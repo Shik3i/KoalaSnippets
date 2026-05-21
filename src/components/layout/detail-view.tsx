@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/toast";
 import {
   Pencil,
   Trash2,
@@ -13,6 +14,7 @@ import {
   Globe,
   Link2,
   Check,
+  Download,
 } from "lucide-react";
 
 interface DetailViewProps {
@@ -38,6 +40,45 @@ const visibilityConfig = {
   PUBLIC: { icon: Globe, label: "Public", color: "text-success" },
 };
 
+const LANGUAGE_EXTENSIONS: Record<string, string> = {
+  typescript: "ts",
+  javascript: "js",
+  python: "py",
+  ruby: "rb",
+  rust: "rs",
+  go: "go",
+  java: "java",
+  kotlin: "kt",
+  swift: "swift",
+  php: "php",
+  c: "c",
+  cpp: "cpp",
+  csharp: "cs",
+  sql: "sql",
+  html: "html",
+  css: "css",
+  scss: "scss",
+  json: "json",
+  yaml: "yaml",
+  yml: "yaml",
+  xml: "xml",
+  markdown: "md",
+  shell: "sh",
+  bash: "sh",
+  zsh: "sh",
+  powershell: "ps1",
+  dockerfile: "Dockerfile",
+  toml: "toml",
+  ini: "ini",
+  txt: "txt",
+};
+
+function getFilename(title: string, language: string): string {
+  const ext = LANGUAGE_EXTENSIONS[language.toLowerCase()] ?? language.toLowerCase();
+  const sanitizedName = title.replace(/[^a-zA-Z0-9_-]/g, "_").toLowerCase();
+  return ext === "Dockerfile" ? "Dockerfile" : `${sanitizedName}.${ext}`;
+}
+
 export function DetailView({
   title,
   description,
@@ -45,7 +86,6 @@ export function DetailView({
   language,
   tags,
   visibility,
-  createdAt,
   updatedAt,
   highlightedCode,
   isOwner,
@@ -54,12 +94,33 @@ export function DetailView({
   onToggleVisibility,
 }: DetailViewProps) {
   const [copied, setCopied] = useState(false);
+  const { addToast } = useToast();
   const VisIcon = visibilityConfig[visibility].icon;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(code);
     setCopied(true);
+    addToast("Link copied!", "success");
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownload = () => {
+    const filename = getFilename(title, language);
+    const blob = new Blob([code], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    addToast(`Downloaded ${filename}`, "success");
+  };
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    addToast("Link copied!", "success");
   };
 
   return (
@@ -82,20 +143,18 @@ export function DetailView({
 
           {isOwner && (
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" onClick={onEdit} title="Edit">
+              <Button variant="ghost" size="icon" onClick={onEdit} aria-label="Edit snippet">
                 <Pencil size={16} suppressHydrationWarning />
               </Button>
-              <Button variant="ghost" size="icon" onClick={onToggleVisibility} title="Toggle visibility">
+              <Button variant="ghost" size="icon" onClick={onToggleVisibility} aria-label="Toggle visibility">
                 <VisIcon size={16} suppressHydrationWarning />
               </Button>
               {visibility === "SHARED" && (
-                <Button variant="ghost" size="icon" title="Share" onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
-                }}>
+                <Button variant="ghost" size="icon" onClick={handleShare} aria-label="Copy share link">
                   <Share2 size={16} suppressHydrationWarning />
                 </Button>
               )}
-              <Button variant="ghost" size="icon" onClick={onDelete} title="Delete" className="text-destructive hover:text-destructive">
+              <Button variant="ghost" size="icon" onClick={onDelete} aria-label="Delete snippet" className="text-destructive hover:text-destructive">
                 <Trash2 size={16} suppressHydrationWarning />
               </Button>
             </div>
@@ -118,15 +177,26 @@ export function DetailView({
       </div>
 
       <div className="flex-1 overflow-auto relative">
-        <div className="absolute top-3 right-3 z-10">
+        <div className="absolute top-3 right-3 z-10 flex gap-2">
           <Button
             variant="outline"
             size="sm"
             className="gap-1.5 bg-card/80 backdrop-blur-sm"
             onClick={handleCopy}
+            aria-label="Copy code to clipboard"
           >
             {copied ? <Check size={14} suppressHydrationWarning /> : <Copy size={14} suppressHydrationWarning />}
             {copied ? "Copied!" : "Copy"}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 bg-card/80 backdrop-blur-sm"
+            onClick={handleDownload}
+            aria-label="Download code file"
+          >
+            <Download size={14} suppressHydrationWarning />
+            Download
           </Button>
         </div>
 

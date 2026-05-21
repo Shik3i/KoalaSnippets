@@ -1,8 +1,8 @@
-import { createHighlighter, type Highlighter } from "shiki";
+import { createHighlighter, type Highlighter, type BundledLanguage } from "shiki";
 
 let highlighter: Highlighter | null = null;
 
-const LANGUAGES = [
+const LANGUAGES: BundledLanguage[] = [
   "typescript",
   "javascript",
   "python",
@@ -42,7 +42,7 @@ async function getHighlighter(): Promise<Highlighter> {
   if (!highlighter) {
     highlighter = await createHighlighter({
       themes: [THEME_DARK, THEME_LIGHT],
-      langs: LANGUAGES as any[],
+      langs: LANGUAGES,
     });
   }
   return highlighter;

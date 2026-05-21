@@ -16,12 +16,15 @@ import {
   X,
   Settings,
   LogOut,
+  BarChart3,
+  Shield,
 } from "lucide-react";
 
 interface SidebarProps {
   tags?: string[];
   languages?: string[];
   isAuthenticated?: boolean;
+  isAdmin?: boolean;
   onTagClick?: (tag: string) => void;
   onLanguageClick?: (language: string) => void;
 }
@@ -30,9 +33,10 @@ const navItems = [
   { href: "/", label: "Home", icon: Home },
   { href: "/dashboard", label: "My Snippets", icon: FileCode },
   { href: "/public", label: "Public Explorer", icon: Globe },
+  { href: "/stats", label: "Statistics", icon: BarChart3 },
 ];
 
-export function Sidebar({ tags = [], languages = [], isAuthenticated = false, onTagClick, onLanguageClick }: SidebarProps) {
+export function Sidebar({ tags = [], languages = [], isAuthenticated = false, isAdmin = false, onTagClick, onLanguageClick }: SidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -136,7 +140,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, on
                   }}
                   className="hover:opacity-80 transition-opacity"
                 >
-                  <Badge variant="outline" className="cursor-pointer text-xs">
+                  <Badge variant="outline" className="cursor-pointer text-xs" aria-label={`Filter by tag: ${tag}`}>
                     {tag}
                   </Badge>
                 </button>
@@ -147,6 +151,21 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, on
 
         <div className="mt-auto border-t border-border">
           <div className="p-3 space-y-1">
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                  pathname === "/admin"
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                )}
+                onClick={() => setMobileOpen(false)}
+              >
+                <Shield size={16} suppressHydrationWarning />
+                Admin Dashboard
+              </Link>
+            )}
             {isAuthenticated ? (
               <>
                 <Link

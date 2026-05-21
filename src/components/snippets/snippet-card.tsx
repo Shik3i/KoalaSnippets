@@ -30,6 +30,7 @@ export function SnippetCard({ id, title, description, language, tags, visibility
       className={cn(
         "group block rounded-lg border border-border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-sm"
       )}
+      aria-label={`View snippet: ${title}`}
     >
       <div className="flex items-start justify-between gap-2 mb-2">
         <h3 className="font-medium text-sm truncate group-hover:text-primary transition-colors">

@@ -33,6 +33,8 @@ KoalaSnippets is a self-hosted snippet management application built with Next.js
   /dashboard/page.tsx      # User's private snippet management (responsive grid)
   /dashboard/new/page.tsx  # Create new snippet form
   /settings/page.tsx       # User settings (password change)
+  /admin/page.tsx          # Admin dashboard (RBAC: ADMIN only)
+  /stats/page.tsx          # Public statistics page
   /impressum/page.tsx      # German imprint (public)
   /privacy/page.tsx        # Privacy policy (public)
   /public/page.tsx         # Public explorer (redundant with /, kept for nav)
@@ -46,12 +48,21 @@ KoalaSnippets is a self-hosted snippet management application built with Next.js
       /[id]/route.ts       # GET/PUT/DELETE: single snippet operations
     /settings/
       /route.ts            # PUT: change password
+    /health/
+      /route.ts            # GET: server + database health check
+    /admin/
+      /users/route.ts      # GET: list all users, DELETE: remove user
+      /backups/route.ts    # GET: list/download backups, POST: trigger backup
+      /stats/route.ts      # GET: admin system metrics
+    /public/
+      /stats/route.ts      # GET: public statistics data
 ```
 
 ### Route Protection
 
-- **Public routes:** `/`, `/login`, `/register`, `/impressum`, `/privacy`, `/api/auth/*`
+- **Public routes:** `/`, `/login`, `/register`, `/impressum`, `/privacy`, `/stats`, `/api/auth/*`, `/api/health`, `/api/public/*`
 - **Authenticated routes:** `/dashboard`, `/snippets/*`, `/api/snippets/*`, `/api/settings`, `/settings`
+- **Admin-only routes:** `/admin`, `/api/admin/*` (returns 403 if session role is not `ADMIN`)
 - **Token-protected routes:** `/snippets/[id]?token=xxx` (SHARED visibility)
 
 ## UI Layout Concept
@@ -85,7 +96,7 @@ DETAIL VIEW (/snippets/[id]):
 |          |  |  Shiki-highlighted code block (full-width) |  |
 |          |  |                                            |  |
 |          |  +--------------------------------------------+  |
-|          |  [Copy Code]                                   |  |
+|          |  [Copy Code]  [Download]                       |  |
 +----------+--------------------------------------------------+
 ```
 
@@ -100,12 +111,19 @@ DETAIL VIEW (/snippets/[id]):
 ```
 src/components/
   layout/
-    sidebar.tsx          # Left sidebar with nav, tags, auth-aware footer
-    detail-view.tsx      # Full-width snippet detail + code block
+    sidebar.tsx          # Left sidebar with nav, tags, auth-aware footer, admin link
+    detail-view.tsx      # Full-width snippet detail + code block + download
   snippets/
     snippet-card.tsx     # Responsive grid card (links to /snippets/[id])
-    search-header.tsx    # Sticky search bar with debounce (uses useSearchParams)
+    search-header.tsx    # Sticky search bar with debounce + Cmd+K hint
   ui/                    # shadcn/ui primitives (button, input, card, badge, etc.)
+    toast.tsx            # Toast notification system (context + container)
+  admin/
+    admin-metrics.tsx    # System metrics cards (DB size, users, snippets)
+    admin-user-list.tsx  # User management table with delete action
+    admin-backup-list.tsx# Backup management with trigger/download
+  stats/
+    public-stats-cards.tsx  # Public statistics counter cards
   auth/
     login-form.tsx
     register-form.tsx
@@ -142,6 +160,7 @@ users (
   id              TEXT PRIMARY KEY (UUID v4),
   username        TEXT UNIQUE NOT NULL,
   password_hash   TEXT NOT NULL,          -- Argon2id hash
+  role            TEXT NOT NULL DEFAULT 'USER',  -- 'USER' or 'ADMIN'
   created_at      INTEGER NOT NULL        -- Unix timestamp
 )
 
@@ -167,6 +186,13 @@ sessions (
   token_hash      TEXT NOT NULL,
   expires_at      INTEGER NOT NULL,
   created_at      INTEGER NOT NULL
+)
+
+-- Site statistics (singleton row, id = 1)
+site_statistics (
+  id                  INTEGER PRIMARY KEY,
+  total_users_created     INTEGER NOT NULL DEFAULT 0,
+  total_snippets_created  INTEGER NOT NULL DEFAULT 0
 )
 ```
 
@@ -211,3 +237,80 @@ sessions (
 ### Font Strategy
 
 All fonts use `next/font/google` (Inter, JetBrains Mono). Fonts are subsetted at build time, hosted locally inside the Next.js bundle, and served with zero layout shift. No external CSS or font CDNs.
+
+## Backup Architecture
+
+### Automated SQLite Backups
+
+KoalaSnippets includes an automated internal backup system that runs on a 6-hour interval, tied to the server lifecycle via Next.js instrumentation hooks.
+
+### Mechanism
+
+- **VACUUM INTO:** Backups use the native SQLite `VACUUM INTO 'path/to/backup.db'` command via `better-sqlite3`. This guarantees a non-corrupt, defragmented copy of the live database.
+- **Scheduler:** The backup scheduler starts automatically when the Next.js server boots (`src/instrumentation.ts`). It runs an initial backup immediately, then repeats every 6 hours.
+- **Backup Directory:** Backups are stored in `/backups` (configurable via `BACKUP_DIR` env var, defaults to `./backups`).
+
+### GFS Retention Strategy (Grandfather-Father-Son)
+
+A rotation policy automatically prunes old backups to prevent disk bloat:
+
+| Tier | Retention | Description |
+|------|-----------|-------------|
+| Daily (Son) | 7 days | 1 backup per day for the last 7 days |
+| Weekly (Father) | 4 weeks | 1 backup per week for the last 4 weeks |
+| Monthly (Grandfather) | 12 months | 1 backup per month for the last 12 months |
+
+Backups older than these rules are automatically deleted during each backup cycle.
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `src/lib/backup.ts` | Core backup logic: VACUUM INTO, GFS retention, date parsing |
+| `src/lib/backup-scheduler.ts` | Interval-based scheduler (6-hour cycle) |
+| `src/instrumentation.ts` | Next.js server lifecycle hook to start scheduler |
+
+### Health Check
+
+A lightweight `GET /api/health` endpoint returns `{"status": "ok", "timestamp": "..."}` if both the Next.js server and the SQLite database are responsive. Returns `503` with `{"status": "error"}` if the database is unreachable.
+
+## Power-User Features
+
+### Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+K` / `Ctrl+K` | Focuses and selects the search bar input |
+| `Cmd+S` / `Ctrl+S` | Triggers form submission while editing/creating a snippet |
+
+Shortcuts are implemented via a global `keydown` listener (`src/lib/keyboard-shortcuts.ts`) and are active on all pages. The search bar displays a `⌘K` hint badge when not actively searching.
+
+### Download Code
+
+A "Download" button next to "Copy Code" in the Snippet Detail view triggers a browser download of the raw code. The filename uses the snippet's title (sanitized) and the correct file extension based on the `language` field (e.g., `.py` for python, `.sql` for sql, `.ts` for typescript).
+
+### OpenGraph Rich Previews
+
+The `/snippets/[id]` page implements Next.js dynamic `generateMetadata`. When a SHARED or PUBLIC link is shared on platforms like Slack/Discord, it displays a preview card with:
+- Snippet title, language, and tags
+- Description (or fallback)
+- `siteName: "KoalaSnippets"`
+
+## Accessibility (A11y)
+
+### Keyboard Navigation
+
+- All interactive elements are reachable via `Tab` navigation.
+- Icon-only buttons include descriptive `aria-label` attributes.
+- The 2-pane interface supports full keyboard navigation.
+- Error messages use `role="alert"` for screen reader announcements.
+
+### Toast Notifications
+
+A lightweight toast system (`src/components/ui/toast.tsx`) provides animated feedback for user actions:
+- "Snippet saved!" on successful creation
+- "Link copied!" on share link copy
+- "Password changed!" on successful password update
+- "Downloaded <filename>" on code download
+
+Toasts auto-dismiss after 3 seconds and are positioned in the bottom-right corner. The toast container uses `aria-live="polite"` for screen reader compatibility.

@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { snippets } from "@/db/schema";
+import { snippets, siteStatistics } from "@/db/schema";
 import { getSession } from "@/lib/session";
 import { snippetSchema } from "@/lib/validations";
 import { generateId, generateShareToken } from "@/lib/auth";
-import { eq, desc, like, or, and } from "drizzle-orm";
-import { sql } from "drizzle-orm";
+import { eq, desc, like, or, and, sql } from "drizzle-orm";
 
 const PAGE_SIZE = 50;
 
@@ -24,7 +23,7 @@ export async function GET(request: Request) {
 
   const baseQuery = db.select().from(snippets);
 
-  let conditions = [];
+  const conditions = [];
 
   if (visibility === "PUBLIC") {
     conditions.push(eq(snippets.visibility, "PUBLIC"));
@@ -102,6 +101,10 @@ export async function POST(request: Request) {
     };
 
     await db.insert(snippets).values(snippetData);
+
+    await db.update(siteStatistics)
+      .set({ totalSnippetsCreated: sql`total_snippets_created + 1` })
+      .where(eq(siteStatistics.id, 1));
 
     return NextResponse.json({ success: true, id: snippetData.id }, { status: 201 });
   } catch {

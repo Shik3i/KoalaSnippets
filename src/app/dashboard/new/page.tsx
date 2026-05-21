@@ -9,10 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sidebar } from "@/components/layout/sidebar";
+import { useToast } from "@/components/ui/toast";
+import { useKeyboardShortcuts } from "@/lib/keyboard-shortcuts";
 import { X, Plus } from "lucide-react";
 
 export default function NewSnippetPage() {
   const router = useRouter();
+  const { addToast } = useToast();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [code, setCode] = useState("");
@@ -23,20 +26,8 @@ export default function NewSnippetPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const addTag = () => {
-    const tag = tagInput.trim();
-    if (tag && !tags.includes(tag) && tags.length < 10) {
-      setTags([...tags, tag]);
-      setTagInput("");
-    }
-  };
-
-  const removeTag = (tag: string) => {
-    setTags(tags.filter((t) => t !== tag));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     setError("");
     setLoading(true);
 
@@ -53,7 +44,7 @@ export default function NewSnippetPage() {
         return;
       }
 
-      const data = await res.json();
+      addToast("Snippet saved!", "success");
       router.push(`/dashboard`);
       router.refresh();
     } catch {
@@ -61,6 +52,20 @@ export default function NewSnippetPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  useKeyboardShortcuts({ onSave: () => { if (!loading) handleSubmit(); } });
+
+  const addTag = () => {
+    const tag = tagInput.trim();
+    if (tag && !tags.includes(tag) && tags.length < 10) {
+      setTags([...tags, tag]);
+      setTagInput("");
+    }
+  };
+
+  const removeTag = (tag: string) => {
+    setTags(tags.filter((t) => t !== tag));
   };
 
   return (
@@ -74,7 +79,7 @@ export default function NewSnippetPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md p-3">
+                <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md p-3" role="alert">
                   {error}
                 </div>
               )}
@@ -133,6 +138,7 @@ export default function NewSnippetPage() {
                     value={visibility}
                     onChange={(e) => setVisibility(e.target.value as typeof visibility)}
                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    aria-label="Snippet visibility"
                   >
                     <option value="PRIVATE">Private</option>
                     <option value="SHARED">Shared (link only)</option>
@@ -154,8 +160,9 @@ export default function NewSnippetPage() {
                         addTag();
                       }
                     }}
+                    aria-label="Tag input"
                   />
-                  <Button type="button" variant="outline" size="icon" onClick={addTag}>
+                  <Button type="button" variant="outline" size="icon" onClick={addTag} aria-label="Add tag">
                     <Plus size={16} />
                   </Button>
                 </div>
@@ -168,6 +175,7 @@ export default function NewSnippetPage() {
                           type="button"
                           onClick={() => removeTag(tag)}
                           className="hover:text-destructive"
+                          aria-label={`Remove tag: ${tag}`}
                         >
                           <X size={12} />
                         </button>

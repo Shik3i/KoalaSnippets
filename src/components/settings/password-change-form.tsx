@@ -6,20 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/ui/toast";
 
 export function PasswordChangeForm() {
   const router = useRouter();
+  const { addToast } = useToast();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setSuccess(false);
     setLoading(true);
 
     try {
@@ -35,10 +35,7 @@ export function PasswordChangeForm() {
         return;
       }
 
-      setSuccess(true);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmNewPassword("");
+      addToast("Password changed!", "success");
 
       setTimeout(() => {
         router.push("/login");
@@ -61,13 +58,8 @@ export function PasswordChangeForm() {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md p-3">
+            <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md p-3" role="alert">
               {error}
-            </div>
-          )}
-          {success && (
-            <div className="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
-              Password changed successfully. Redirecting to login...
             </div>
           )}
           <div className="space-y-2">

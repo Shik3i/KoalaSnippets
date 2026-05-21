@@ -21,7 +21,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const includeCodeBool = includeCode === "true";
 
   const baseQuery = db.select().from(snippets);
-  let conditions = [eq(snippets.authorId, session.user.id)];
+  const conditions = [eq(snippets.authorId, session.user.id)];
 
   if (query) {
     const searchConditions = [
@@ -53,6 +53,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         tags={allTags}
         languages={languages}
         isAuthenticated={true}
+        isAdmin={session.user.role === "ADMIN"}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">

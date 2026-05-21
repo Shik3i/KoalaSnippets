@@ -5,6 +5,7 @@ export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
   username: text("username").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
+  role: text("role", { enum: ["USER", "ADMIN"] }).notNull().default("USER"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
 
@@ -28,6 +29,12 @@ export const sessions = sqliteTable("sessions", {
   tokenHash: text("token_hash").notNull(),
   expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
+export const siteStatistics = sqliteTable("site_statistics", {
+  id: integer("id").primaryKey(),
+  totalUsersCreated: integer("total_users_created").notNull().default(0),
+  totalSnippetsCreated: integer("total_snippets_created").notNull().default(0),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({

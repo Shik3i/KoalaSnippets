@@ -13,7 +13,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="flex h-screen">
-      <Sidebar isAuthenticated={true} />
+      <Sidebar isAuthenticated={true} isAdmin={session.user.role === "ADMIN"} />
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-2xl mx-auto space-y-6">
           <div>

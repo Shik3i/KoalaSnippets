@@ -16,7 +16,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const includeCodeBool = includeCode === "true";
 
   const baseQuery = db.select().from(snippets);
-  let conditions = [eq(snippets.visibility, "PUBLIC")];
+  const conditions = [eq(snippets.visibility, "PUBLIC")];
 
   if (query) {
     const searchConditions = [
@@ -48,6 +48,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         tags={allTags}
         languages={languages}
         isAuthenticated={!!session}
+        isAdmin={session?.user.role === "ADMIN"}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">

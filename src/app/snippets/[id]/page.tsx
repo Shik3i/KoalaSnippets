@@ -9,6 +9,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { DetailView } from "@/components/layout/detail-view";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
@@ -24,27 +25,72 @@ interface PageProps {
   searchParams: Promise<{ token?: string }>;
 }
 
-export default async function SnippetDetailPage({ params, searchParams }: PageProps) {
-  const { id } = await params;
-  const { token } = await searchParams;
-  const session = await getSession();
-
+async function getSnippet(id: string, token?: string) {
   const snippet = await db.select().from(snippets).where(eq(snippets.id, id)).get();
 
   if (!snippet) {
-    notFound();
+    return null;
   }
 
   if (snippet.visibility === "PRIVATE") {
+    const session = await getSession();
     if (!session || snippet.authorId !== session.user.id) {
-      notFound();
+      return null;
     }
   }
 
   if (snippet.visibility === "SHARED") {
     if (!token || !snippet.shareToken || !constantTimeCompare(snippet.shareToken, token)) {
-      notFound();
+      return null;
     }
+  }
+
+  return snippet;
+}
+
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const { token } = await searchParams;
+  const snippet = await getSnippet(id, token);
+
+  if (!snippet) {
+    return {
+      title: "Snippet Not Found | KoalaSnippets",
+    };
+  }
+
+  const tagsStr = snippet.tags?.length ? ` · ${snippet.tags.join(", ")}` : "";
+  const title = `${snippet.title} · ${snippet.language}${tagsStr}`;
+  const description = snippet.description ?? `Code snippet in ${snippet.language} from KoalaSnippets`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      siteName: "KoalaSnippets",
+      locale: "en_US",
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+      site: "@KoalaSnippets",
+    },
+  };
+}
+
+export default async function SnippetDetailPage({ params, searchParams }: PageProps) {
+  const { id } = await params;
+  const { token } = await searchParams;
+  const session = await getSession();
+
+  const snippet = await getSnippet(id, token);
+
+  if (!snippet) {
+    notFound();
   }
 
   const highlightedCode = await highlightCode(snippet.code, snippet.language);
@@ -53,7 +99,7 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
 
   return (
     <div className="flex h-screen">
-      <Sidebar isAuthenticated={!!session} />
+      <Sidebar isAuthenticated={!!session} isAdmin={session?.user.role === "ADMIN"} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="border-b border-border p-4">

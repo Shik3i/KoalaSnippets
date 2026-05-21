@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { users, siteStatistics } from "@/db/schema";
 import { hashPassword, generateId } from "@/lib/auth";
 import { registerSchema } from "@/lib/validations";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 export async function POST(request: Request) {
   if (process.env.ALLOW_REGISTRATION !== "true") {
@@ -42,8 +42,13 @@ export async function POST(request: Request) {
       id: generateId(),
       username,
       passwordHash,
+      role: "USER",
       createdAt: new Date(),
     });
+
+    await db.update(siteStatistics)
+      .set({ totalUsersCreated: sql`total_users_created + 1` })
+      .where(eq(siteStatistics.id, 1));
 
     const res = NextResponse.json({ success: true }, { status: 201 });
     return res;
