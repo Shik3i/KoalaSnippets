@@ -18,6 +18,8 @@ COPY . .
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV AUTH_PEPPER="build-time-dummy-pepper-ignore"
+ENV SESSION_SECRET="build-time-dummy-secret-ignore"
 
 RUN npm run build
 
