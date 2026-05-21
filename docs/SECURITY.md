@@ -32,13 +32,21 @@
 2. Cookie value hashed (SHA-256) and looked up in `sessions` table.
 3. If found and `expires_at > now`, session is valid.
 4. User ID extracted from session record.
-5. Sliding expiration: `expires_at` extended on each valid request.
+5. **Grace period:** Session expiry is only extended if within 24 hours of expiration (reduces DB writes from every request to ~once/day per active session).
 
 ### Logout
 
 1. Session cookie read from request.
 2. Session record deleted from database.
 3. Cookie cleared with `Max-Age=0`.
+
+### Password Change
+
+1. User submits current password + new password to `PUT /api/settings`.
+2. Current password verified against stored hash using Argon2id.
+3. New password hashed with a **fresh random salt** + same pepper.
+4. Database updated with new hash.
+5. **All active sessions terminated** for the user (forces re-login everywhere).
 
 ## Password Hashing: Argon2id + Salt + Pepper
 
@@ -56,25 +64,25 @@
 import { hash, verify } from 'argon2';
 import crypto from 'crypto';
 
-const PEPPER = process.env.AUTH_PEPPER; // Required env var
+const PEPPER = process.env.AUTH_PEPPER;
 
 async function hashPassword(password: string): Promise<string> {
-  const salt = crypto.randomBytes(16).toString('hex');
-  const pepperedPassword = `${password}${PEPPER}${salt}`;
-  
+  const salt = crypto.randomBytes(16);
+  const pepperedPassword = `${password}${PEPPER}${salt.toString('hex')}`;
+
   return hash(pepperedPassword, {
     type: 2, // Argon2id
     memoryCost: 65536, // 64 MB
     timeCost: 3,
     parallelism: 1,
-    salt: Buffer.from(salt, 'hex'),
+    salt,
   });
 }
 
-async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  // Salt is extracted from the stored hash by argon2 library
-  const pepperedPassword = `${password}${PEPPER}${extractSalt(hash)}`;
-  return verify(hash, pepperedPassword);
+async function verifyPassword(password: string, hashStr: string): Promise<boolean> {
+  const salt = extractSalt(hashStr);
+  const pepperedPassword = `${password}${PEPPER}${salt}`;
+  return verify(hashStr, pepperedPassword);
 }
 ```
 
@@ -89,6 +97,20 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 | Salt Length | 16 bytes | Industry standard |
 | Hash Length | 32 bytes | Industry standard |
 
+## Rate Limiting
+
+In-memory `Map`-based rate limiter (`src/lib/rate-limit.ts`). Zero external dependencies.
+
+| Endpoint | Limit | Window |
+|----------|-------|--------|
+| Login | 5 attempts | 15 minutes per IP |
+| Registration | 3 attempts | 60 minutes per IP |
+
+- IP extracted from `x-forwarded-for` header.
+- Returns `429 Too Many Requests` with `Retry-After` header.
+- Auto-cleanup of expired entries every 5 minutes.
+- Designed for single-instance Docker deployments.
+
 ## Visibility & Access Control
 
 ### PRIVATE Snippets
@@ -101,6 +123,7 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 
 - **Access method:** `/snippets/[id]?token=[shareToken]`
 - **Query:** `WHERE id = ? AND share_token = ? AND visibility = 'SHARED'`
+- **Token comparison:** Uses `crypto.timingSafeEqual` (constant-time) to prevent timing attacks.
 - **If token missing or invalid:** `404 Not Found`.
 - **No listing:** SHARED snippets never appear in any list endpoint.
 - **No auth required:** Token is the sole access mechanism.
@@ -108,7 +131,7 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 ### PUBLIC Snippets
 
 - **Query:** `WHERE visibility = 'PUBLIC'` (no auth required).
-- **Listed on:** Public homepage explorer.
+- **Listed on:** Public homepage grid (`/`).
 - **Detail view:** Anyone can view, but only author can edit/delete.
 
 ### Authorization Matrix
@@ -123,11 +146,13 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 | Delete | Author only | Author only | Author only |
 | Share | Author only | Author only | Author only |
 
-## HTTP Security Headers (Caddy)
+## HTTP Security Headers
+
+### Next.js Config (`next.config.ts`)
 
 | Header | Value | Purpose |
 |--------|-------|---------|
-| `Content-Security-Policy` | `default-src 'self'; script-src 'self' 'nonce-{random}'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'` | Prevents XSS, clickjacking, data exfiltration |
+| `Content-Security-Policy` | `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' (dev only); style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'` | Prevents XSS, clickjacking, data exfiltration |
 | `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` | Forces HTTPS for 2 years |
 | `X-Content-Type-Options` | `nosniff` | Prevents MIME-type sniffing |
 | `X-Frame-Options` | `DENY` | Prevents clickjacking |
@@ -135,10 +160,14 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 | `Referrer-Policy` | `strict-origin-when-cross-origin` | Limits referrer leakage |
 | `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | Restricts browser features |
 
+### Caddy (Production)
+
+See `Caddyfile.example` for production reverse proxy configuration with additional hardening.
+
 ## SQL Injection Prevention
 
 - **Drizzle ORM** parameterized queries exclusively.
-- No raw SQL string concatenation with user input.
+- Search uses `like()` and `sql\`\`` with parameterized values — no string concatenation.
 - All input validated with Zod schemas before reaching database layer.
 - SQLite's `better-sqlite3` prepared statements under the hood.
 
@@ -147,8 +176,21 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 - Session tokens: 32 bytes from `crypto.randomBytes()`.
 - Stored as SHA-256 hash (plaintext token never stored).
 - Cookie flags: `HttpOnly`, `Secure`, `SameSite=Lax`.
-- Session rotation on privilege changes.
-- Automatic cleanup of expired sessions (cron or on-startup).
+- Session rotation on password change (all sessions terminated).
+- Grace period for sliding expiration (only writes DB if within 24h of expiry).
+
+## Timing Attack Prevention
+
+- `shareToken` comparison uses `crypto.timingSafeEqual` with length guard.
+- Applied in both API route (`api/snippets/[id]/route.ts`) and page (`snippets/[id]/page.tsx`).
+
+## Zero External Dependencies
+
+- **No CDNs:** All fonts via `next/font/google` (locally hosted, subsetted at build).
+- **No external icons:** `lucide-react` bundled as npm dependency.
+- **No analytics:** Zero tracking scripts, zero telemetry.
+- **No external APIs:** All data from local SQLite database.
+- Application works fully air-gapped.
 
 ## Environment Variables (Secrets)
 

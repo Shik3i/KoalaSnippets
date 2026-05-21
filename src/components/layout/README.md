@@ -7,7 +7,7 @@ Core UI components for the 2-pane layout (Sidebar + Main Content).
 | Component | File | Type | Description |
 |-----------|------|------|-------------|
 | `Sidebar` | `sidebar.tsx` | Client | Left navigation pane (fixed width). Branding, nav links, tag/language filters, new snippet button (auth only), settings/sign-in, legal links. Responsive: collapses to drawer on mobile. |
-| `DetailView` | `detail-view.tsx` | Client | Full-width snippet detail view. Title, description, metadata, Shiki-highlighted code block, copy button, owner actions (edit, delete, toggle visibility, share). |
+| `DetailView` | `detail-view.tsx` | Client | Full-width snippet detail view on dedicated route. Title, description, metadata, Shiki-highlighted code block, copy button, owner actions (edit, delete, toggle visibility, share). |
 
 ## Layout Structure (2-Pane)
 
@@ -19,8 +19,9 @@ Core UI components for the 2-pane layout (Sidebar + Main Content).
 | Nav      |  List View:                      |
 | Tags     |    - Sticky search header        |
 | Actions  |    - Responsive card grid        |
+|          |      (1/2/3 columns)             |
 |          |                                  |
-|          |  Detail View:                    |
+|          |  Detail View (/snippets/[id]):   |
 |          |    - Back button                 |
 |          |    - Full-width code display     |
 +----------+----------------------------------+
@@ -30,13 +31,13 @@ Core UI components for the 2-pane layout (Sidebar + Main Content).
 
 - **Sidebar**: Client Component (interactive navigation, mobile drawer toggle)
 - **DetailView**: Client Component (clipboard operations, interactive actions)
-- **SearchHeader**: Client Component (debounced search, URL manipulation)
-- **SnippetCard**: Client Component (Link navigation)
+- **SnippetSearchHeader**: Client Component (debounced search, URL manipulation via `useSearchParams`)
+- **SnippetCard**: Client Component (Link navigation to `/snippets/[id]`)
 
 Data fetching is done by Server Components (page files) which pass data as props or use URL search params.
 
 ## Responsive Behavior
 
-- **Desktop (1024px+)**: Sidebar visible, 3-column card grid
-- **Tablet (768px-1024px)**: Sidebar visible, 2-column card grid
-- **Mobile (< 768px)**: Sidebar collapses to drawer, 1-column card grid
+- **Desktop (1024px+):** Sidebar visible, 3-column card grid
+- **Tablet (768px-1024px):** Sidebar visible, 2-column card grid
+- **Mobile (< 768px):** Sidebar collapses to drawer, 1-column card grid

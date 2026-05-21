@@ -1,35 +1,56 @@
-# KoalaSnippets
+# 🐨 KoalaSnippets
 
-A self-hosted, privacy-first snippet management web application with a modern IDE-like interface.
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![SQLite](https://img.shields.io/badge/Database-SQLite-003B57?style=flat-square&logo=sqlite)](https://www.sqlite.org/)
+[![Self-Hosted](https://img.shields.io/badge/Self--Hosted-Yes-2ea44f?style=flat-square)]()
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
-## Features
+> A blazing fast, zero-bloat, privacy-first snippet manager designed to cure **Notepad++ tab hell**.
 
-- **Three-pane IDE layout** - Sidebar navigation, snippet list, and code detail view
-- **Server-side syntax highlighting** - Shiki renders highlighted code on the server (no heavy client scripts)
-- **Three-tier visibility** - Private, Shared (link-only), and Public snippets
-- **Zero external dependencies** - All fonts, icons, and assets bundled locally
-- **Secure authentication** - Argon2id + Salt + Pepper password hashing
-- **SQLite storage** - Lightweight, file-based database via Drizzle ORM
-- **Dark/Light mode** - Respects system preference with manual toggle
-- **Rate limiting** - In-memory brute-force protection on auth endpoints
+KoalaSnippets is a self-hosted web application for storing, organizing, and sharing code snippets. It features a clean two-pane interface, server-side syntax highlighting, and rock-solid security — all with **zero external dependencies**. No CDNs. No tracking. No bloat. Just your code, your server, your rules.
 
-## Tech Stack
+![KoalaSnippets Interface](./docs/assets/screenshot-placeholder.png)
+
+## ✨ Core Features
+
+- 🔒 **Privacy by Default** — Zero CDNs, locally hosted fonts, self-hosted. Your data never leaves your server.
+- 🛡️ **Rock-Solid Security** — Argon2id + Salt + Pepper password hashing, in-memory rate limiting, strict CSP headers, timing-attack-resistant token comparison.
+- 👁️ **Visibility Controls** — Public Explorer for anyone, secure shared links with unguessable tokens, or keep snippets strictly private.
+- ⚡ **Blazing Fast Search** — Server-side parameterized queries with an "include code in search" toggle. No client-side filtering bottlenecks.
+- 🎨 **Beautiful 2-Pane UI** — Responsive card grid, dark mode by default, clean shadcn/ui components, JetBrains Mono for code.
+- 💻 **Developer Ready** — Shiki server-side syntax highlighting for 30+ languages, one-click copy-to-clipboard, tag-based organization.
+
+## 🧱 Tech Stack
 
 | Layer | Technology |
 |-------|------------|
-| Framework | Next.js 16+ (App Router, React Server Components) |
-| Language | TypeScript (strict) |
-| Styling | Tailwind CSS + shadcn/ui |
+| Framework | Next.js 16 (App Router, React Server Components) |
+| Language | TypeScript (strict mode) |
+| Styling | Tailwind CSS v4 + shadcn/ui |
 | Database | SQLite (better-sqlite3) |
 | ORM | Drizzle ORM |
-| Syntax Highlighting | Shiki (server-side) |
+| Syntax Highlighting | Shiki (server-side, 30+ languages) |
 | Authentication | Session cookies + Argon2id + Pepper |
+| Fonts | next/font/google (Inter, JetBrains Mono) |
+| Icons | lucide-react (bundled) |
 
-## Local Testing & Development
+## 🚀 Quick Start
 
-### 1. Set Up Environment Variables
+### Prerequisites
 
-Copy the example environment file and configure it:
+- Node.js 20+
+- npm (or pnpm/yarn)
+
+### 1. Clone & Install
+
+```bash
+git clone https://github.com/Shik3i/KoalaSnippets.git
+cd KoalaSnippets
+npm install
+```
+
+### 2. Set Up Environment
 
 ```bash
 cp .env.example .env
@@ -38,70 +59,39 @@ cp .env.example .env
 Edit `.env` with your values:
 
 ```env
-# Required: Application-level pepper for password hashing (use a long random string)
-AUTH_PEPPER=your-secret-pepper-string
+# Required: Application-level pepper for password hashing
+AUTH_PEPPER=your-long-random-string-here
 
-# Required: Session encryption secret (use a long random string)
-SESSION_SECRET=your-session-secret-string
+# Required: Session encryption secret
+SESSION_SECRET=another-long-random-string
 
 # Optional: Enable/disable user registration (default: false)
 ALLOW_REGISTRATION=true
 
-# Optional: SQLite database file path (default: ./data/koalasnippets.db)
+# Optional: SQLite database path
 DATABASE_URL=file:./data/koalasnippets.db
-
-# Optional: Environment (default: development)
-NODE_ENV=development
 ```
 
 Generate secure random strings:
-
 ```bash
-# macOS / Linux
-openssl rand -hex 32
-
-# Or use Node.js
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-### 2. Install Dependencies & Initialize Database
+### 3. Initialize Database
 
 ```bash
-npm install
-
-# Create the data directory
 mkdir -p data
-
-# Generate and apply database migrations
 npm run db:generate
 npm run db:migrate
 ```
 
-### 3. Start the Development Server
+### 4. Start Development Server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The server uses Turbopack for fast hot-reloading. The SQLite database is initialized automatically on first access.
-
-### 4. Build & Test Production Locally (Docker)
-
-```bash
-# Build and run with Docker Compose
-docker compose up --build
-
-# Or build and run manually
-docker build -t koalasnippets .
-docker run -d -p 3000:3000 \
-  -v koalasnippets-data:/app/data \
-  -e AUTH_PEPPER=your-pepper \
-  -e SESSION_SECRET=your-secret \
-  -e ALLOW_REGISTRATION=true \
-  koalasnippets
-```
-
-Open [http://localhost:3000](http://localhost:3000). The SQLite database persists across container restarts via the Docker volume.
+Open [http://localhost:3000](http://localhost:3000). The server uses Turbopack for instant hot-reloading. The SQLite database initializes automatically on first access.
 
 ### Available Scripts
 
@@ -113,49 +103,79 @@ Open [http://localhost:3000](http://localhost:3000). The SQLite database persist
 | `npm run lint` | Run ESLint |
 | `npm run db:generate` | Generate Drizzle migrations |
 | `npm run db:migrate` | Apply database migrations |
-| `npm run db:studio` | Open Drizzle Studio (DB browser) |
+| `npm run db:studio` | Open Drizzle Studio (web-based DB browser) |
 
-## Project Structure
+## 🐳 Docker Deployment
+
+### Docker Compose (Recommended)
+
+```bash
+# Set environment variables
+export AUTH_PEPPER="your-pepper"
+export SESSION_SECRET="your-secret"
+export ALLOW_REGISTRATION="true"
+
+# Build and run
+docker compose up --build -d
+```
+
+Open [http://localhost:3000](http://localhost:3000). The SQLite database persists across container restarts via a Docker volume.
+
+### Manual Docker
+
+```bash
+docker build -t koalasnippets .
+docker run -d -p 3000:3000 \
+  -v koalasnippets-data:/app/data \
+  -e AUTH_PEPPER=your-pepper \
+  -e SESSION_SECRET=your-secret \
+  -e ALLOW_REGISTRATION=true \
+  koalasnippets
+```
+
+### Reverse Proxy (Caddy)
+
+See `Caddyfile.example` for a production-ready Caddy configuration with strict security headers (CSP, HSTS, X-Content-Type-Options).
+
+## 📁 Project Structure
 
 ```
 KoalaSnippets/
-├── docs/                   # Architecture & AI documentation
+├── docs/                   # Architecture, security, and AI documentation
 ├── src/
 │   ├── app/                # Next.js App Router (pages, API routes)
 │   │   ├── api/            # API routes (auth, snippets, settings)
-│   │   ├── dashboard/      # Dashboard (authenticated)
-│   │   ├── login/          # Login page
-│   │   ├── register/       # Registration page
+│   │   ├── dashboard/      # Dashboard (authenticated, responsive grid)
+│   │   ├── snippets/[id]/  # Dedicated snippet detail view
 │   │   ├── settings/       # User settings (password change)
-│   │   ├── public/         # Public snippet explorer
-│   │   └── snippets/[id]/  # Snippet detail view
+│   │   ├── impressum/      # German imprint
+│   │   └── privacy/        # Privacy policy
 │   ├── components/
-│   │   ├── layout/         # Sidebar, list view, detail view
+│   │   ├── layout/         # Sidebar, detail view
+│   │   ├── snippets/       # SnippetCard, SnippetSearchHeader
 │   │   ├── ui/             # shadcn/ui primitives
 │   │   ├── auth/           # Login/register forms
 │   │   └── settings/       # Password change form
-│   ├── db/                 # Drizzle schema & migrations
-│   ├── lib/                # Utilities (auth, session, shiki, rate-limit, validations)
-│   └── middleware.ts       # Route protection middleware
-├── public/                 # Static assets
+│   ├── db/                 # Drizzle schema, migrations, connection
+│   └── lib/                # Auth, session, Shiki, rate-limit, validations
 ├── Dockerfile              # Multi-stage production build
 ├── docker-compose.yml      # Docker orchestration
 ├── Caddyfile.example       # Reverse proxy with security headers
-└── PRIVACY.md              # Privacy policy
+└── PRIVACY.md              # Detailed privacy policy
 ```
 
-## Security
+## 🔐 Security
 
 - Passwords hashed with **Argon2id + Salt + Pepper**
 - Session tokens stored as hashes, never plaintext
 - Strict CSP and security headers via Next.js config + Caddy
-- Zero external CDNs - everything bundled locally
+- Zero external CDNs — everything bundled locally
 - SQL injection prevented via Drizzle parameterized queries
 - Timing-attack-resistant token comparison (`crypto.timingSafeEqual`)
-- Rate limiting on login (5 attempts/15min) and registration (3 attempts/60min)
+- Rate limiting on login (5/15min) and registration (3/60min)
 
-See [docs/SECURITY.md](docs/SECURITY.md) for details.
+See [docs/SECURITY.md](docs/SECURITY.md) for the full security specification.
 
-## License
+## 📄 License
 
 MIT
