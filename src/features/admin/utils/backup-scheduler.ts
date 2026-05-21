@@ -24,7 +24,7 @@ export function startBackupScheduler() {
     } catch (err) {
       console.error("[backup] Backup failed:", err);
     }
-  }, BACKUP_INTERVAL_MS);
+  }, BACKUP_INTERVAL_MS).unref();
 }
 
 export function stopBackupScheduler() {

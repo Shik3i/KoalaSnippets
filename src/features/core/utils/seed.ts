@@ -8,6 +8,7 @@ export async function seedAdminUser() {
   const adminPassword = process.env.ADMIN_PASSWORD;
 
   if (!adminUsername || !adminPassword) {
+    console.warn("[seed] WARNING: ADMIN_USERNAME or ADMIN_PASSWORD is not set. Skipping admin user creation. Set these env vars to create an admin account.");
     return;
   }
 
