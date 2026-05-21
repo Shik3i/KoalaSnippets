@@ -1,0 +1,61 @@
+import { notFound } from "next/navigation";
+import { db } from "@/db";
+import { snippets } from "@/db/schema";
+import { getSession } from "@/lib/session";
+import { highlightCode } from "@/lib/shiki";
+import { DetailView } from "@/components/layout/detail-view";
+import { eq } from "drizzle-orm";
+
+export const dynamic = "force-dynamic";
+
+interface PageProps {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ token?: string }>;
+}
+
+export default async function SnippetDetailPage({ params, searchParams }: PageProps) {
+  const { id } = await params;
+  const { token } = await searchParams;
+  const session = await getSession();
+
+  const snippet = await db.select().from(snippets).where(eq(snippets.id, id)).get();
+
+  if (!snippet) {
+    notFound();
+  }
+
+  if (snippet.visibility === "PRIVATE") {
+    if (!session || snippet.authorId !== session.user.id) {
+      notFound();
+    }
+  }
+
+  if (snippet.visibility === "SHARED") {
+    if (snippet.shareToken !== token) {
+      notFound();
+    }
+  }
+
+  const highlightedCode = await highlightCode(snippet.code, snippet.language);
+  const isOwner = session?.user.id === snippet.authorId;
+
+  return (
+    <div className="flex h-screen">
+      <div className="flex-1 overflow-hidden">
+        <DetailView
+          id={snippet.id}
+          title={snippet.title}
+          description={snippet.description ?? undefined}
+          code={snippet.code}
+          language={snippet.language}
+          tags={snippet.tags ?? undefined}
+          visibility={snippet.visibility as "PRIVATE" | "SHARED" | "PUBLIC"}
+          createdAt={snippet.createdAt}
+          updatedAt={snippet.updatedAt}
+          highlightedCode={highlightedCode}
+          isOwner={isOwner}
+        />
+      </div>
+    </div>
+  );
+}
