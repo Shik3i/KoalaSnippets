@@ -50,43 +50,47 @@ export function SnippetSearchHeader({ placeholder = "Search snippets..." }: Snip
   }, []);
 
   return (
-    <div className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm p-4 space-y-3">
-      <div className="relative">
+    <div className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm p-4">
+      <div className="relative flex items-center w-full">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} suppressHydrationWarning />
         <Input
           ref={inputRef}
           placeholder={placeholder}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="pl-9 h-9 pr-16"
+          className="pl-9 h-9 pr-28 sm:pr-52 w-full"
           aria-label="Search snippets"
         />
-        {searching ? (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <div className="w-3 h-3 border border-muted-foreground border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs text-muted-foreground pointer-events-none">
-            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded border border-border bg-background text-[10px]">
-              <Command size={10} suppressHydrationWarning />
-            </kbd>
-            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded border border-border bg-background text-[10px]">
-              K
-            </kbd>
-          </div>
-        )}
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 sm:gap-3">
+          {searching ? (
+            <div className="w-3.5 h-3.5 border border-muted-foreground border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground pointer-events-none">
+              <kbd className="inline-flex items-center px-1.5 py-0.5 rounded border border-border bg-background text-[10px]">
+                <Command size={10} suppressHydrationWarning />
+              </kbd>
+              <kbd className="inline-flex items-center px-1.5 py-0.5 rounded border border-border bg-background text-[10px]">
+                K
+              </kbd>
+            </div>
+          )}
+          
+          <div className="h-4 w-[1px] bg-border hidden sm:block" />
+          
+          <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors py-1">
+            <input
+              type="checkbox"
+              checked={includeCode}
+              onChange={(e) => setIncludeCode(e.target.checked)}
+              className="rounded border-border text-primary focus:ring-ring focus:ring-offset-background"
+              aria-label="Include code in search"
+            />
+            <Code size={12} suppressHydrationWarning className="text-muted-foreground" />
+            <span className="hidden sm:inline">Include code</span>
+            <span className="inline sm:hidden">Code</span>
+          </label>
+        </div>
       </div>
-      <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
-        <input
-          type="checkbox"
-          checked={includeCode}
-          onChange={(e) => setIncludeCode(e.target.checked)}
-          className="rounded border-border"
-          aria-label="Include code in search"
-        />
-        <Code size={12} suppressHydrationWarning />
-        Include code in search
-      </label>
     </div>
   );
 }
