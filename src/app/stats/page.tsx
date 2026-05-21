@@ -1,5 +1,6 @@
 import { db } from "@/db";
 import { siteStatistics } from "@/db/schema";
+import { getSession } from "@/features/auth/utils/session";
 import { Sidebar } from "@/features/core/components/sidebar";
 import { PublicStatsCards } from "@/features/core/components/public-stats-cards";
 import { eq } from "drizzle-orm";
@@ -13,11 +14,12 @@ export const metadata: Metadata = {
 };
 
 export default async function StatsPage() {
+  const session = await getSession();
   const stats = await db.select().from(siteStatistics).where(eq(siteStatistics.id, 1)).get();
 
   return (
     <div className="flex h-screen">
-      <Sidebar />
+      <Sidebar isAuthenticated={!!session} isAdmin={session?.user.role === "ADMIN"} />
 
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-4xl mx-auto space-y-8">
