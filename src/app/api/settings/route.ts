@@ -6,6 +6,8 @@ import { verifyPassword, hashPassword } from "@/features/auth/utils/auth";
 import { passwordChangeSchema } from "@/features/core/utils/validations";
 import { eq } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 export async function PUT(request: Request) {
   const session = await getSession();
   if (!session) {

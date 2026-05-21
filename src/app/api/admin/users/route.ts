@@ -4,6 +4,8 @@ import { users, snippets } from "@/db/schema";
 import { requireAdmin } from "@/features/admin/utils/admin-guard";
 import { eq, desc } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const guard = await requireAdmin();
   if ("unauthorized" in guard) return guard.unauthorized;

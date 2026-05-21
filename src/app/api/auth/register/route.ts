@@ -6,6 +6,8 @@ import { registerSchema } from "@/features/core/utils/validations";
 import { checkRateLimit } from "@/features/core/utils/rate-limit";
 import { eq, sql } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   if (process.env.ALLOW_REGISTRATION !== "true") {
     return NextResponse.json({ error: "Registration is disabled" }, { status: 403 });

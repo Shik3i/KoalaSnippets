@@ -7,6 +7,8 @@ import { loginSchema } from "@/features/core/utils/validations";
 import { checkRateLimit } from "@/features/core/utils/rate-limit";
 import { eq } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
   const limit = checkRateLimit(`login:${ip}`, 5, 15 * 60 * 1000);

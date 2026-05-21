@@ -7,6 +7,8 @@ import { generateShareToken } from "@/features/auth/utils/auth";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
 
+export const dynamic = "force-dynamic";
+
 function constantTimeCompare(a: string, b: string): boolean {
   if (a.length !== b.length) {
     return false;

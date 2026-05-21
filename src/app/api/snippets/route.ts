@@ -6,6 +6,8 @@ import { snippetSchema } from "@/features/core/utils/validations";
 import { generateId, generateShareToken } from "@/features/auth/utils/auth";
 import { eq, desc, like, or, and, sql } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 const PAGE_SIZE = 50;
 
 export async function GET(request: Request) {

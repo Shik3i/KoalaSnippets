@@ -4,6 +4,8 @@ import path from "path";
 import { requireAdmin } from "@/features/admin/utils/admin-guard";
 import { runVacuumBackup } from "@/features/admin/utils/backup";
 
+export const dynamic = "force-dynamic";
+
 const BACKUP_DIR = process.env.BACKUP_DIR ?? path.join(process.cwd(), "backups");
 
 export async function GET(request: Request) {
