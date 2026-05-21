@@ -59,7 +59,7 @@ export function SnippetCard({
           {language}
         </Badge>
         <span className="text-xs text-muted-foreground">
-          {mounted ? new Date(createdAt).toLocaleDateString() : ""}
+          {mounted ? new Date(createdAt).toLocaleDateString() : new Date(createdAt).toISOString().split('T')[0]}
         </span>
       </div>
 

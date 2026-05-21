@@ -148,7 +148,7 @@ export function DetailView({
                 {visibilityConfig[visibility].label}
               </span>
               <span className="text-xs text-muted-foreground">
-                {mounted ? `Updated ${updatedAt.toLocaleDateString()}` : ""}
+                Updated {mounted ? new Date(updatedAt).toLocaleDateString() : new Date(updatedAt).toISOString().split('T')[0]}
               </span>
             </div>
           </div>
