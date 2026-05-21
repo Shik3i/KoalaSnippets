@@ -1,0 +1,65 @@
+# Caddyfile Example
+# Reverse proxy configuration with strict security headers for KoalaSnippets
+# 
+# Usage: Copy to /etc/caddy/Caddyfile and replace example.com with your domain
+
+{
+    # Global options
+    email admin@example.com
+    default_bind 0.0.0.0
+}
+
+example.com {
+    # Reverse proxy to Next.js application
+    reverse_proxy localhost:3000
+
+    # TLS settings
+    tls {
+        protocols tls1.2 tls1.3
+        ciphers TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384 TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256 TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+    }
+
+    # HTTP Strict Transport Security (2 years, include subdomains, preload)
+    header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+
+    # Content Security Policy
+    # - Only allow resources from same origin
+    # - No inline scripts (use nonce if needed)
+    # - No external fonts, images, or connections
+    # - Prevent clickjacking
+    header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+
+    # Prevent MIME-type sniffing
+    header X-Content-Type-Options "nosniff"
+
+    # Prevent clickjacking (redundant with CSP frame-ancestors, but defense in depth)
+    header X-Frame-Options "DENY"
+
+    # Disable X-XSS-Protection (CSP is superior, this header can introduce vulnerabilities)
+    header X-XSS-Protection "0"
+
+    # Referrer policy: limit information sent to other origins
+    header Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Restrict browser features that the app doesn't need
+    header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"
+
+    # Remove server identification header
+    header -Server
+
+    # Enable gzip compression
+    encode gzip
+
+    # Logging
+    log {
+        output file /var/log/caddy/koalasnippets.log {
+            roll_size 100mb
+            roll_keep 5
+        }
+    }
+}
+
+# HTTP to HTTPS redirect (automatic with Caddy, but explicit for clarity)
+http://example.com {
+    redir https://example.com{uri} permanent
+}

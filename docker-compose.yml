@@ -1,0 +1,43 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: koalasnippets
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/koalasnippets.db
+      - AUTH_PEPPER=${AUTH_PEPPER:?AUTH_PEPPER is required}
+      - SESSION_SECRET=${SESSION_SECRET:?SESSION_SECRET is required}
+      - ALLOW_REGISTRATION=${ALLOW_REGISTRATION:-false}
+    volumes:
+      - koalasnippets-data:/app/data
+    networks:
+      - koalasnippets-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 128M
+          cpus: "0.25"
+
+volumes:
+  koalasnippets-data:
+    driver: local
+    name: koalasnippets-data
+
+networks:
+  koalasnippets-network:
+    driver: bridge
+    name: koalasnippets-network
