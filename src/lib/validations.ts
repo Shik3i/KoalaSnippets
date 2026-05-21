@@ -10,6 +10,15 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+export const passwordChangeSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(8).regex(/[A-Z]/, "Password must contain an uppercase letter").regex(/[a-z]/, "Password must contain a lowercase letter").regex(/[0-9]/, "Password must contain a number"),
+  confirmNewPassword: z.string().min(1, "Please confirm your new password"),
+}).refine((data) => data.newPassword === data.confirmNewPassword, {
+  message: "Passwords do not match",
+  path: ["confirmNewPassword"],
+});
+
 export const snippetSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(2000).optional(),
@@ -23,5 +32,6 @@ export const updateSnippetSchema = snippetSchema.partial();
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type PasswordChangeInput = z.infer<typeof passwordChangeSchema>;
 export type SnippetInput = z.infer<typeof snippetSchema>;
 export type UpdateSnippetInput = z.infer<typeof updateSnippetSchema>;

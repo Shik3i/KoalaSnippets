@@ -14,6 +14,8 @@ import {
   ChevronRight,
   Menu,
   X,
+  Settings,
+  LogOut,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -137,9 +139,31 @@ export function Sidebar({ tags = [], languages = [], onTagClick, onLanguageClick
           </div>
         )}
 
-        <div className="mt-auto p-3 border-t border-border">
-          <div className="text-xs text-muted-foreground px-2">
-            Self-hosted &middot; Zero CDN &middot; Private
+        <div className="mt-auto border-t border-border">
+          <div className="p-3 space-y-1">
+            <Link
+              href="/settings"
+              className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
+              onClick={() => setMobileOpen(false)}
+            >
+              <Settings size={16} />
+              Settings
+            </Link>
+            <button
+              onClick={async () => {
+                await fetch("/api/auth/logout", { method: "POST" });
+                window.location.href = "/login";
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+            >
+              <LogOut size={16} />
+              Sign Out
+            </button>
+          </div>
+          <div className="px-3 pb-3">
+            <div className="text-xs text-muted-foreground px-2">
+              Self-hosted &middot; Zero CDN &middot; Private
+            </div>
           </div>
         </div>
       </aside>
