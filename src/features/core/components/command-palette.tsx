@@ -93,7 +93,11 @@ export function CommandPalette({ isAdmin = false }: CommandPaletteProps) {
   // Debounced search for snippets
   useEffect(() => {
     if (!isOpen) return;
-    if (query.startsWith("/") || query.trim().length === 0) return;
+    if (query.startsWith("/") || query.trim().length === 0) {
+      setLoading(false);
+      setSnippets([]);
+      return;
+    }
 
     const delayDebounce = setTimeout(() => {
       fetch(`/api/snippets?q=${encodeURIComponent(query)}`)

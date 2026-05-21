@@ -6,7 +6,7 @@ import { snippets } from "@/db/schema";
 import { getSession } from "@/features/auth/utils/session";
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { Sidebar } from "@/features/core/components/sidebar";
-import { DetailView } from "@/features/core/components/detail-view";
+import { SnippetDetailClient } from "./SnippetDetailClient";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
 import type { Metadata } from "next";
@@ -127,7 +127,7 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
         </div>
 
         <div className="flex-1 overflow-hidden">
-          <DetailView
+          <SnippetDetailClient
             id={snippet.id}
             title={snippet.title}
             description={snippet.description ?? undefined}
