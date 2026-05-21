@@ -99,24 +99,31 @@ export function CommandPalette({ isAdmin = false }: CommandPaletteProps) {
       return;
     }
 
+    const abortController = new AbortController();
+
     const delayDebounce = setTimeout(() => {
-      fetch(`/api/snippets?q=${encodeURIComponent(query)}`)
+      fetch(`/api/snippets?q=${encodeURIComponent(query)}`, { signal: abortController.signal })
         .then((res) => {
           if (!res.ok) throw new Error();
           return res.json();
         })
         .then((data) => {
           setSnippets(data.snippets || []);
-        })
-        .catch(() => {
-          setSnippets([]);
-        })
-        .finally(() => {
           setLoading(false);
+        })
+        .catch((err) => {
+          if (err.name !== "AbortError") {
+            setSnippets([]);
+            setLoading(false);
+          }
         });
     }, 200);
 
-    return () => clearTimeout(delayDebounce);
+    return () => {
+      clearTimeout(delayDebounce);
+      abortController.abort();
+      setLoading(false);
+    };
   }, [query, isOpen]);
 
   // Filter commands by query

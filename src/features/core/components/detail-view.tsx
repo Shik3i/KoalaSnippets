@@ -30,6 +30,7 @@ interface DetailViewProps {
   updatedAt: Date;
   highlightedCode: string;
   isOwner: boolean;
+  isSubmitting?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
   onToggleVisibility?: () => void;
@@ -91,6 +92,7 @@ export function DetailView({
   updatedAt,
   highlightedCode,
   isOwner,
+  isSubmitting,
   onEdit,
   onDelete,
   onToggleVisibility,
@@ -154,21 +156,21 @@ export function DetailView({
           <div className="flex items-center gap-1">
             {isOwner && (
               <>
-                <Button variant="ghost" size="icon" onClick={onEdit} aria-label="Edit snippet">
+                <Button variant="ghost" size="icon" onClick={onEdit} aria-label="Edit snippet" disabled={isSubmitting}>
                   <Pencil size={16} suppressHydrationWarning />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={onToggleVisibility} aria-label="Toggle visibility">
+                <Button variant="ghost" size="icon" onClick={onToggleVisibility} aria-label="Toggle visibility" disabled={isSubmitting}>
                   <VisIcon size={16} suppressHydrationWarning />
                 </Button>
               </>
             )}
             {visibility === "SHARED" && (
-              <Button variant="ghost" size="icon" onClick={handleShare} aria-label="Copy share link">
+              <Button variant="ghost" size="icon" onClick={handleShare} aria-label="Copy share link" disabled={isSubmitting}>
                 <Share2 size={16} suppressHydrationWarning />
               </Button>
             )}
             {isOwner && (
-              <Button variant="ghost" size="icon" onClick={onDelete} aria-label="Delete snippet" className="text-destructive hover:text-destructive">
+              <Button variant="ghost" size="icon" onClick={onDelete} aria-label="Delete snippet" className="text-destructive hover:text-destructive" disabled={isSubmitting}>
                 <Trash2 size={16} suppressHydrationWarning />
               </Button>
             )}

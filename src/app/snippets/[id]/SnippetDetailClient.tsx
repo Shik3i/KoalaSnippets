@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { DetailView } from "@/features/core/components/detail-view";
 import { useToast } from "@/components/ui/toast";
+import { revalidateDashboard, revalidateSnippet } from "@/features/core/actions/revalidate";
 
 interface SnippetDetailClientProps {
   id: string;
@@ -22,6 +24,7 @@ interface SnippetDetailClientProps {
 export function SnippetDetailClient(props: SnippetDetailClientProps) {
   const router = useRouter();
   const { addToast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleEdit = () => {
     router.push("/dashboard/new");
@@ -30,13 +33,18 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this snippet? This action cannot be undone.")) return;
 
-    const res = await fetch(`/api/snippets/${props.id}`, { method: "DELETE" });
-    if (res.ok) {
-      addToast("Snippet deleted", "success");
-      router.push("/dashboard");
-      router.refresh();
-    } else {
-      addToast("Failed to delete snippet", "error");
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/snippets/${props.id}`, { method: "DELETE" });
+      if (res.ok) {
+        addToast("Snippet deleted", "success");
+        await revalidateDashboard();
+        router.push("/dashboard");
+      } else {
+        addToast("Failed to delete snippet", "error");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -44,23 +52,31 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
     const next: "PRIVATE" | "SHARED" | "PUBLIC" =
       props.visibility === "PRIVATE" ? "SHARED" : props.visibility === "SHARED" ? "PUBLIC" : "PRIVATE";
 
-    const res = await fetch(`/api/snippets/${props.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ visibility: next }),
-    });
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/snippets/${props.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ visibility: next }),
+      });
 
-    if (res.ok) {
-      addToast(`Visibility changed to ${next}`, "success");
-      router.refresh();
-    } else {
-      addToast("Failed to change visibility", "error");
+      if (res.ok) {
+        addToast(`Visibility changed to ${next}`, "success");
+        await revalidateDashboard();
+        await revalidateSnippet(props.id);
+        router.refresh(); // Still refresh locally to update current view
+      } else {
+        addToast("Failed to change visibility", "error");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <DetailView
       {...props}
+      isSubmitting={isSubmitting}
       onEdit={handleEdit}
       onDelete={handleDelete}
       onToggleVisibility={handleToggleVisibility}

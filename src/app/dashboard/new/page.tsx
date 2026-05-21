@@ -13,6 +13,7 @@ import { Sidebar } from "@/features/core/components/sidebar";
 import { useToast } from "@/components/ui/toast";
 import { useKeyboardShortcuts } from "@/features/snippets/utils/keyboard-shortcuts";
 import { SUPPORTED_LANGUAGES } from "@/features/snippets/utils/shiki";
+import { revalidateDashboard } from "@/features/core/actions/revalidate";
 import { X, Plus, ChevronDown } from "lucide-react";
 
 export default function NewSnippetPage() {
@@ -58,12 +59,13 @@ export default function NewSnippetPage() {
       }
 
       addToast("Snippet saved!", "success");
+      await revalidateDashboard();
+      
       if (visibility === "SHARED" && data.shareToken) {
         router.push(`/snippets/${data.id}?token=${data.shareToken}`);
       } else {
         router.push(`/snippets/${data.id}`);
       }
-      router.refresh();
     } catch {
       setError("An error occurred. Please try again.");
     } finally {
