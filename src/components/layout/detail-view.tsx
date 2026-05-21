@@ -71,7 +71,7 @@ export function DetailView({
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="secondary">{language}</Badge>
               <span className={cn("flex items-center gap-1 text-xs", visibilityConfig[visibility].color)}>
-                <VisIcon size={12} />
+                <VisIcon size={12} suppressHydrationWarning />
                 {visibilityConfig[visibility].label}
               </span>
               <span className="text-xs text-muted-foreground">
@@ -83,20 +83,20 @@ export function DetailView({
           {isOwner && (
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" onClick={onEdit} title="Edit">
-                <Pencil size={16} />
+                <Pencil size={16} suppressHydrationWarning />
               </Button>
               <Button variant="ghost" size="icon" onClick={onToggleVisibility} title="Toggle visibility">
-                <VisIcon size={16} />
+                <VisIcon size={16} suppressHydrationWarning />
               </Button>
               {visibility === "SHARED" && (
                 <Button variant="ghost" size="icon" title="Share" onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
                 }}>
-                  <Share2 size={16} />
+                  <Share2 size={16} suppressHydrationWarning />
                 </Button>
               )}
               <Button variant="ghost" size="icon" onClick={onDelete} title="Delete" className="text-destructive hover:text-destructive">
-                <Trash2 size={16} />
+                <Trash2 size={16} suppressHydrationWarning />
               </Button>
             </div>
           )}
@@ -125,7 +125,7 @@ export function DetailView({
             className="gap-1.5 bg-card/80 backdrop-blur-sm"
             onClick={handleCopy}
           >
-            {copied ? <Check size={14} /> : <Copy size={14} />}
+            {copied ? <Check size={14} suppressHydrationWarning /> : <Copy size={14} suppressHydrationWarning />}
             {copied ? "Copied!" : "Copy"}
           </Button>
         </div>

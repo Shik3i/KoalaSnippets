@@ -43,7 +43,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, on
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-label="Toggle menu"
       >
-        {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+        {mobileOpen ? <X size={20} suppressHydrationWarning /> : <Menu size={20} suppressHydrationWarning />}
       </button>
 
       <aside
@@ -80,7 +80,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, on
                 )}
                 onClick={() => setMobileOpen(false)}
               >
-                <Icon size={16} />
+                <Icon size={16} suppressHydrationWarning />
                 {item.label}
               </Link>
             );
@@ -91,7 +91,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, on
           <div className="px-3 py-2">
             <Button className="w-full gap-2" size="sm" asChild>
               <Link href="/dashboard/new" onClick={() => setMobileOpen(false)}>
-                <Plus size={14} />
+                <Plus size={14} suppressHydrationWarning />
                 New Snippet
               </Link>
             </Button>
@@ -113,7 +113,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, on
                   }}
                   className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
                 >
-                  <ChevronRight size={12} />
+                  <ChevronRight size={12} suppressHydrationWarning />
                   {lang}
                 </button>
               ))}
@@ -154,7 +154,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, on
                   className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
                   onClick={() => setMobileOpen(false)}
                 >
-                  <Settings size={16} />
+                  <Settings size={16} suppressHydrationWarning />
                   Settings
                 </Link>
                 <button
@@ -164,7 +164,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, on
                   }}
                   className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
                 >
-                  <LogOut size={16} />
+                  <LogOut size={16} suppressHydrationWarning />
                   Sign Out
                 </button>
               </>
@@ -177,6 +177,14 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, on
             )}
           </div>
           <div className="px-3 pb-3">
+            <div className="flex gap-3 text-xs text-muted-foreground px-2 mb-1">
+              <Link href="/impressum" className="hover:text-foreground transition-colors">
+                Impressum
+              </Link>
+              <Link href="/privacy" className="hover:text-foreground transition-colors">
+                Datenschutz
+              </Link>
+            </div>
             <div className="text-xs text-muted-foreground px-2">
               Self-hosted &middot; Zero CDN &middot; Private
             </div>

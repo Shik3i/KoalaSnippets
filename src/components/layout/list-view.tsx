@@ -78,9 +78,9 @@ export function ListView({ snippets: initialSnippets, selectedId, onSelect, apiE
 
   return (
     <div className="flex flex-col h-full border-r border-border bg-card/50">
-      <div className="p-3 space-y-2 border-b border-border">
+      <div className="sticky top-0 z-10 p-3 space-y-2 border-b border-border bg-card/95 backdrop-blur-sm">
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} suppressHydrationWarning />
           <Input
             placeholder="Search snippets..."
             value={search}
@@ -100,7 +100,7 @@ export function ListView({ snippets: initialSnippets, selectedId, onSelect, apiE
             onChange={(e) => setIncludeCode(e.target.checked)}
             className="rounded border-border"
           />
-          <Code size={12} />
+          <Code size={12} suppressHydrationWarning />
           Include code in search
         </label>
       </div>
@@ -108,7 +108,7 @@ export function ListView({ snippets: initialSnippets, selectedId, onSelect, apiE
       <div className="flex-1 overflow-y-auto">
         {snippets.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-sm p-6">
-            <Search size={24} className="mb-2 opacity-50" />
+            <Search size={24} className="mb-2 opacity-50" suppressHydrationWarning />
             No snippets found
           </div>
         ) : (
@@ -126,7 +126,7 @@ export function ListView({ snippets: initialSnippets, selectedId, onSelect, apiE
                 >
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="font-medium text-sm truncate">{snippet.title}</h3>
-                    <Icon size={12} className={cn("shrink-0 mt-1", visibilityColors[snippet.visibility])} />
+                    <Icon size={12} className={cn("shrink-0 mt-1", visibilityColors[snippet.visibility])} suppressHydrationWarning />
                   </div>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
