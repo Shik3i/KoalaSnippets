@@ -198,6 +198,21 @@ const BG_PATTERNS = [
     name: "Soft Glow",
     description: "Ambient top radial light source depth fade",
   },
+  {
+    id: "drift",
+    name: "Drifting Dust",
+    description: "Slow hardware-accelerated drifting particle matrix",
+  },
+  {
+    id: "aurora",
+    name: "Breathing Aurora",
+    description: "Extremely slow breathing ambient orb glow",
+  },
+  {
+    id: "silk",
+    name: "Flowing Silk",
+    description: "Soft diagonal flowing silk animation back & forth",
+  },
 ];
 
 export function AppearanceSettingsForm({ initialPreferences }: AppearanceSettingsFormProps) {
@@ -386,7 +401,7 @@ export function AppearanceSettingsForm({ initialPreferences }: AppearanceSetting
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {BG_PATTERNS.map((pattern) => {
               const isSelected = bgPattern === pattern.id;
               return (
