@@ -38,6 +38,7 @@ RUN mkdir -p /app/data /app/backups && chown nextjs:nodejs /app/data /app/backup
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/src/db/migrations ./src/db/migrations
 
 RUN chown -R nextjs:nodejs /app
 
