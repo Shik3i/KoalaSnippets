@@ -58,24 +58,27 @@ export function SnippetSearchHeader({ placeholder = "Search snippets..." }: Snip
           placeholder={placeholder}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="pl-9 h-9 pr-28 sm:pr-52 w-full"
+          className="pl-9 h-9 pr-28 sm:pr-56 w-full"
           aria-label="Search snippets"
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 sm:gap-3">
           {searching ? (
             <div className="w-3.5 h-3.5 border border-muted-foreground border-t-transparent rounded-full animate-spin" />
           ) : (
-            <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground pointer-events-none">
-              <kbd className="inline-flex items-center px-1.5 py-0.5 rounded border border-border bg-background text-[10px]">
-                <Command size={10} suppressHydrationWarning />
-              </kbd>
-              <kbd className="inline-flex items-center px-1.5 py-0.5 rounded border border-border bg-background text-[10px]">
-                K
-              </kbd>
-            </div>
+            <button
+              type="button"
+              onClick={() => {
+                window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
+              }}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 px-2 py-1 rounded-md transition-colors"
+              aria-label="Open Command Palette"
+            >
+              <Command size={14} suppressHydrationWarning />
+              <span className="hidden sm:inline font-medium">Command</span>
+            </button>
           )}
           
-          <div className="h-4 w-[1px] bg-border hidden sm:block" />
+          <div className="h-4 w-[1px] bg-border" />
           
           <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors py-1">
             <input
@@ -85,9 +88,8 @@ export function SnippetSearchHeader({ placeholder = "Search snippets..." }: Snip
               className="rounded border-border text-primary focus:ring-ring focus:ring-offset-background"
               aria-label="Include code in search"
             />
-            <Code size={12} suppressHydrationWarning className="text-muted-foreground" />
-            <span className="hidden sm:inline">Include code</span>
-            <span className="inline sm:hidden">Code</span>
+            <Code size={14} suppressHydrationWarning className="text-muted-foreground" />
+            <span className="hidden sm:inline font-medium">Include code</span>
           </label>
         </div>
       </div>

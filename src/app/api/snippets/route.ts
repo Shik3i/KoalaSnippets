@@ -100,11 +100,13 @@ export async function POST(request: Request) {
       updatedAt: new Date(),
     };
 
-    await db.insert(snippets).values(snippetData);
-
-    await db.update(siteStatistics)
-      .set({ totalSnippetsCreated: sql`total_snippets_created + 1` })
-      .where(eq(siteStatistics.id, 1));
+    await db.transaction(async (tx) => {
+      await tx.insert(snippets).values(snippetData);
+      
+      await tx.update(siteStatistics)
+        .set({ totalSnippetsCreated: sql`total_snippets_created + 1` })
+        .where(eq(siteStatistics.id, 1));
+    });
 
     return NextResponse.json({ 
       success: true, 

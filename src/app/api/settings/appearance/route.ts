@@ -3,19 +3,22 @@ import { getSession } from "@/features/auth/utils/session";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 
-const VALID_APP_THEMES = ["theme-dark", "theme-midnight", "theme-hacker", "light"];
-const VALID_SNIPPET_DENSITIES = ["compact", "preview", "full"];
-const VALID_SYNTAX_THEMES = [
-  "github-dark",
-  "dracula",
-  "nord",
-  "poimandres",
-  "github-light",
-  "monokai",
-];
+const appearanceSettingsSchema = z.object({
+  appTheme: z.enum(["theme-dark", "theme-midnight", "theme-hacker", "light"]).optional(),
+  snippetDensity: z.enum(["compact", "preview", "full"]).optional(),
+  syntaxTheme: z.enum([
+    "github-dark",
+    "dracula",
+    "nord",
+    "poimandres",
+    "github-light",
+    "monokai",
+  ]).optional(),
+});
 
 export async function PUT(request: Request) {
   try {
@@ -25,20 +28,13 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { appTheme, snippetDensity, syntaxTheme } = body;
+    const parsed = appearanceSettingsSchema.safeParse(body);
 
-    // Validate inputs
-    if (appTheme && !VALID_APP_THEMES.includes(appTheme)) {
-      return NextResponse.json({ error: "Invalid app theme" }, { status: 400 });
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid appearance settings payload" }, { status: 400 });
     }
 
-    if (snippetDensity && !VALID_SNIPPET_DENSITIES.includes(snippetDensity)) {
-      return NextResponse.json({ error: "Invalid snippet density" }, { status: 400 });
-    }
-
-    if (syntaxTheme && !VALID_SYNTAX_THEMES.includes(syntaxTheme)) {
-      return NextResponse.json({ error: "Invalid syntax highlighting theme" }, { status: 400 });
-    }
+    const { appTheme, snippetDensity, syntaxTheme } = parsed.data;
 
     // Merge with existing preferences or fallback to defaults
     const currentPrefs = session.user.preferences || {
