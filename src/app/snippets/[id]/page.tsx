@@ -32,20 +32,27 @@ async function getSnippet(id: string, token?: string) {
     return null;
   }
 
-  if (snippet.visibility === "PRIVATE") {
-    const session = await getSession();
-    if (!session || snippet.authorId !== session.user.id) {
-      return null;
-    }
+  const session = await getSession();
+  const isOwner = session && snippet.authorId === session.user.id;
+
+  // The owner must ALWAYS be able to see their snippet, regardless of visibility or missing tokens in the URL.
+  if (isOwner) {
+    return snippet;
   }
 
+  // PUBLIC snippets are accessible to anyone
+  if (snippet.visibility === "PUBLIC") {
+    return snippet;
+  }
+
+  // SHARED snippets are accessible if the correct token is provided
   if (snippet.visibility === "SHARED") {
-    if (!token || !snippet.shareToken || !constantTimeCompare(snippet.shareToken, token)) {
-      return null;
+    if (token && snippet.shareToken && constantTimeCompare(snippet.shareToken, token)) {
+      return snippet;
     }
   }
 
-  return snippet;
+  return null;
 }
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
@@ -121,6 +128,7 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
             language={snippet.language}
             tags={snippet.tags ?? undefined}
             visibility={snippet.visibility as "PRIVATE" | "SHARED" | "PUBLIC"}
+            shareToken={snippet.shareToken ?? undefined}
             createdAt={snippet.createdAt}
             updatedAt={snippet.updatedAt}
             highlightedCode={highlightedCode}

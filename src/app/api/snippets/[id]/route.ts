@@ -29,15 +29,17 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  if (snippet.visibility === "PRIVATE") {
-    if (!session || snippet.authorId !== session.user.id) {
+  const isOwner = session && snippet.authorId === session.user.id;
+
+  if (!isOwner) {
+    if (snippet.visibility === "PRIVATE") {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-  }
 
-  if (snippet.visibility === "SHARED") {
-    if (!token || !constantTimeCompare(snippet.shareToken!, token)) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (snippet.visibility === "SHARED") {
+      if (!token || !constantTimeCompare(snippet.shareToken!, token)) {
+        return NextResponse.json({ error: "Not found" }, { status: 404 });
+      }
     }
   }
 

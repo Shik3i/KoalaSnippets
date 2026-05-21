@@ -106,7 +106,11 @@ export async function POST(request: Request) {
       .set({ totalSnippetsCreated: sql`total_snippets_created + 1` })
       .where(eq(siteStatistics.id, 1));
 
-    return NextResponse.json({ success: true, id: snippetData.id }, { status: 201 });
+    return NextResponse.json({ 
+      success: true, 
+      id: snippetData.id, 
+      shareToken: snippetData.shareToken ?? undefined 
+    }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

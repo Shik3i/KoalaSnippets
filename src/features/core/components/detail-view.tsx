@@ -25,6 +25,7 @@ interface DetailViewProps {
   language: string;
   tags?: string[];
   visibility: "PRIVATE" | "SHARED" | "PUBLIC";
+  shareToken?: string;
   createdAt: Date;
   updatedAt: Date;
   highlightedCode: string;
@@ -86,6 +87,7 @@ export function DetailView({
   language,
   tags,
   visibility,
+  shareToken,
   updatedAt,
   highlightedCode,
   isOwner,
@@ -119,8 +121,14 @@ export function DetailView({
   };
 
   const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    addToast("Link copied!", "success");
+    const url = new URL(window.location.href);
+    if (visibility === "SHARED" && shareToken) {
+      url.searchParams.set("token", shareToken);
+    } else {
+      url.searchParams.delete("token");
+    }
+    navigator.clipboard.writeText(url.toString());
+    addToast("Share link copied!", "success");
   };
 
   return (
@@ -141,24 +149,28 @@ export function DetailView({
             </div>
           </div>
 
-          {isOwner && (
-            <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" onClick={onEdit} aria-label="Edit snippet">
-                <Pencil size={16} suppressHydrationWarning />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={onToggleVisibility} aria-label="Toggle visibility">
-                <VisIcon size={16} suppressHydrationWarning />
-              </Button>
-              {visibility === "SHARED" && (
-                <Button variant="ghost" size="icon" onClick={handleShare} aria-label="Copy share link">
-                  <Share2 size={16} suppressHydrationWarning />
+          <div className="flex items-center gap-1">
+            {isOwner && (
+              <>
+                <Button variant="ghost" size="icon" onClick={onEdit} aria-label="Edit snippet">
+                  <Pencil size={16} suppressHydrationWarning />
                 </Button>
-              )}
+                <Button variant="ghost" size="icon" onClick={onToggleVisibility} aria-label="Toggle visibility">
+                  <VisIcon size={16} suppressHydrationWarning />
+                </Button>
+              </>
+            )}
+            {visibility === "SHARED" && (
+              <Button variant="ghost" size="icon" onClick={handleShare} aria-label="Copy share link">
+                <Share2 size={16} suppressHydrationWarning />
+              </Button>
+            )}
+            {isOwner && (
               <Button variant="ghost" size="icon" onClick={onDelete} aria-label="Delete snippet" className="text-destructive hover:text-destructive">
                 <Trash2 size={16} suppressHydrationWarning />
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {description && (

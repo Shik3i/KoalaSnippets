@@ -39,14 +39,18 @@ export default function NewSnippetPage() {
         body: JSON.stringify({ title, description, code, language, tags, visibility }),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
         setError(data.error ?? "Failed to create snippet");
         return;
       }
 
       addToast("Snippet saved!", "success");
-      router.push(`/dashboard`);
+      if (visibility === "SHARED" && data.shareToken) {
+        router.push(`/snippets/${data.id}?token=${data.shareToken}`);
+      } else {
+        router.push(`/snippets/${data.id}`);
+      }
       router.refresh();
     } catch {
       setError("An error occurred. Please try again.");
