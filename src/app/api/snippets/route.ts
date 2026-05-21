@@ -87,13 +87,15 @@ export async function POST(request: Request) {
 
     const { title, description, code, language, tags, visibility } = parsed.data;
 
+    const normalizedTags = tags?.map((t) => t.toLowerCase()) ?? null;
+
     const snippetData: typeof snippets.$inferInsert = {
       id: generateId(),
       title,
       description: description ?? null,
       code,
       language,
-      tags: tags ?? null,
+      tags: normalizedTags,
       authorId: session.user.id,
       visibility,
       shareToken: visibility === "SHARED" ? generateShareToken() : null,

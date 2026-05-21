@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,9 +26,18 @@ export default function NewSnippetPage() {
   const [languageOpen, setLanguageOpen] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [tagOpen, setTagOpen] = useState(false);
+  const [existingTags, setExistingTags] = useState<string[]>([]);
   const [visibility, setVisibility] = useState<"PRIVATE" | "SHARED" | "PUBLIC">("PRIVATE");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/tags")
+      .then((r) => r.json())
+      .then((data) => setExistingTags(data.tags ?? []))
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -39,7 +48,7 @@ export default function NewSnippetPage() {
       const res = await fetch("/api/snippets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, code, language, tags, visibility }),
+        body: JSON.stringify({ title, description, code, language, tags: tags.map((t) => t.toLowerCase()), visibility }),
       });
 
       const data = await res.json();
@@ -65,16 +74,21 @@ export default function NewSnippetPage() {
   useKeyboardShortcuts({ onSave: () => { if (!loading) handleSubmit(); } });
 
   const addTag = () => {
-    const tag = tagInput.trim();
+    const tag = tagInput.trim().toLowerCase();
     if (tag && !tags.includes(tag) && tags.length < 10) {
       setTags([...tags, tag]);
       setTagInput("");
+      setTagOpen(false);
     }
   };
 
   const removeTag = (tag: string) => {
     setTags(tags.filter((t) => t !== tag));
   };
+
+  const filteredTags = existingTags.filter(
+    (t) => t.includes(tagInput.toLowerCase()) && !tags.includes(t)
+  );
 
   return (
     <div className="flex h-screen">
@@ -190,22 +204,50 @@ export default function NewSnippetPage() {
 
               <div className="space-y-2">
                 <Label>Tags</Label>
-                <div className="flex gap-2">
-                  <Input
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    placeholder="Add a tag..."
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        addTag();
-                      }
-                    }}
-                    aria-label="Tag input"
-                  />
-                  <Button type="button" variant="outline" size="icon" onClick={addTag} aria-label="Add tag">
-                    <Plus size={16} />
-                  </Button>
+                <div className="relative">
+                  <div className="flex gap-2">
+                    <Input
+                      value={tagInput}
+                      onChange={(e) => {
+                        setTagInput(e.target.value);
+                        setTagOpen(true);
+                      }}
+                      onFocus={() => setTagOpen(true)}
+                      onBlur={() => setTimeout(() => setTagOpen(false), 150)}
+                      placeholder="Search or add a tag..."
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addTag();
+                        }
+                      }}
+                      aria-label="Tag input"
+                    />
+                    <Button type="button" variant="outline" size="icon" onClick={addTag} aria-label="Add tag">
+                      <Plus size={16} />
+                    </Button>
+                  </div>
+                  {tagOpen && filteredTags.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                      {filteredTags.map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent focus:bg-accent focus:outline-none"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            if (!tags.includes(tag) && tags.length < 10) {
+                              setTags([...tags, tag]);
+                            }
+                            setTagInput("");
+                            setTagOpen(false);
+                          }}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 {tags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-2">

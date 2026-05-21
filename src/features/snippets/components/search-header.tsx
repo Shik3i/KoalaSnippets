@@ -50,7 +50,7 @@ export function SnippetSearchHeader({ placeholder = "Search snippets..." }: Snip
   }, []);
 
   return (
-    <div className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm p-4">
+    <div className="sticky top-0 z-10 p-4">
       <div className="relative flex items-center w-full">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} suppressHydrationWarning />
         <Input
