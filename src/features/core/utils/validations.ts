@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SUPPORTED_LANGUAGES } from "@/features/snippets/utils/shiki";
 
 export const registerSchema = z.object({
   username: z.string().min(3).max(32).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
@@ -23,7 +24,10 @@ export const snippetSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(2000).optional(),
   code: z.string().min(1),
-  language: z.string().min(1).max(50),
+  language: z.string().min(1).max(50).refine(
+    (lang) => SUPPORTED_LANGUAGES.includes(lang),
+    { message: `Language must be one of: ${SUPPORTED_LANGUAGES.join(", ")}` }
+  ),
   tags: z.array(z.string().max(50)).max(10).optional(),
   visibility: z.enum(["PRIVATE", "SHARED", "PUBLIC"]).default("PRIVATE"),
 });

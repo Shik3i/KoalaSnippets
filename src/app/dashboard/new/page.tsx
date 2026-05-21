@@ -12,7 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sidebar } from "@/features/core/components/sidebar";
 import { useToast } from "@/components/ui/toast";
 import { useKeyboardShortcuts } from "@/features/snippets/utils/keyboard-shortcuts";
-import { X, Plus } from "lucide-react";
+import { SUPPORTED_LANGUAGES } from "@/features/snippets/utils/shiki";
+import { X, Plus, ChevronDown } from "lucide-react";
 
 export default function NewSnippetPage() {
   const router = useRouter();
@@ -21,6 +22,8 @@ export default function NewSnippetPage() {
   const [description, setDescription] = useState("");
   const [code, setCode] = useState("");
   const [language, setLanguage] = useState("typescript");
+  const [languageSearch, setLanguageSearch] = useState("");
+  const [languageOpen, setLanguageOpen] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [visibility, setVisibility] = useState<"PRIVATE" | "SHARED" | "PUBLIC">("PRIVATE");
@@ -127,13 +130,46 @@ export default function NewSnippetPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="language">Language</Label>
-                  <Input
-                    id="language"
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    placeholder="typescript"
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="language"
+                      value={languageOpen ? languageSearch : language}
+                      onChange={(e) => {
+                        setLanguageSearch(e.target.value);
+                        setLanguageOpen(true);
+                      }}
+                      onFocus={() => setLanguageOpen(true)}
+                      onBlur={() => setTimeout(() => setLanguageOpen(false), 150)}
+                      placeholder="Search language..."
+                      required
+                      autoComplete="off"
+                    />
+                    <ChevronDown
+                      size={16}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+                    />
+                    {languageOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                        {SUPPORTED_LANGUAGES.filter((lang) =>
+                          lang.toLowerCase().includes(languageSearch.toLowerCase())
+                        ).map((lang) => (
+                          <button
+                            key={lang}
+                            type="button"
+                            className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent focus:bg-accent focus:outline-none"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setLanguage(lang);
+                              setLanguageSearch("");
+                              setLanguageOpen(false);
+                            }}
+                          >
+                            {lang}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-2">

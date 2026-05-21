@@ -41,7 +41,11 @@ const ALL_SUPPORTED_LANGUAGES: BundledLanguage[] = [
   "r",
   "scala",
   "zig",
+  "nginx",
+  "ini",
 ];
+
+export const SUPPORTED_LANGUAGES = [...ALL_SUPPORTED_LANGUAGES, "plaintext"] as string[];
 
 const THEME_DEFAULT = "github-dark";
 
@@ -92,5 +96,5 @@ export async function highlightCode(code: string, language: string, themeName: s
 }
 
 export function getAvailableLanguages(): string[] {
-  return ALL_SUPPORTED_LANGUAGES;
+  return SUPPORTED_LANGUAGES;
 }

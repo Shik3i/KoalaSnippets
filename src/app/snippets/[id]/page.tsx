@@ -101,7 +101,13 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
   }
 
   const syntaxTheme = session?.user?.preferences?.syntaxTheme ?? "github-dark";
-  const highlightedCode = await highlightCode(snippet.code, snippet.language, syntaxTheme);
+  let highlightedCode: string;
+  try {
+    highlightedCode = await highlightCode(snippet.code, snippet.language, syntaxTheme);
+  } catch (err) {
+    console.error("[snippet] Failed to highlight code, falling back to plaintext:", err);
+    highlightedCode = `<pre><code>${snippet.code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>`;
+  }
   const isOwner = session?.user.id === snippet.authorId;
   const backUrl = snippet.visibility === "PUBLIC" ? "/public" : "/dashboard";
 
