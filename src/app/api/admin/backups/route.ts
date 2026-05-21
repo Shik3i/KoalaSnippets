@@ -29,8 +29,8 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Backup not found" }, { status: 404 });
       }
 
-      const fileBuffer = fs.readFileSync(resolved);
-      return new NextResponse(fileBuffer, {
+      const fileStream = fs.createReadStream(resolved);
+      return new NextResponse(fileStream as unknown as ReadableStream, {
         headers: {
           "Content-Type": "application/octet-stream",
           "Content-Disposition": `attachment; filename="${download}"`,

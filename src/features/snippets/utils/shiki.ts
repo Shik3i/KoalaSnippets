@@ -1,6 +1,6 @@
 import { createHighlighter, type Highlighter, type BundledLanguage, type BundledTheme } from "shiki";
 
-let highlighter: Highlighter | null = null;
+let highlighterPromise: Promise<Highlighter> | null = null;
 
 const CORE_LANGUAGES: BundledLanguage[] = [
   "javascript",
@@ -46,13 +46,13 @@ const ALL_SUPPORTED_LANGUAGES: BundledLanguage[] = [
 const THEME_DEFAULT = "github-dark";
 
 async function getHighlighter(): Promise<Highlighter> {
-  if (!highlighter) {
-    highlighter = await createHighlighter({
+  if (!highlighterPromise) {
+    highlighterPromise = createHighlighter({
       themes: [THEME_DEFAULT],
       langs: CORE_LANGUAGES,
     });
   }
-  return highlighter;
+  return highlighterPromise;
 }
 
 export async function highlightCode(code: string, language: string, themeName: string = "github-dark"): Promise<string> {

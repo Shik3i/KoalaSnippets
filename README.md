@@ -55,7 +55,6 @@ KoalaSnippets is a self-hosted web application for storing, organizing, and shar
 
 ```bash
 git clone https://github.com/Shik3i/KoalaSnippets.git
-git clone https://github.com/Shik3i/KoalaSnippets.git
 cd KoalaSnippets
 npm install
 ```

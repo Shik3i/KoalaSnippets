@@ -40,9 +40,8 @@ export async function POST(request: Request) {
 
     const token = await createSession(user.id);
 
-    const res = NextResponse.json({ success: true });
     await setSessionCookie(token);
-    return res;
+    return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

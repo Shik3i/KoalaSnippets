@@ -32,17 +32,16 @@ export async function GET(request: Request) {
   }
 
   if (query) {
+    const escapedQuery = query.replace(/%/g, "\\%").replace(/_/g, "\\_");
     const searchConditions = [
-      like(snippets.title, `%${query}%`),
-      like(snippets.language, `%${query}%`),
+      like(snippets.title, `%${escapedQuery}%`),
+      like(snippets.language, `%${escapedQuery}%`),
+      like(snippets.tags, `%${escapedQuery}%`),
     ];
 
     if (includeCode) {
-      searchConditions.push(like(snippets.code, `%${query}%`));
+      searchConditions.push(like(snippets.code, `%${escapedQuery}%`));
     }
-
-    const tagsCondition = sql`snippets.tags LIKE ${`%${query}%`}`;
-    searchConditions.push(tagsCondition);
 
     conditions.push(or(...searchConditions));
   }

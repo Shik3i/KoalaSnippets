@@ -3,8 +3,11 @@ import crypto from "crypto";
 
 const PEPPER = process.env.AUTH_PEPPER;
 
-if (!PEPPER && process.env.NODE_ENV === "production") {
-  console.warn("AUTH_PEPPER environment variable is not set. Using default (INSECURE)");
+if (!PEPPER) {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("AUTH_PEPPER environment variable is required in production. Generate one with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"");
+  }
+  console.warn("[auth] AUTH_PEPPER not set. Using development-only fallback pepper.");
 }
 
 const pepper = PEPPER ?? "dev-pepper-not-for-production";

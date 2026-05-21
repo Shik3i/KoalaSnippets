@@ -5,7 +5,8 @@
 
 {
     # Global options
-    email admin@example.com
+    # Replace with your actual ACME email or set CADDY_EMAIL environment variable
+    email {$CADDY_EMAIL:admin@example.com}
     default_bind 0.0.0.0
 }
 

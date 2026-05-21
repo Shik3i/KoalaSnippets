@@ -35,4 +35,4 @@ export function cleanupExpiredRateLimits() {
   }
 }
 
-setInterval(cleanupExpiredRateLimits, 5 * 60 * 1000);
+setInterval(cleanupExpiredRateLimits, 5 * 60 * 1000).unref();

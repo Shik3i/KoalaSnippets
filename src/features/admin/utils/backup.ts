@@ -17,7 +17,8 @@ function ensureBackupDir() {
 }
 
 function getDbPath(): string {
-  return process.env.DATABASE_URL?.replace("file:", "") ?? "./data/koalasnippets.db";
+  const dbPath = process.env.DATABASE_URL?.replace("file:", "") ?? "./data/koalasnippets.db";
+  return path.resolve(process.cwd(), dbPath);
 }
 
 export function runVacuumBackup(): string {
@@ -27,9 +28,13 @@ export function runVacuumBackup(): string {
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const backupPath = path.join(BACKUP_DIR, `backup-${timestamp}.db`);
 
+  if (backupPath.includes("'") || backupPath.includes('"') || backupPath.includes(";")) {
+    throw new Error("Invalid backup path: contains SQL-special characters");
+  }
+
   const sourceDb = new Database(dbPath, { readonly: true });
   try {
-    sourceDb.prepare(`VACUUM INTO '${backupPath}'`).run();
+    sourceDb.prepare(`VACUUM INTO '${backupPath.replace(/'/g, "''")}'`).run();
   } finally {
     sourceDb.close();
   }

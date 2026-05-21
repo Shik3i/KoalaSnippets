@@ -11,7 +11,11 @@ export function startBackupScheduler() {
 
   console.log("[backup] Starting automated backup scheduler (every 6 hours)");
 
-  runBackupWithRetention();
+  try {
+    runBackupWithRetention();
+  } catch (err) {
+    console.error("[backup] Initial backup failed:", err);
+  }
 
   backupInterval = setInterval(() => {
     try {

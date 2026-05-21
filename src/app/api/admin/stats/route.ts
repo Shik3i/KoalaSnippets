@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
+import path from "path";
 import { db } from "@/db";
 import { siteStatistics } from "@/db/schema";
 import { requireAdmin } from "@/features/admin/utils/admin-guard";
@@ -12,7 +13,7 @@ export async function GET() {
 
   const stats = await db.select().from(siteStatistics).where(eq(siteStatistics.id, 1)).get();
 
-  const dbPath = process.env.DATABASE_URL?.replace("file:", "") ?? "./data/koalasnippets.db";
+  const dbPath = path.resolve(process.cwd(), process.env.DATABASE_URL?.replace("file:", "") ?? "./data/koalasnippets.db");
   let dbSize = 0;
   if (fs.existsSync(dbPath)) {
     dbSize = fs.statSync(dbPath).size;
