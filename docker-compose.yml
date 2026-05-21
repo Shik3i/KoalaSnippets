@@ -13,12 +13,16 @@ services:
       - AUTH_PEPPER=${AUTH_PEPPER:?AUTH_PEPPER is required}
       - SESSION_SECRET=${SESSION_SECRET:?SESSION_SECRET is required}
       - ALLOW_REGISTRATION=${ALLOW_REGISTRATION:-false}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - BACKUP_DIR=/app/backups
     volumes:
       - koalasnippets-data:/app/data
+      - koalasnippets-backups:/app/backups
     networks:
       - koalasnippets-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -36,6 +40,9 @@ volumes:
   koalasnippets-data:
     driver: local
     name: koalasnippets-data
+  koalasnippets-backups:
+    driver: local
+    name: koalasnippets-backups
 
 networks:
   koalasnippets-network:

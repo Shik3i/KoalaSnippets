@@ -25,6 +25,9 @@ build/
 *.db-wal
 data/
 
+# Backups
+backups/
+
 # IDE
 .vscode/*
 !.vscode/settings.json

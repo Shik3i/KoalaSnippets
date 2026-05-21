@@ -20,6 +20,12 @@ KoalaSnippets is a self-hosted web application for storing, organizing, and shar
 - ⚡ **Blazing Fast Search** — Server-side parameterized queries with an "include code in search" toggle. No client-side filtering bottlenecks.
 - 🎨 **Beautiful 2-Pane UI** — Responsive card grid, dark mode by default, clean shadcn/ui components, JetBrains Mono for code.
 - 💻 **Developer Ready** — Shiki server-side syntax highlighting for 30+ languages, one-click copy-to-clipboard, tag-based organization.
+- ⌨️ **Keyboard Shortcuts** — `Cmd+K` to focus search, `Cmd+S` to save while editing.
+- 📥 **Download Code** — Download snippets as files with correct extensions.
+- 🔄 **Automated Backups** — SQLite `VACUUM INTO` with GFS retention (7 daily, 4 weekly, 12 monthly).
+- 🛡️ **Admin Dashboard** — RBAC with admin seeding, user management, backup management, system metrics.
+- 📊 **Public Statistics** — Community metrics page with lifetime counters.
+- 🔔 **Toast Notifications** — Animated feedback for all user actions.
 
 ## 🧱 Tech Stack
 
@@ -31,7 +37,7 @@ KoalaSnippets is a self-hosted web application for storing, organizing, and shar
 | Database | SQLite (better-sqlite3) |
 | ORM | Drizzle ORM |
 | Syntax Highlighting | Shiki (server-side, 30+ languages) |
-| Authentication | Session cookies + Argon2id + Pepper |
+| Authentication | Session cookies + Argon2id + Pepper + RBAC |
 | Fonts | next/font/google (Inter, JetBrains Mono) |
 | Icons | lucide-react (bundled) |
 
@@ -65,11 +71,18 @@ AUTH_PEPPER=your-long-random-string-here
 # Required: Session encryption secret
 SESSION_SECRET=another-long-random-string
 
+# Optional: Admin user seeded on first boot
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=a-very-secure-password
+
 # Optional: Enable/disable user registration (default: false)
 ALLOW_REGISTRATION=true
 
 # Optional: SQLite database path
 DATABASE_URL=file:./data/koalasnippets.db
+
+# Optional: Backup directory (default: ./backups)
+BACKUP_DIR=./backups
 ```
 
 Generate secure random strings:
@@ -114,12 +127,14 @@ Open [http://localhost:3000](http://localhost:3000). The server uses Turbopack f
 export AUTH_PEPPER="your-pepper"
 export SESSION_SECRET="your-secret"
 export ALLOW_REGISTRATION="true"
+export ADMIN_USERNAME="admin"
+export ADMIN_PASSWORD="your-secure-password"
 
 # Build and run
 docker compose up --build -d
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The SQLite database persists across container restarts via a Docker volume.
+Open [http://localhost:3000](http://localhost:3000). The SQLite database and backups persist across container restarts via Docker volumes.
 
 ### Manual Docker
 
@@ -127,9 +142,12 @@ Open [http://localhost:3000](http://localhost:3000). The SQLite database persist
 docker build -t koalasnippets .
 docker run -d -p 3000:3000 \
   -v koalasnippets-data:/app/data \
+  -v koalasnippets-backups:/app/backups \
   -e AUTH_PEPPER=your-pepper \
   -e SESSION_SECRET=your-secret \
   -e ALLOW_REGISTRATION=true \
+  -e ADMIN_USERNAME=admin \
+  -e ADMIN_PASSWORD=your-secure-password \
   koalasnippets
 ```
 
@@ -144,20 +162,31 @@ KoalaSnippets/
 ├── docs/                   # Architecture, security, and AI documentation
 ├── src/
 │   ├── app/                # Next.js App Router (pages, API routes)
-│   │   ├── api/            # API routes (auth, snippets, settings)
-│   │   ├── dashboard/      # Dashboard (authenticated, responsive grid)
-│   │   ├── snippets/[id]/  # Dedicated snippet detail view
-│   │   ├── settings/       # User settings (password change)
+│   │   ├── api/            # API routes
+│   │   │   ├── auth/       # Login, logout, register
+│   │   │   ├── snippets/   # CRUD operations
+│   │   │   ├── settings/   # Password change
+│   │   │   ├── admin/      # Admin-only: users, backups, stats
+│   │   │   ├── health/     # Health check endpoint
+│   │   │   └── public/     # Public API (stats)
+│   │   ├── admin/          # Admin dashboard (RBAC protected)
+│   │   ├── dashboard/      # User snippet management
+│   │   ├── snippets/[id]/  # Snippet detail view
+│   │   ├── settings/       # User settings
+│   │   ├── stats/          # Public statistics page
 │   │   ├── impressum/      # German imprint
 │   │   └── privacy/        # Privacy policy
 │   ├── components/
 │   │   ├── layout/         # Sidebar, detail view
 │   │   ├── snippets/       # SnippetCard, SnippetSearchHeader
-│   │   ├── ui/             # shadcn/ui primitives
+│   │   ├── admin/          # Admin metrics, user list, backup list
+│   │   ├── stats/          # Public stats counter cards
+│   │   ├── ui/             # shadcn/ui primitives + toast
 │   │   ├── auth/           # Login/register forms
 │   │   └── settings/       # Password change form
 │   ├── db/                 # Drizzle schema, migrations, connection
-│   └── lib/                # Auth, session, Shiki, rate-limit, validations
+│   └── lib/                # Auth, session, Shiki, backup, seed, etc.
+├── instrumentation.ts      # Server lifecycle hooks (backup, seeding)
 ├── Dockerfile              # Multi-stage production build
 ├── docker-compose.yml      # Docker orchestration
 ├── Caddyfile.example       # Reverse proxy with security headers
@@ -173,6 +202,7 @@ KoalaSnippets/
 - SQL injection prevented via Drizzle parameterized queries
 - Timing-attack-resistant token comparison (`crypto.timingSafeEqual`)
 - Rate limiting on login (5/15min) and registration (3/60min)
+- Role-based access control (RBAC) — admin routes return 403 for non-admins
 
 See [docs/SECURITY.md](docs/SECURITY.md) for the full security specification.
 

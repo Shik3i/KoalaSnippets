@@ -200,6 +200,29 @@ See `Caddyfile.example` for production reverse proxy configuration with addition
 | `SESSION_SECRET` | Yes | Secret for session token signing/encryption |
 | `DATABASE_URL` | Yes | Path to SQLite database file |
 | `ALLOW_REGISTRATION` | Yes | `true` or `false` - controls registration endpoint |
+| `ADMIN_USERNAME` | No | Username for admin account seeded on first boot |
+| `ADMIN_PASSWORD` | No | Password for admin account seeded on first boot |
+| `BACKUP_DIR` | No | Directory for automated database backups (default: `./backups`) |
 | `NODE_ENV` | Yes | `production` or `development` |
 
 **NEVER commit `.env` files to version control.**
+
+## Role-Based Access Control (RBAC)
+
+### User Roles
+
+| Role | Permissions |
+|------|-------------|
+| `USER` | Default role. Can create, edit, delete own snippets. View public/shared snippets. |
+| `ADMIN` | All USER permissions plus: access `/admin` dashboard, manage users, trigger/download backups, view system metrics. |
+
+### Admin Route Protection
+
+- `/admin` — Server component redirects non-admins to `/dashboard`.
+- `/api/admin/*` — `requireAdmin()` guard returns `401` (no session) or `403` (non-admin role).
+- Admin users cannot be deleted via the admin dashboard (self-protection).
+- Admin account is seeded from `ADMIN_USERNAME`/`ADMIN_PASSWORD` env vars on server boot if it doesn't already exist.
+
+### Session Role
+
+The user's `role` is embedded in the session object (fetched via `getSession()`), so role checks are performed without additional database queries per request.
