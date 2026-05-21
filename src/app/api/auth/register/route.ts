@@ -44,6 +44,11 @@ export async function POST(request: Request) {
       passwordHash,
       role: "USER",
       createdAt: new Date(),
+      preferences: {
+        appTheme: "theme-dark",
+        snippetDensity: "compact",
+        syntaxTheme: "github-dark",
+      },
     });
 
     await db.update(siteStatistics)

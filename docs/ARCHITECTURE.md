@@ -32,7 +32,9 @@ KoalaSnippets is a self-hosted snippet management application built with Next.js
     /[id]/page.tsx         # Dedicated snippet detail view (full-width, back button)
   /dashboard/page.tsx      # User's private snippet management (responsive grid)
   /dashboard/new/page.tsx  # Create new snippet form (uses Custom CodeEditor)
-  /settings/page.tsx       # User settings (password change)
+  /settings/
+    /page.tsx              # User settings (password change)
+    /appearance/page.tsx   # Visual settings (App theme, list density, syntax highlights)
   /admin/page.tsx          # Admin dashboard (RBAC: ADMIN only)
   /stats/page.tsx          # Public statistics page
   /impressum/page.tsx      # German imprint (public)
@@ -48,6 +50,7 @@ KoalaSnippets is a self-hosted snippet management application built with Next.js
       /[id]/route.ts       # GET/PUT/DELETE: single snippet operations
     /settings/
       /route.ts            # PUT: change password
+      /appearance/route.ts # PUT: update visual settings and preferences JSON
     /health/
       /route.ts            # GET: server + database health check
     /admin/
@@ -61,7 +64,7 @@ KoalaSnippets is a self-hosted snippet management application built with Next.js
 ### Route Protection
 
 - **Public routes:** `/`, `/login`, `/register`, `/impressum`, `/privacy`, `/stats`, `/api/auth/*`, `/api/health`, `/api/public/*`
-- **Authenticated routes:** `/dashboard`, `/snippets/*`, `/api/snippets/*`, `/api/settings`, `/settings`
+- **Authenticated routes:** `/dashboard`, `/snippets/*`, `/api/snippets/*`, `/api/settings`, `/settings`, `/settings/appearance`, `/api/settings/appearance`
 - **Admin-only routes:** `/admin`, `/api/admin/*` (returns 403 if session role is not `ADMIN`)
 - **Token-protected routes:** `/snippets/[id]?token=xxx` (SHARED visibility)
 
@@ -123,7 +126,7 @@ src/
       components/          # SnippetCard, SnippetSearchHeader, Custom CodeEditor
       utils/               # Keyboard shortcuts & lazy-loaded Shiki syntax highlight
     core/                  # Domain-independent structure and layouts
-      components/          # Global Sidebar, DetailView, glassmorphic CommandPalette
+      components/          # Global Sidebar, DetailView, glassmorphic CommandPalette, AppearanceSettingsForm
       utils/               # Tailwind style merges, validations, seed metrics, rate limiters
   components/
     ui/                    # shadcn/ui base primitive layouts (buttons, inputs, cards, toasts)
@@ -162,6 +165,7 @@ users (
   username        TEXT UNIQUE NOT NULL,
   password_hash   TEXT NOT NULL,          -- Argon2id hash
   role            TEXT NOT NULL DEFAULT 'USER',  -- 'USER' or 'ADMIN'
+  preferences     TEXT NOT NULL,          -- JSON object: {"appTheme":"theme-dark","snippetDensity":"compact","syntaxTheme":"github-dark"}
   created_at      INTEGER NOT NULL        -- Unix timestamp
 )
 
@@ -291,8 +295,15 @@ In `src/features/snippets/components/code-editor.tsx`, a custom browser-native c
 - **Overtyping skip:** Ignores repeated closing elements if the user types them manually right before the caret.
 - **Backspace matching-pair deletion:** Hitting `Backspace` between matching brackets or quotes deletes both characters at once.
 
-### Shiki Performance (Lazy-Loaded Languages)
+### Shiki Performance (Lazy-Loaded Languages & Highlighting Themes)
 To keep memory usage minimal and server starts instantaneous, `src/features/snippets/utils/shiki.ts` is configured to lazy-load syntax parsing libraries. It loads only 5 core languages on boot, and dynamically executes `hl.loadLanguage(...)` if the user opens a snippet containing any of the other 31 supported languages.
+Furthermore, syntax highlighting themes (e.g. `dracula`, `nord`, `poimandres`, `monokai`, `github-light`) are lazy-loaded dynamically on-demand, caching compiled highlighters dynamically and preventing bundle bloat.
+
+### Visual Appearance Customization
+Users can personalize their coding environment in real-time under `/settings/appearance`:
+- **App Themes:** Toggle among Default Dark, Midnight Blue, Hacker Green, and Light Mode with interactive live HSL overrides on the document tree.
+- **Snippet Densities:** Personalize layouts by selecting `compact` density (metadata list), `preview` density (Shiki highlighted 5-line truncated previews compiled on the server), or `full` density (complete highlighted code card).
+- **Syntax Themes:** Instantly swap code themes with zero-latency client-side visualization mockups.
 
 ### Keyboard Shortcuts
 

@@ -18,6 +18,7 @@ import {
   LogOut,
   BarChart3,
   Shield,
+  Palette,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -103,7 +104,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
         )}
 
         {languages.length > 0 && (
-          <div className="px-3 py-2 border-t border-border">
+          <div className="px-3 py-2 border-t border-border overflow-y-auto max-h-48">
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">
               Languages
             </h3>
@@ -126,7 +127,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
         )}
 
         {tags.length > 0 && (
-          <div className="px-3 py-2 border-t border-border">
+          <div className="px-3 py-2 border-t border-border overflow-y-auto max-h-48">
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">
               Tags
             </h3>
@@ -170,11 +171,29 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
               <>
                 <Link
                   href="/settings"
-                  className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                    pathname === "/settings"
+                      ? "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                  )}
                   onClick={() => setMobileOpen(false)}
                 >
                   <Settings size={16} suppressHydrationWarning />
-                  Settings
+                  Security Settings
+                </Link>
+                <Link
+                  href="/settings/appearance"
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                    pathname === "/settings/appearance"
+                      ? "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                  )}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <Palette size={16} suppressHydrationWarning />
+                  Appearance Settings
                 </Link>
                 <button
                   onClick={async () => {

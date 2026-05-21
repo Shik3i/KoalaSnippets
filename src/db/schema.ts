@@ -1,12 +1,23 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
 
+export interface UserPreferences {
+  appTheme: string;
+  snippetDensity: "compact" | "preview" | "full";
+  syntaxTheme: string;
+}
+
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
   username: text("username").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   role: text("role", { enum: ["USER", "ADMIN"] }).notNull().default("USER"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  preferences: text("preferences", { mode: "json" }).$type<UserPreferences>().notNull().default({
+    appTheme: "theme-dark",
+    snippetDensity: "compact",
+    syntaxTheme: "github-dark",
+  }),
 });
 
 export const snippets = sqliteTable("snippets", {

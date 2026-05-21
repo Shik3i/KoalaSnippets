@@ -100,7 +100,8 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
     notFound();
   }
 
-  const highlightedCode = await highlightCode(snippet.code, snippet.language);
+  const syntaxTheme = session?.user?.preferences?.syntaxTheme ?? "github-dark";
+  const highlightedCode = await highlightCode(snippet.code, snippet.language, syntaxTheme);
   const isOwner = session?.user.id === snippet.authorId;
   const backUrl = snippet.visibility === "PUBLIC" ? "/public" : "/dashboard";
 

@@ -24,6 +24,11 @@ export async function seedAdminUser() {
     passwordHash,
     role: "ADMIN",
     createdAt: new Date(),
+    preferences: {
+      appTheme: "theme-dark",
+      snippetDensity: "compact",
+      syntaxTheme: "github-dark",
+    },
   });
 
   console.log(`[seed] Admin user "${adminUsername}" created`);

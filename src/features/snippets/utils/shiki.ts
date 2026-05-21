@@ -1,4 +1,4 @@
-import { createHighlighter, type Highlighter, type BundledLanguage } from "shiki";
+import { createHighlighter, type Highlighter, type BundledLanguage, type BundledTheme } from "shiki";
 
 let highlighter: Highlighter | null = null;
 
@@ -43,20 +43,19 @@ const ALL_SUPPORTED_LANGUAGES: BundledLanguage[] = [
   "zig",
 ];
 
-const THEME_DARK = "github-dark";
-const THEME_LIGHT = "github-light";
+const THEME_DEFAULT = "github-dark";
 
 async function getHighlighter(): Promise<Highlighter> {
   if (!highlighter) {
     highlighter = await createHighlighter({
-      themes: [THEME_DARK, THEME_LIGHT],
+      themes: [THEME_DEFAULT],
       langs: CORE_LANGUAGES,
     });
   }
   return highlighter;
 }
 
-export async function highlightCode(code: string, language: string, theme: "dark" | "light" = "dark"): Promise<string> {
+export async function highlightCode(code: string, language: string, themeName: string = "github-dark"): Promise<string> {
   const hl = await getHighlighter();
 
   let targetLang = "plaintext";
@@ -75,11 +74,20 @@ export async function highlightCode(code: string, language: string, theme: "dark
     }
   }
 
-  const themeName = theme === "dark" ? THEME_DARK : THEME_LIGHT;
+  // Lazy-load the theme dynamically if not loaded yet
+  if (!hl.getLoadedThemes().includes(themeName)) {
+    try {
+      await hl.loadTheme(themeName as BundledTheme);
+    } catch (err) {
+      console.error(`Failed to load theme: ${themeName}`, err);
+    }
+  }
+
+  const activeTheme = hl.getLoadedThemes().includes(themeName) ? themeName : THEME_DEFAULT;
 
   return hl.codeToHtml(code, {
     lang: targetLang,
-    theme: themeName,
+    theme: activeTheme,
   });
 }
 

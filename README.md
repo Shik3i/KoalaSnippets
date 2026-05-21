@@ -18,6 +18,7 @@ KoalaSnippets is a self-hosted web application for storing, organizing, and shar
 - 🛡️ **Rock-Solid Security** — Argon2id + Salt + Pepper password hashing, in-memory rate limiting, strict CSP headers, timing-attack-resistant token comparison.
 - 👁️ **Visibility Controls** — Public Explorer for anyone, secure shared links with unguessable tokens, or keep snippets strictly private.
 - ⚡ **Blazing Fast Search** — Server-side parameterized queries with an "include code in search" toggle. No client-side filtering bottlenecks.
+- 🎨 **Appearance & Theme Customization** — Personalize your experience with multiple themes (Default Dark, Midnight Blue, Hacker Green, Light Mode), customizable list densities (Compact, 5-Line Preview, Full Code), and 6 lazy-loaded syntax highlighting themes with an interactive real-time visual mockup preview.
 - 🎨 **Beautiful 2-Pane UI** — Responsive card grid, dark mode by default, clean shadcn/ui components, JetBrains Mono for code.
 - 💻 **Developer Ready** — Shiki server-side syntax highlighting for 30+ languages, one-click copy-to-clipboard, tag-based organization.
 - ⌨️ **Premium Custom `CodeEditor`** — Zero-dependency native code editor supporting automatic Tab indentation spaces, matching brackets/quotes auto-closing, overtyping skip, and backspace pair matching deletions.
@@ -53,6 +54,7 @@ KoalaSnippets is a self-hosted web application for storing, organizing, and shar
 ### 1. Clone & Install
 
 ```bash
+git clone https://github.com/Shik3i/KoalaSnippets.git
 git clone https://github.com/Shik3i/KoalaSnippets.git
 cd KoalaSnippets
 npm install
@@ -172,14 +174,14 @@ KoalaSnippets/
 │   │   ├── api/            # API routes
 │   │   │   ├── auth/       # Login, logout, register
 │   │   │   ├── snippets/   # CRUD operations
-│   │   │   ├── settings/   # Password change
+│   │   │   ├── settings/   # Password change & appearance update
 │   │   │   ├── admin/      # Admin-only: users, backups, stats
 │   │   │   ├── health/     # Health check endpoint
 │   │   │   └── public/     # Public API (stats)
 │   │   ├── admin/          # Admin dashboard (RBAC protected)
 │   │   ├── dashboard/      # User snippet management
 │   │   ├── snippets/[id]/  # Snippet detail view
-│   │   ├── settings/       # User settings
+│   │   ├── settings/       # User settings & Appearance settings
 │   │   ├── stats/          # Public statistics page
 │   │   ├── impressum/      # German imprint
 │   │   └── privacy/        # Privacy policy
@@ -189,13 +191,13 @@ KoalaSnippets/
 │   │   ├── snippets/       # Snippet cards, search header, custom CodeEditor & lazy Shiki highlighting
 │   │   └── core/           # Common layouts (sidebar, detail-view), global rate limiters, CommandPalette & styles
 │   ├── components/
-│   │   └── ui/             # shadcn/ui primitives + toast notification providers
+│   │   └── ui/             # shadcn/ui base primitive layouts (buttons, inputs, cards, toasts)
 │   ├── db/                 # Drizzle schema, migrations, connection (WAL enabled)
-├── instrumentation.ts      # Server lifecycle hooks (backup, seeding)
-├── Dockerfile              # Multi-stage production build
-├── docker-compose.yml      # Docker orchestration
-├── Caddyfile.example       # Reverse proxy with security headers
-└── PRIVACY.md              # Detailed privacy policy
+│   ├── instrumentation.ts      # Server lifecycle hooks (backup, seeding)
+│   ├── Dockerfile              # Multi-stage production build
+│   ├── docker-compose.yml      # Docker orchestration
+│   ├── Caddyfile.example       # Reverse proxy with security headers
+│   └── PRIVACY.md              # Detailed privacy policy
 ```
 
 ## 🔐 Security

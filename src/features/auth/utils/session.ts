@@ -27,6 +27,7 @@ export async function getSession() {
         id: users.id,
         username: users.username,
         role: users.role,
+        preferences: users.preferences,
       },
     })
     .from(sessions)

@@ -13,6 +13,8 @@ interface SnippetCardProps {
   tags?: string[];
   visibility: "PRIVATE" | "SHARED" | "PUBLIC";
   createdAt: Date;
+  snippetDensity?: "compact" | "preview" | "full";
+  highlightedCode?: string;
 }
 
 const visibilityConfig = {
@@ -21,7 +23,17 @@ const visibilityConfig = {
   PUBLIC: { icon: Globe, label: "Public", color: "text-success" },
 };
 
-export function SnippetCard({ id, title, description, language, tags, visibility, createdAt }: SnippetCardProps) {
+export function SnippetCard({
+  id,
+  title,
+  description,
+  language,
+  tags,
+  visibility,
+  createdAt,
+  snippetDensity = "compact",
+  highlightedCode,
+}: SnippetCardProps) {
   const VisIcon = visibilityConfig[visibility].icon;
 
   return (
@@ -65,6 +77,18 @@ export function SnippetCard({ id, title, description, language, tags, visibility
             <span className="text-[10px] text-muted-foreground">+{tags.length - 3}</span>
           )}
         </div>
+      )}
+
+      {snippetDensity !== "compact" && highlightedCode && (
+        <div
+          className="mt-3 rounded-md border border-border bg-muted/20 text-[11px] max-h-40 overflow-y-auto leading-normal [&>pre]:!bg-transparent [&>pre]:!p-2 [&>pre]:!m-0 [&>pre]:overflow-x-auto select-text font-mono"
+          style={{ fontFamily: "var(--font-jetbrains), monospace" }}
+          dangerouslySetInnerHTML={{ __html: highlightedCode }}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+        />
       )}
     </Link>
   );

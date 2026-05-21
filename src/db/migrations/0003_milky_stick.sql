@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `preferences` text DEFAULT '{"appTheme":"theme-dark","snippetDensity":"compact","syntaxTheme":"github-dark"}' NOT NULL;
