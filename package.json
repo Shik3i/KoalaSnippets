@@ -16,7 +16,7 @@
     "argon2": "^0.41",
     "better-sqlite3": "^11",
     "clsx": "^2.1.1",
-    "drizzle-orm": "^0.38",
+    "drizzle-orm": "^0.45",
     "lucide-react": "^0.469",
     "next": "16.2.6",
     "react": "19.2.4",
