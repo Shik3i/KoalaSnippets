@@ -29,7 +29,6 @@ export function runVacuumBackup(): string {
 
   const sourceDb = new Database(dbPath, { readonly: true });
   try {
-    sourceDb.pragma("journal_mode = WAL");
     sourceDb.prepare(`VACUUM INTO '${backupPath}'`).run();
   } finally {
     sourceDb.close();
