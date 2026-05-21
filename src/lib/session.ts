@@ -92,7 +92,3 @@ export async function setSessionCookie(token: string) {
     maxAge: SESSION_DURATION_DAYS * 24 * 60 * 60,
   });
 }
-
-export function getRequireAuth() {
-  return getSession();
-}

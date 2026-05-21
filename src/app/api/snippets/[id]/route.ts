@@ -5,6 +5,14 @@ import { getSession } from "@/lib/session";
 import { updateSnippetSchema } from "@/lib/validations";
 import { generateShareToken } from "@/lib/auth";
 import { eq } from "drizzle-orm";
+import crypto from "crypto";
+
+function constantTimeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 
 export async function GET(
   _request: Request,
@@ -28,7 +36,7 @@ export async function GET(
   }
 
   if (snippet.visibility === "SHARED") {
-    if (snippet.shareToken !== token) {
+    if (!token || !constantTimeCompare(snippet.shareToken!, token)) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
   }
@@ -41,7 +49,7 @@ export async function GET(
     language: snippet.language,
     tags: snippet.tags,
     visibility: snippet.visibility,
-    shareToken: snippet.shareToken,
+    shareToken: snippet.visibility === "SHARED" ? snippet.shareToken : undefined,
     createdAt: snippet.createdAt,
     updatedAt: snippet.updatedAt,
     isOwner: session?.user.id === snippet.authorId,

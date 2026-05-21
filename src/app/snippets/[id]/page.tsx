@@ -5,8 +5,16 @@ import { getSession } from "@/lib/session";
 import { highlightCode } from "@/lib/shiki";
 import { DetailView } from "@/components/layout/detail-view";
 import { eq } from "drizzle-orm";
+import crypto from "crypto";
 
 export const dynamic = "force-dynamic";
+
+function constantTimeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -31,7 +39,7 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
   }
 
   if (snippet.visibility === "SHARED") {
-    if (snippet.shareToken !== token) {
+    if (!token || !snippet.shareToken || !constantTimeCompare(snippet.shareToken, token)) {
       notFound();
     }
   }

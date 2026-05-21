@@ -41,6 +41,7 @@ const visibilityConfig = {
 export function DetailView({
   title,
   description,
+  code,
   language,
   tags,
   visibility,
@@ -56,9 +57,7 @@ export function DetailView({
   const VisIcon = visibilityConfig[visibility].icon;
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(
-      highlightedCode.replace(/<[^>]*>/g, "")
-    );
+    await navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

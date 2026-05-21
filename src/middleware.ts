@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const publicPaths = ["/login", "/register", "/public"];
-const apiPublicPaths = ["/api/auth/login", "/api/auth/register", "/api/auth/logout"];
+const apiAuthPaths = ["/api/auth/login", "/api/auth/register", "/api/auth/logout"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -16,11 +16,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  if (pathname === "/register" && process.env.ALLOW_REGISTRATION !== "true") {
+    const loginUrl = new URL("/login", request.url);
+    return NextResponse.redirect(loginUrl);
+  }
+
   const sessionCookie = request.cookies.get("ks_session");
 
   if (!sessionCookie) {
     if (publicPaths.some((p) => pathname.startsWith(p))) {
       return NextResponse.next();
+    }
+
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const loginUrl = new URL("/login", request.url);
