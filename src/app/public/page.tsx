@@ -1,5 +1,6 @@
 import { db } from "@/db";
 import { snippets } from "@/db/schema";
+import { getSession } from "@/lib/session";
 import { Sidebar } from "@/components/layout/sidebar";
 import { ListView } from "@/components/layout/list-view";
 import { DetailView } from "@/components/layout/detail-view";
@@ -9,6 +10,8 @@ import { eq, desc } from "drizzle-orm";
 export const dynamic = "force-dynamic";
 
 export default async function PublicPage() {
+  const session = await getSession();
+
   const publicSnippets = await db
     .select()
     .from(snippets)
@@ -27,7 +30,7 @@ export default async function PublicPage() {
 
   return (
     <div className="flex h-screen">
-      <Sidebar tags={allTags} languages={languages} />
+      <Sidebar tags={allTags} languages={languages} isAuthenticated={!!session} />
 
       <div className="flex-1 flex overflow-hidden">
         <div className="w-80 shrink-0">

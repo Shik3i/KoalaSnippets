@@ -37,6 +37,7 @@ export default async function DashboardPage() {
       <Sidebar
         tags={allTags}
         languages={languages}
+        isAuthenticated={true}
       />
 
       <div className="flex-1 flex overflow-hidden">

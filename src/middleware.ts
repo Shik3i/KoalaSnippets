@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const publicPaths = ["/login", "/register", "/public"];
-const apiAuthPaths = ["/api/auth/login", "/api/auth/register", "/api/auth/logout"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -11,7 +10,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api/auth") ||
     pathname === "/favicon.ico" ||
-    pathname.startsWith("/public")
+    pathname.startsWith("/public") ||
+    pathname === "/"
   ) {
     return NextResponse.next();
   }

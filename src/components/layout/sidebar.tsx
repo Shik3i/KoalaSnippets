@@ -21,6 +21,7 @@ import {
 interface SidebarProps {
   tags?: string[];
   languages?: string[];
+  isAuthenticated?: boolean;
   onTagClick?: (tag: string) => void;
   onLanguageClick?: (language: string) => void;
 }
@@ -31,7 +32,7 @@ const navItems = [
   { href: "/public", label: "Public Explorer", icon: Globe },
 ];
 
-export function Sidebar({ tags = [], languages = [], onTagClick, onLanguageClick }: SidebarProps) {
+export function Sidebar({ tags = [], languages = [], isAuthenticated = false, onTagClick, onLanguageClick }: SidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -62,6 +63,9 @@ export function Sidebar({ tags = [], languages = [], onTagClick, onLanguageClick
 
         <nav className="p-3 space-y-1">
           {navItems.map((item) => {
+            if (item.href === "/dashboard" && !isAuthenticated) {
+              return null;
+            }
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (
@@ -83,14 +87,16 @@ export function Sidebar({ tags = [], languages = [], onTagClick, onLanguageClick
           })}
         </nav>
 
-        <div className="px-3 py-2">
-          <Button className="w-full gap-2" size="sm" asChild>
-            <Link href="/dashboard/new" onClick={() => setMobileOpen(false)}>
-              <Plus size={14} />
-              New Snippet
-            </Link>
-          </Button>
-        </div>
+        {isAuthenticated && (
+          <div className="px-3 py-2">
+            <Button className="w-full gap-2" size="sm" asChild>
+              <Link href="/dashboard/new" onClick={() => setMobileOpen(false)}>
+                <Plus size={14} />
+                New Snippet
+              </Link>
+            </Button>
+          </div>
+        )}
 
         {languages.length > 0 && (
           <div className="px-3 py-2 border-t border-border">
@@ -141,24 +147,34 @@ export function Sidebar({ tags = [], languages = [], onTagClick, onLanguageClick
 
         <div className="mt-auto border-t border-border">
           <div className="p-3 space-y-1">
-            <Link
-              href="/settings"
-              className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
-              onClick={() => setMobileOpen(false)}
-            >
-              <Settings size={16} />
-              Settings
-            </Link>
-            <button
-              onClick={async () => {
-                await fetch("/api/auth/logout", { method: "POST" });
-                window.location.href = "/login";
-              }}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-            >
-              <LogOut size={16} />
-              Sign Out
-            </button>
+            {isAuthenticated ? (
+              <>
+                <Link
+                  href="/settings"
+                  className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <Settings size={16} />
+                  Settings
+                </Link>
+                <button
+                  onClick={async () => {
+                    await fetch("/api/auth/logout", { method: "POST" });
+                    window.location.href = "/login";
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                >
+                  <LogOut size={16} />
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <Button variant="outline" className="w-full gap-2" asChild>
+                <Link href="/login" onClick={() => setMobileOpen(false)}>
+                  Sign In
+                </Link>
+              </Button>
+            )}
           </div>
           <div className="px-3 pb-3">
             <div className="text-xs text-muted-foreground px-2">
