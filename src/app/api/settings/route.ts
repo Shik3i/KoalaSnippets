@@ -5,10 +5,15 @@ import { getSession } from "@/features/auth/utils/session";
 import { verifyPassword, hashPassword } from "@/features/auth/utils/auth";
 import { passwordChangeSchema } from "@/features/core/utils/validations";
 import { eq } from "drizzle-orm";
+import { verifyCsrf } from "@/features/core/utils/security";
 
 export const dynamic = "force-dynamic";
 
 export async function PUT(request: Request) {
+  if (!verifyCsrf(request)) {
+    return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
+  }
+
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -40,7 +45,8 @@ export async function PUT(request: Request) {
     await db.delete(sessions).where(eq(sessions.userId, session.user.id));
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    console.error("[Settings API PUT Error]", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { users, snippets } from "@/db/schema";
 import { requireAdmin } from "@/features/admin/utils/admin-guard";
 import { eq, desc } from "drizzle-orm";
+import { verifyCsrf } from "@/features/core/utils/security";
 
 export const dynamic = "force-dynamic";
 
@@ -41,11 +42,16 @@ export async function GET() {
 }
 
 export async function DELETE(request: Request) {
+  if (!verifyCsrf(request)) {
+    return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
+  }
+
   const guard = await requireAdmin();
   if ("unauthorized" in guard) return guard.unauthorized;
   if ("forbidden" in guard) return guard.forbidden;
 
-  const { userId } = await request.json();
+  try {
+    const { userId } = await request.json();
 
   if (!userId) {
     return NextResponse.json({ error: "User ID required" }, { status: 400 });
@@ -60,10 +66,14 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Cannot delete admin users" }, { status: 403 });
   }
 
-  await db.transaction(async (tx) => {
-    await tx.delete(snippets).where(eq(snippets.authorId, userId));
-    await tx.delete(users).where(eq(users.id, userId));
-  });
+    await db.transaction(async (tx) => {
+      await tx.delete(snippets).where(eq(snippets.authorId, userId));
+      await tx.delete(users).where(eq(users.id, userId));
+    });
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[Admin Users API Error]", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

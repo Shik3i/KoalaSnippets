@@ -6,6 +6,7 @@ import { updateSnippetSchema } from "@/features/core/utils/validations";
 import { generateShareToken } from "@/features/auth/utils/auth";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
+import { verifyCsrf } from "@/features/core/utils/security";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +65,10 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!verifyCsrf(request)) {
+    return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
+  }
+
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -97,7 +102,8 @@ export async function PUT(
     await db.update(snippets).set(updates).where(eq(snippets.id, id));
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    console.error("[Snippets API PUT Error]", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -106,6 +112,10 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!verifyCsrf(_request)) {
+    return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
+  }
+
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

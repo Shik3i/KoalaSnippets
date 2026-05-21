@@ -5,6 +5,7 @@ import { getSession } from "@/features/auth/utils/session";
 import { snippetSchema } from "@/features/core/utils/validations";
 import { generateId, generateShareToken } from "@/features/auth/utils/auth";
 import { eq, desc, like, or, and, sql } from "drizzle-orm";
+import { getSafePage, verifyCsrf } from "@/features/core/utils/security";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export async function GET(request: Request) {
   const visibility = searchParams.get("visibility");
   const query = searchParams.get("q");
   const includeCode = searchParams.get("includeCode") === "true";
-  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+  const page = getSafePage(searchParams.get("page"));
   const offset = (page - 1) * PAGE_SIZE;
 
   if (!session && visibility !== "PUBLIC") {
@@ -72,6 +73,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  if (!verifyCsrf(request)) {
+    return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
+  }
+
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

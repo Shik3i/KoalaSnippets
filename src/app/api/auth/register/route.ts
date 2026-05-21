@@ -5,10 +5,15 @@ import { hashPassword, generateId } from "@/features/auth/utils/auth";
 import { registerSchema } from "@/features/core/utils/validations";
 import { checkRateLimit } from "@/features/core/utils/rate-limit";
 import { eq, sql } from "drizzle-orm";
+import { verifyCsrf } from "@/features/core/utils/security";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  if (!verifyCsrf(request)) {
+    return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
+  }
+
   if (process.env.ALLOW_REGISTRATION !== "true") {
     return NextResponse.json({ error: "Registration is disabled" }, { status: 403 });
   }
@@ -62,7 +67,8 @@ export async function POST(request: Request) {
 
     const res = NextResponse.json({ success: true }, { status: 201 });
     return res;
-  } catch {
+  } catch (error) {
+    console.error("[Register API Error]", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -8,6 +8,7 @@ import { highlightCode } from "@/features/snippets/utils/shiki";
 import { Sidebar } from "@/features/core/components/sidebar";
 import { SnippetDetailClient } from "./SnippetDetailClient";
 import { eq } from "drizzle-orm";
+import { escapeHtml } from "@/features/core/utils/security";
 import crypto from "crypto";
 import type { Metadata } from "next";
 
@@ -106,7 +107,7 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
     highlightedCode = await highlightCode(snippet.code, snippet.language, syntaxTheme);
   } catch (err) {
     console.error("[snippet] Failed to highlight code, falling back to plaintext:", err);
-    highlightedCode = `<pre><code>${snippet.code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>`;
+    highlightedCode = `<pre><code>${escapeHtml(snippet.code)}</code></pre>`;
   }
   const isOwner = session?.user.id === snippet.authorId;
   const backUrl = snippet.visibility === "PUBLIC" ? "/public" : "/dashboard";

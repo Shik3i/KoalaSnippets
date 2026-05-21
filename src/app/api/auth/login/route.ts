@@ -6,10 +6,15 @@ import { createSession, setSessionCookie } from "@/features/auth/utils/session";
 import { loginSchema } from "@/features/core/utils/validations";
 import { checkRateLimit } from "@/features/core/utils/rate-limit";
 import { eq } from "drizzle-orm";
+import { verifyCsrf } from "@/features/core/utils/security";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  if (!verifyCsrf(request)) {
+    return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
+  }
+
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
   const limit = checkRateLimit(`login:${ip}`, 5, 15 * 60 * 1000);
 
@@ -44,7 +49,8 @@ export async function POST(request: Request) {
 
     await setSessionCookie(token);
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    console.error("[Login API Error]", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
