@@ -51,6 +51,7 @@ export default async function DashboardPage() {
               createdAt: s.createdAt,
             }))}
             selectedId={firstSnippet?.id}
+            apiEndpoint="/api/snippets"
           />
         </div>
 

@@ -6,6 +6,7 @@ import { hashSessionToken, generateSessionToken } from "./auth";
 
 const SESSION_COOKIE_NAME = "ks_session";
 const SESSION_DURATION_DAYS = 30;
+const SESSION_REFRESH_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 export async function getSession() {
   const cookieStore = await cookies();
@@ -41,8 +42,12 @@ export async function getSession() {
     return null;
   }
 
-  const newExpiresAt = new Date(Date.now() + SESSION_DURATION_DAYS * 24 * 60 * 60 * 1000);
-  await db.update(sessions).set({ expiresAt: newExpiresAt }).where(eq(sessions.id, session.id));
+  const now = Date.now();
+  const expiresAtMs = session.expiresAt.getTime();
+  if (expiresAtMs - now < SESSION_REFRESH_WINDOW_MS) {
+    const newExpiresAt = new Date(now + SESSION_DURATION_DAYS * 24 * 60 * 60 * 1000);
+    await db.update(sessions).set({ expiresAt: newExpiresAt }).where(eq(sessions.id, session.id));
+  }
 
   return session;
 }

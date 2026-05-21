@@ -3,11 +3,22 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { hashPassword, generateId } from "@/lib/auth";
 import { registerSchema } from "@/lib/validations";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { eq } from "drizzle-orm";
 
 export async function POST(request: Request) {
   if (process.env.ALLOW_REGISTRATION !== "true") {
     return NextResponse.json({ error: "Registration is disabled" }, { status: 403 });
+  }
+
+  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+  const limit = checkRateLimit(`register:${ip}`, 3, 60 * 60 * 1000);
+
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Too many attempts. Try again later." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((limit.resetAt - Date.now()) / 1000)) } }
+    );
   }
 
   try {

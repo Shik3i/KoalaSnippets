@@ -12,8 +12,6 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@fontsource/inter": "^5",
-    "@fontsource/jetbrains-mono": "^5",
     "@radix-ui/react-slot": "^1.2.4",
     "argon2": "^0.41",
     "better-sqlite3": "^11",

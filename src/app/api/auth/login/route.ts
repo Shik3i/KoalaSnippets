@@ -4,9 +4,20 @@ import { users } from "@/db/schema";
 import { verifyPassword } from "@/lib/auth";
 import { createSession, setSessionCookie } from "@/lib/session";
 import { loginSchema } from "@/lib/validations";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { eq } from "drizzle-orm";
 
 export async function POST(request: Request) {
+  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+  const limit = checkRateLimit(`login:${ip}`, 5, 15 * 60 * 1000);
+
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Too many attempts. Try again later." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((limit.resetAt - Date.now()) / 1000)) } }
+    );
+  }
+
   try {
     const body = await request.json();
     const parsed = loginSchema.safeParse(body);

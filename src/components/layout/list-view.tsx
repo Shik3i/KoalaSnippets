@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,7 @@ interface ListViewProps {
   snippets: SnippetListItem[];
   selectedId?: string;
   onSelect?: (id: string) => void;
+  apiEndpoint: string;
 }
 
 const visibilityIcons = {
@@ -33,18 +34,47 @@ const visibilityColors = {
   PUBLIC: "text-success",
 };
 
-export function ListView({ snippets, selectedId, onSelect }: ListViewProps) {
+export function ListView({ snippets: initialSnippets, selectedId, onSelect, apiEndpoint }: ListViewProps) {
+  const [snippets, setSnippets] = useState<SnippetListItem[]>(
+    initialSnippets.map((s) => ({ ...s, createdAt: new Date(s.createdAt) }))
+  );
   const [search, setSearch] = useState("");
   const [includeCode, setIncludeCode] = useState(false);
+  const [searching, setSearching] = useState(false);
 
-  const filtered = snippets.filter((s) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    if (s.title.toLowerCase().includes(q)) return true;
-    if (s.language.toLowerCase().includes(q)) return true;
-    if (s.tags?.some((t) => t.toLowerCase().includes(q))) return true;
-    return false;
-  });
+  const searchSnippets = useCallback(async (q: string, includeCodeSearch: boolean) => {
+    if (!q) {
+      setSnippets(initialSnippets.map((s) => ({ ...s, createdAt: new Date(s.createdAt) })));
+      return;
+    }
+
+    setSearching(true);
+    try {
+      const params = new URLSearchParams({
+        q,
+        includeCode: String(includeCodeSearch),
+        visibility: apiEndpoint.includes("/public") ? "PUBLIC" : "",
+      });
+
+      const res = await fetch(`/api/snippets?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSnippets(data.snippets.map((s: SnippetListItem) => ({ ...s, createdAt: new Date(s.createdAt) })));
+      }
+    } catch {
+      // ignore
+    } finally {
+      setSearching(false);
+    }
+  }, [initialSnippets, apiEndpoint]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      searchSnippets(search, includeCode);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [search, includeCode, searchSnippets]);
 
   return (
     <div className="flex flex-col h-full border-r border-border bg-card/50">
@@ -57,6 +87,11 @@ export function ListView({ snippets, selectedId, onSelect }: ListViewProps) {
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8 h-8 text-sm"
           />
+          {searching && (
+            <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+              <div className="w-3 h-3 border border-muted-foreground border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
         </div>
         <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
           <input
@@ -71,14 +106,14 @@ export function ListView({ snippets, selectedId, onSelect }: ListViewProps) {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {filtered.length === 0 ? (
+        {snippets.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-sm p-6">
             <Search size={24} className="mb-2 opacity-50" />
             No snippets found
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {filtered.map((snippet) => {
+            {snippets.map((snippet) => {
               const Icon = visibilityIcons[snippet.visibility];
               return (
                 <button

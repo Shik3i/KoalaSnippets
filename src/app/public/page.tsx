@@ -41,6 +41,7 @@ export default async function PublicPage() {
               createdAt: s.createdAt,
             }))}
             selectedId={firstSnippet?.id}
+            apiEndpoint="/api/snippets"
           />
         </div>
 

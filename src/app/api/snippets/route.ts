@@ -4,54 +4,59 @@ import { snippets } from "@/db/schema";
 import { getSession } from "@/lib/session";
 import { snippetSchema } from "@/lib/validations";
 import { generateId, generateShareToken } from "@/lib/auth";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, like, or, and } from "drizzle-orm";
+import { sql } from "drizzle-orm";
+
+const PAGE_SIZE = 50;
 
 export async function GET(request: Request) {
   const session = await getSession();
   const { searchParams } = new URL(request.url);
   const visibility = searchParams.get("visibility");
+  const query = searchParams.get("q");
+  const includeCode = searchParams.get("includeCode") === "true";
+  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+  const offset = (page - 1) * PAGE_SIZE;
 
   if (!session && visibility !== "PUBLIC") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let query = db.select().from(snippets).orderBy(desc(snippets.createdAt));
+  const baseQuery = db.select().from(snippets);
+
+  let conditions = [];
 
   if (visibility === "PUBLIC") {
-    const results = await query.where(eq(snippets.visibility, "PUBLIC")).all();
-    return NextResponse.json(
-      results.map((s) => ({
-        id: s.id,
-        title: s.title,
-        description: s.description,
-        language: s.language,
-        tags: s.tags,
-        visibility: s.visibility,
-        createdAt: s.createdAt,
-        updatedAt: s.updatedAt,
-      }))
-    );
+    conditions.push(eq(snippets.visibility, "PUBLIC"));
+  } else if (session) {
+    conditions.push(eq(snippets.authorId, session.user.id));
   }
 
-  if (session) {
-    const results = await query.where(eq(snippets.authorId, session.user.id)).all();
-    return NextResponse.json(
-      results.map((s) => ({
-        id: s.id,
-        title: s.title,
-        description: s.description,
-        language: s.language,
-        tags: s.tags,
-        visibility: s.visibility,
-        createdAt: s.createdAt,
-        updatedAt: s.updatedAt,
-      }))
-    );
+  if (query) {
+    const searchConditions = [
+      like(snippets.title, `%${query}%`),
+      like(snippets.language, `%${query}%`),
+    ];
+
+    if (includeCode) {
+      searchConditions.push(like(snippets.code, `%${query}%`));
+    }
+
+    const tagsCondition = sql`snippets.tags LIKE ${`%${query}%`}`;
+    searchConditions.push(tagsCondition);
+
+    conditions.push(or(...searchConditions));
   }
 
-  const results = await query.all();
-  return NextResponse.json(
-    results.map((s) => ({
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const results = await (whereClause
+    ? baseQuery.where(whereClause).orderBy(desc(snippets.createdAt)).limit(PAGE_SIZE).offset(offset)
+    : baseQuery.orderBy(desc(snippets.createdAt)).limit(PAGE_SIZE).offset(offset)
+  ).all();
+
+  return NextResponse.json({
+    snippets: results.map((s) => ({
       id: s.id,
       title: s.title,
       description: s.description,
@@ -60,8 +65,10 @@ export async function GET(request: Request) {
       visibility: s.visibility,
       createdAt: s.createdAt,
       updatedAt: s.updatedAt,
-    }))
-  );
+    })),
+    page,
+    hasMore: results.length === PAGE_SIZE,
+  });
 }
 
 export async function POST(request: Request) {
