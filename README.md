@@ -1,16 +1,43 @@
+<div align="center">
+
 # 🐨 KoalaSnippets
 
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![SQLite](https://img.shields.io/badge/Database-SQLite-003B57?style=flat-square&logo=sqlite)](https://www.sqlite.org/)
-[![Self-Hosted](https://img.shields.io/badge/Self--Hosted-Yes-2ea44f?style=flat-square)]()
-[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+**A blazing fast, zero-bloat, privacy-first snippet manager designed to cure Notepad++ tab hell.**
 
-> A blazing fast, zero-bloat, privacy-first snippet manager designed to cure **Notepad++ tab hell**.
+[![Version](https://img.shields.io/github/package-json/v/Shik3i/KoalaSnippets?style=for-the-badge&color=blue)](https://github.com/Shik3i/KoalaSnippets)
+[![Docker Image](https://img.shields.io/badge/Docker-Latest-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://hub.docker.com/r/shik3i/koalasnippets)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/Shik3i/KoalaSnippets/ci.yml?style=for-the-badge&logo=github&label=Build)](https://github.com/Shik3i/KoalaSnippets/actions)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+
+<br />
+<a href="https://snippets.koalastuff.net">
+  <img src="https://img.shields.io/badge/Live_Demo-snippets.koalastuff.net-FF6B6B?style=for-the-badge" alt="Live Demo" />
+</a>
+<br />
 
 KoalaSnippets is a self-hosted web application for storing, organizing, and sharing code snippets. It features a clean two-pane interface, server-side syntax highlighting, and rock-solid security — all with **zero external dependencies**. No CDNs. No tracking. No bloat. Just your code, your server, your rules.
 
-![KoalaSnippets Interface](./docs/assets/screenshot-placeholder.png)
+<!-- We recommend replacing this placeholder with a short feature showcase GIF -->
+<img src="./docs/assets/screenshot-placeholder.png" alt="KoalaSnippets Interface Demo" width="800" style="border-radius: 8px; margin-top: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+
+</div>
+
+<details>
+<summary><b>📚 Table of Contents</b></summary>
+
+- [✨ Core Features](#-core-features)
+- [🧱 Tech Stack](#-tech-stack)
+- [🚀 Quick Start](#-quick-start)
+- [🐳 Docker Deployment](#-docker-deployment)
+- [📁 Project Structure](#-project-structure)
+- [🔐 Security](#-security)
+- [📄 License](#-license)
+
+<br/>
+</details>
 
 ## ✨ Core Features
 
