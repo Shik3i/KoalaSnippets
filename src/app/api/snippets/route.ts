@@ -114,7 +114,13 @@ export async function POST(request: Request) {
       id: snippetData.id, 
       shareToken: snippetData.shareToken ?? undefined 
     }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    const stack = error instanceof Error ? error.stack : undefined;
+    console.error("[Snippets API Error]", message, stack);
+    return NextResponse.json(
+      { error: "Internal Server Error", details: message },
+      { status: 500 }
+    );
   }
 }

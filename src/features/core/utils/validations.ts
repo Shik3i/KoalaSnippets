@@ -23,7 +23,7 @@ export const passwordChangeSchema = z.object({
 export const snippetSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(2000).optional(),
-  code: z.string().min(1),
+  code: z.string().min(1).max(250000, "Code must not exceed 250,000 characters"),
   language: z.string().min(1).max(50).refine(
     (lang) => SUPPORTED_LANGUAGES.includes(lang),
     { message: `Language must be one of: ${SUPPORTED_LANGUAGES.join(", ")}` }
