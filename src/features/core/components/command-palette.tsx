@@ -68,6 +68,20 @@ export function CommandPalette({ isAdmin = false }: CommandPaletteProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  // Listen for custom event to open command palette (e.g., from mobile search button)
+  useEffect(() => {
+    const handleOpenPalette = () => {
+      setIsOpen(true);
+      setQuery("");
+      setActiveIndex(0);
+      setSnippets([]);
+      setLoading(false);
+    };
+
+    window.addEventListener("open-command-palette", handleOpenPalette);
+    return () => window.removeEventListener("open-command-palette", handleOpenPalette);
+  }, []);
+
   // Focus input on open
   useEffect(() => {
     if (isOpen) {

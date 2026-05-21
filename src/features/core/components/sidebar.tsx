@@ -19,6 +19,7 @@ import {
   BarChart3,
   Shield,
   Palette,
+  Search,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -49,6 +50,16 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
         aria-label="Toggle menu"
       >
         {mobileOpen ? <X size={20} suppressHydrationWarning /> : <Menu size={20} suppressHydrationWarning />}
+      </button>
+
+      <button
+        className="fixed top-4 right-4 z-50 p-2 rounded-md bg-card border border-border lg:hidden flex items-center justify-center cursor-pointer"
+        onClick={() => {
+          window.dispatchEvent(new CustomEvent("open-command-palette"));
+        }}
+        aria-label="Open Command Palette Search"
+      >
+        <Search size={20} suppressHydrationWarning />
       </button>
 
       <aside

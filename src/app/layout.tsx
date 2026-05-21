@@ -34,7 +34,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={`${theme} bg-pattern-${bgPattern}`} suppressHydrationWarning>
-      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`} suppressHydrationWarning>
         <ToastProvider>
           {children}
           <CommandPalette isAdmin={isAdmin} />

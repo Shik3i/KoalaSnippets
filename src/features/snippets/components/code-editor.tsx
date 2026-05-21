@@ -10,8 +10,21 @@ interface CodeEditorProps extends Omit<React.TextareaHTMLAttributes<HTMLTextArea
 
 export const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>(
   ({ value, onChange, onKeyDown, className, ...props }, forwardedRef) => {
-    const internalRef = React.useRef<HTMLTextAreaElement>(null);
-    const ref = (forwardedRef as React.RefObject<HTMLTextAreaElement>) || internalRef;
+    const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
+
+    // Sync unified ref handler to support both callback refs and ref objects from parents
+    const setRef = React.useCallback(
+      (element: HTMLTextAreaElement | null) => {
+        textareaRef.current = element;
+        if (!forwardedRef) return;
+        if (typeof forwardedRef === "function") {
+          forwardedRef(element);
+        } else {
+          (forwardedRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = element;
+        }
+      },
+      [forwardedRef]
+    );
     
     // We use a ref to track the desired cursor position after a programmatic mutation
     const cursorPositionRef = React.useRef<{ start: number; end: number } | null>(null);
@@ -28,20 +41,20 @@ export const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [value]);
 
-    // Restore cursor position immediately after React updates the DOM with new localValue
-    React.useLayoutEffect(() => {
-      if (cursorPositionRef.current && ref.current) {
-        ref.current.selectionStart = cursorPositionRef.current.start;
-        ref.current.selectionEnd = cursorPositionRef.current.end;
-        cursorPositionRef.current = null;
-      }
-    }, [localValue, ref]);
-
     const triggerChange = (newVal: string, start?: number, end?: number) => {
       setLocalValue(newVal);
       
       if (start !== undefined && end !== undefined) {
         cursorPositionRef.current = { start, end };
+        // Use setTimeout(0) to restore cursor after React flushes the DOM update
+        setTimeout(() => {
+          if (cursorPositionRef.current && textareaRef.current) {
+            const { start, end } = cursorPositionRef.current;
+            textareaRef.current.selectionStart = start;
+            textareaRef.current.selectionEnd = end;
+            cursorPositionRef.current = null;
+          }
+        }, 0);
       }
       
       // Debounce the heavy parent onChange to prevent UI freezing on large pastes
@@ -97,8 +110,8 @@ export const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>
           // If overtyping identical quote
           if ((char === '"' || char === "'" || char === "`") && val.charAt(selectionStart) === char) {
             e.preventDefault();
-            cursorPositionRef.current = { start: selectionStart + 1, end: selectionStart + 1 };
-            setLocalValue((v) => v); // Force re-render to apply cursor
+            textarea.selectionStart = selectionStart + 1;
+            textarea.selectionEnd = selectionStart + 1;
             return;
           }
 
@@ -109,8 +122,9 @@ export const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>
           // If overtyping closing bracket
           if (val.charAt(selectionStart) === e.key) {
             e.preventDefault();
-            cursorPositionRef.current = { start: selectionStart + 1, end: selectionStart + 1 };
-            setLocalValue((v) => v);
+            textarea.selectionStart = selectionStart + 1;
+            textarea.selectionEnd = selectionStart + 1;
+            return;
           }
         }
       }
@@ -127,7 +141,7 @@ export const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>
 
     return (
       <Textarea
-        ref={ref}
+        ref={setRef}
         value={localValue}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
