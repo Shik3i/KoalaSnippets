@@ -5,6 +5,7 @@ export interface UserPreferences {
   appTheme: string;
   snippetDensity: "compact" | "preview" | "full";
   syntaxTheme: string;
+  bgPattern: string;
 }
 
 export const users = sqliteTable("users", {
@@ -17,6 +18,7 @@ export const users = sqliteTable("users", {
     appTheme: "theme-dark",
     snippetDensity: "compact",
     syntaxTheme: "github-dark",
+    bgPattern: "flat",
   }),
 });
 

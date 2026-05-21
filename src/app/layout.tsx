@@ -30,9 +30,10 @@ export default async function RootLayout({
   const session = await getSession();
   const isAdmin = session?.user?.role === "ADMIN";
   const theme = session?.user?.preferences?.appTheme ?? "theme-dark";
+  const bgPattern = session?.user?.preferences?.bgPattern ?? "flat";
 
   return (
-    <html lang="en" className={theme} suppressHydrationWarning>
+    <html lang="en" className={`${theme} bg-pattern-${bgPattern}`} suppressHydrationWarning>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         <ToastProvider>
           {children}

@@ -8,7 +8,15 @@ import { z } from "zod";
 export const dynamic = "force-dynamic";
 
 const appearanceSettingsSchema = z.object({
-  appTheme: z.enum(["theme-dark", "theme-midnight", "theme-hacker", "light"]).optional(),
+  appTheme: z.enum([
+    "theme-dark",
+    "theme-midnight",
+    "theme-hacker",
+    "light",
+    "theme-nord",
+    "theme-dracula",
+    "theme-terracotta",
+  ]).optional(),
   snippetDensity: z.enum(["compact", "preview", "full"]).optional(),
   syntaxTheme: z.enum([
     "github-dark",
@@ -18,6 +26,7 @@ const appearanceSettingsSchema = z.object({
     "github-light",
     "monokai",
   ]).optional(),
+  bgPattern: z.enum(["flat", "dots", "grid", "gradient"]).optional(),
 });
 
 export async function PUT(request: Request) {
@@ -34,19 +43,21 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Invalid appearance settings payload" }, { status: 400 });
     }
 
-    const { appTheme, snippetDensity, syntaxTheme } = parsed.data;
+    const { appTheme, snippetDensity, syntaxTheme, bgPattern } = parsed.data;
 
     // Merge with existing preferences or fallback to defaults
     const currentPrefs = session.user.preferences || {
       appTheme: "theme-dark",
       snippetDensity: "compact",
       syntaxTheme: "github-dark",
+      bgPattern: "flat",
     };
 
     const updatedPrefs = {
-      appTheme: appTheme ?? currentPrefs.appTheme,
-      snippetDensity: snippetDensity ?? currentPrefs.snippetDensity,
-      syntaxTheme: syntaxTheme ?? currentPrefs.syntaxTheme,
+      appTheme: appTheme ?? currentPrefs.appTheme ?? "theme-dark",
+      snippetDensity: snippetDensity ?? currentPrefs.snippetDensity ?? "compact",
+      syntaxTheme: syntaxTheme ?? currentPrefs.syntaxTheme ?? "github-dark",
+      bgPattern: bgPattern ?? currentPrefs.bgPattern ?? "flat",
     };
 
     // Update in database

@@ -39,6 +39,16 @@ export async function getSession() {
     return null;
   }
 
+  // Gracefully normalize user preferences to ensure robust fallbacks for existing profiles
+  if (session.user && session.user.preferences) {
+    session.user.preferences = {
+      appTheme: session.user.preferences.appTheme ?? "theme-dark",
+      snippetDensity: session.user.preferences.snippetDensity ?? "compact",
+      syntaxTheme: session.user.preferences.syntaxTheme ?? "github-dark",
+      bgPattern: session.user.preferences.bgPattern ?? "flat",
+    };
+  }
+
   if (session.expiresAt < new Date()) {
     await db.delete(sessions).where(eq(sessions.id, session.id));
     return null;

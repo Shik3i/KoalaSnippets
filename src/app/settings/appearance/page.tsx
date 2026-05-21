@@ -11,10 +11,12 @@ export default async function AppearanceSettingsPage() {
     redirect("/login");
   }
 
-  const initialPreferences = session.user.preferences || {
-    appTheme: "theme-dark",
-    snippetDensity: "compact",
-    syntaxTheme: "github-dark",
+  const prefs = session.user.preferences;
+  const initialPreferences = {
+    appTheme: prefs?.appTheme ?? "theme-dark",
+    snippetDensity: (prefs?.snippetDensity ?? "compact") as "compact" | "preview" | "full",
+    syntaxTheme: prefs?.syntaxTheme ?? "github-dark",
+    bgPattern: prefs?.bgPattern ?? "flat",
   };
 
   return (

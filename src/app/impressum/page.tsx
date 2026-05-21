@@ -17,7 +17,9 @@ export default function ImpressumPage() {
             <h2 className="text-xl font-semibold mb-3">Angaben gem&auml;&szlig; &sect; 5 TMG</h2>
             <p className="text-muted-foreground">
               KoalaSnippets ist ein selbstgehostetes Snippet-Management-Tool, das von privaten Entwicklern
-              betrieben wird. Die Software wird lokal auf eigener Infrastruktur ausgef&uuml;hrt.
+              betrieben wird. Die Software wird lokal auf eigener Infrastruktur ausgef&uuml;hrt. Die Anwendung speichert
+              verschl&uuml;sselte Zugangsdaten und pers&ouml;nliche Design-Einstellungen (im JSON-Format) ausschlie&szlig;lich
+              in einer lokalen, privaten SQLite-Datenbankinstanz.
             </p>
           </section>
 

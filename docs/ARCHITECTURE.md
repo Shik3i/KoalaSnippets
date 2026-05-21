@@ -165,7 +165,7 @@ users (
   username        TEXT UNIQUE NOT NULL,
   password_hash   TEXT NOT NULL,          -- Argon2id hash
   role            TEXT NOT NULL DEFAULT 'USER',  -- 'USER' or 'ADMIN'
-  preferences     TEXT NOT NULL,          -- JSON object: {"appTheme":"theme-dark","snippetDensity":"compact","syntaxTheme":"github-dark"}
+  preferences     TEXT NOT NULL,          -- JSON object: {"appTheme":"theme-dark","snippetDensity":"compact","syntaxTheme":"github-dark","bgPattern":"flat"}
   created_at      INTEGER NOT NULL        -- Unix timestamp
 )
 
@@ -300,8 +300,10 @@ To keep memory usage minimal and server starts instantaneous, `src/features/snip
 Furthermore, syntax highlighting themes (e.g. `dracula`, `nord`, `poimandres`, `monokai`, `github-light`) are lazy-loaded dynamically on-demand, caching compiled highlighters dynamically and preventing bundle bloat.
 
 ### Visual Appearance Customization
+
 Users can personalize their coding environment in real-time under `/settings/appearance`:
-- **App Themes:** Toggle among Default Dark, Midnight Blue, Hacker Green, and Light Mode with interactive live HSL overrides on the document tree.
+- **App Themes:** Toggle among Default Dark, Midnight Blue, Hacker Green, Light Mode, Nord, Dracula, and Terracotta with interactive live HSL overrides on the document tree.
+- **Background Patterns:** Choose from four pure CSS background patterns (`flat`, `dots`, `grid`, `gradient`) scoped dynamically to both the global body and interactive client-side preview wrappers.
 - **Snippet Densities:** Personalize layouts by selecting `compact` density (metadata list), `preview` density (Shiki highlighted 5-line truncated previews compiled on the server), or `full` density (complete highlighted code card).
 - **Syntax Themes:** Instantly swap code themes with zero-latency client-side visualization mockups.
 

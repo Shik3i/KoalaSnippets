@@ -48,6 +48,7 @@ export async function POST(request: Request) {
         appTheme: "theme-dark",
         snippetDensity: "compact",
         syntaxTheme: "github-dark",
+        bgPattern: "flat",
       },
     });
 

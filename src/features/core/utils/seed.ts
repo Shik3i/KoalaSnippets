@@ -28,6 +28,7 @@ export async function seedAdminUser() {
       appTheme: "theme-dark",
       snippetDensity: "compact",
       syntaxTheme: "github-dark",
+      bgPattern: "flat",
     },
   });
 

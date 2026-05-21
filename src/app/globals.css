@@ -131,6 +131,96 @@
   --color-popover-foreground: hsl(120 100% 75%);
 }
 
+.theme-nord {
+  --color-background: hsl(220 16% 16%);
+  --color-foreground: hsl(218 27% 92%);
+
+  --color-muted: hsl(220 16% 22%);
+  --color-muted-foreground: hsl(218 10% 70%);
+
+  --color-primary: hsl(210 29% 97%);
+  --color-primary-foreground: hsl(220 16% 16%);
+
+  --color-secondary: hsl(220 16% 20%);
+  --color-secondary-foreground: hsl(210 29% 97%);
+
+  --color-accent: hsl(193 43% 67%);
+  --color-accent-foreground: hsl(220 16% 16%);
+
+  --color-destructive: hsl(354 70% 42%);
+  --color-destructive-foreground: hsl(210 29% 97%);
+
+  --color-border: hsl(220 16% 26%);
+  --color-input: hsl(220 16% 26%);
+  --color-ring: hsl(193 43% 67%);
+
+  --color-card: hsl(220 16% 18%);
+  --color-card-foreground: hsl(218 27% 92%);
+
+  --color-popover: hsl(220 16% 18%);
+  --color-popover-foreground: hsl(218 27% 92%);
+}
+
+.theme-dracula {
+  --color-background: hsl(231 15% 18%);
+  --color-foreground: hsl(231 15% 90%);
+
+  --color-muted: hsl(231 15% 24%);
+  --color-muted-foreground: hsl(231 10% 70%);
+
+  --color-primary: hsl(60 30% 96%);
+  --color-primary-foreground: hsl(231 15% 18%);
+
+  --color-secondary: hsl(231 15% 26%);
+  --color-secondary-foreground: hsl(60 30% 96%);
+
+  --color-accent: hsl(265 89% 78%);
+  --color-accent-foreground: hsl(231 15% 18%);
+
+  --color-destructive: hsl(0 100% 67%);
+  --color-destructive-foreground: hsl(231 15% 90%);
+
+  --color-border: hsl(231 15% 28%);
+  --color-input: hsl(231 15% 28%);
+  --color-ring: hsl(265 89% 78%);
+
+  --color-card: hsl(231 15% 20%);
+  --color-card-foreground: hsl(231 15% 90%);
+
+  --color-popover: hsl(231 15% 20%);
+  --color-popover-foreground: hsl(231 15% 90%);
+}
+
+.theme-terracotta {
+  --color-background: hsl(20 20% 12%);
+  --color-foreground: hsl(30 30% 88%);
+
+  --color-muted: hsl(20 18% 18%);
+  --color-muted-foreground: hsl(20 10% 68%);
+
+  --color-primary: hsl(30 30% 92%);
+  --color-primary-foreground: hsl(20 20% 12%);
+
+  --color-secondary: hsl(20 18% 22%);
+  --color-secondary-foreground: hsl(30 30% 92%);
+
+  --color-accent: hsl(14 65% 58%);
+  --color-accent-foreground: hsl(20 20% 12%);
+
+  --color-destructive: hsl(0 60% 45%);
+  --color-destructive-foreground: hsl(30 30% 92%);
+
+  --color-border: hsl(20 18% 26%);
+  --color-input: hsl(20 18% 26%);
+  --color-ring: hsl(14 65% 58%);
+
+  --color-card: hsl(20 20% 14%);
+  --color-card-foreground: hsl(30 30% 88%);
+
+  --color-popover: hsl(20 20% 14%);
+  --color-popover-foreground: hsl(30 30% 88%);
+}
+
 * {
   border-color: var(--color-border);
 }
@@ -141,4 +231,25 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scoped body background patterns and generic containers */
+.bg-pattern-dots body,
+.bg-pattern-dots.bg-pattern-container {
+  background-image: radial-gradient(var(--color-border) 1.5px, transparent 1.5px);
+  background-size: 20px 20px;
+}
+
+.bg-pattern-grid body,
+.bg-pattern-grid.bg-pattern-container {
+  background-image: 
+    linear-gradient(to right, var(--color-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-border) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.bg-pattern-gradient body,
+.bg-pattern-gradient.bg-pattern-container {
+  background-image: radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--color-accent) 12%, transparent) 0%, transparent 60%);
+  background-attachment: fixed;
 }

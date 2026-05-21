@@ -42,18 +42,23 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-3">3. Erhobene Daten</h2>
+            <h2 className="text-xl font-semibold mb-3">3. Erhobene Daten und lokale Speicherung</h2>
             <p className="text-muted-foreground">
-              Die einzigen gespeicherten Daten sind die, die Sie explizit bereitstellen:
+              Die Anwendung speichert s&auml;mtliche Daten ausschlie&szlig;lich in einer lokalen, privaten SQLite-Datenbankinstanz
+              auf Ihrem eigenen Server. Es werden nur die Daten verarbeitet, die Sie explizit bereitstellen oder die f&uuml;r den
+              Betrieb zwingend erforderlich sind:
             </p>
             <ul className="list-disc list-inside text-muted-foreground space-y-1">
               <li>Benutzername (zur Authentifizierung)</li>
-              <li>Passwort-Hash (Argon2id, irreversibel)</li>
+              <li>Passwort-Hash (Argon2id, irreversibel verschl&uuml;sselt)</li>
+              <li>User-Design-Pr&auml;ferenzen (App-Theme, Code-Vorschau-Dichte, Syntax-Highlighting-Theme, Hintergrundmuster im JSON-Format)</li>
               <li>Erstellte Snippets (Titel, Beschreibung, Code, Tags)</li>
               <li>Session-Tokens (gehasht, automatisch ablaufend)</li>
             </ul>
             <p className="text-muted-foreground mt-2">
-              Wir erfassen <strong>nicht</strong>: IP-Adressen, Browser-Fingerprints,
+              Da die Plattform auf einem strikten Zero-Tracking-, Zero-Telemetry- und Zero-CDN-Framework basiert, verl&auml;sst
+              absolut kein einziges Datenpaket die selbstgehostete Umgebung. Nutzungsanalysen, Telemetrie, Fehlerberichte oder
+              Drittanbieter-Tracking existieren schlichtweg nicht. Wir erfassen <strong>nicht</strong>: IP-Adressen, Browser-Fingerprints,
               Nutzungsanalysen, Fehler-Tracking oder Telemetrie.
             </p>
           </section>

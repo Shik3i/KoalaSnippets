@@ -18,7 +18,7 @@ KoalaSnippets is a self-hosted web application for storing, organizing, and shar
 - 🛡️ **Rock-Solid Security** — Argon2id + Salt + Pepper password hashing, in-memory rate limiting, strict CSP headers, timing-attack-resistant token comparison.
 - 👁️ **Visibility Controls** — Public Explorer for anyone, secure shared links with unguessable tokens, or keep snippets strictly private.
 - ⚡ **Blazing Fast Search** — Server-side parameterized queries with an "include code in search" toggle. No client-side filtering bottlenecks.
-- 🎨 **Appearance & Theme Customization** — Personalize your experience with multiple themes (Default Dark, Midnight Blue, Hacker Green, Light Mode), customizable list densities (Compact, 5-Line Preview, Full Code), and 6 lazy-loaded syntax highlighting themes with an interactive real-time visual mockup preview.
+- 🎨 **Appearance & Theme Customization** — Personalize your experience with 7 premium themes (Default Dark, Midnight Blue, Nordic Frost, Dracula, Cozy Terracotta, Hacker Green, Light Mode), 4 CSS-driven background patterns (Flat, Subtle Dots, Mesh Grid, Soft Glow), customizable list densities (Compact, 5-Line Preview, Full Code), and 6 lazy-loaded syntax highlighting themes with an interactive real-time visual mockup preview.
 - 🎨 **Beautiful 2-Pane UI** — Responsive card grid, dark mode by default, clean shadcn/ui components, JetBrains Mono for code.
 - 💻 **Developer Ready** — Shiki server-side syntax highlighting for 30+ languages, one-click copy-to-clipboard, tag-based organization.
 - ⌨️ **Premium Custom `CodeEditor`** — Zero-dependency native code editor supporting automatic Tab indentation spaces, matching brackets/quotes auto-closing, overtyping skip, and backspace pair matching deletions.

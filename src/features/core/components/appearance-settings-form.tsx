@@ -14,12 +14,14 @@ import {
   Layers,
   Code,
   Eye,
+  Grid,
 } from "lucide-react";
 
 interface UserPreferences {
   appTheme: string;
   snippetDensity: "compact" | "preview" | "full";
   syntaxTheme: string;
+  bgPattern: string;
 }
 
 interface AppearanceSettingsFormProps {
@@ -104,6 +106,30 @@ const APP_THEMES = [
     colors: ["bg-[#0b101b]", "border-accent", "text-[#f0f5ff]"],
   },
   {
+    id: "theme-nord",
+    name: "Nordic Frost",
+    description: "Cool gray-blue tones inspired by arctic elegance",
+    icon: Compass,
+    class: "theme-nord",
+    colors: ["bg-[#2e3440]", "border-[#3b4252]", "text-[#eceff4]"],
+  },
+  {
+    id: "theme-dracula",
+    name: "Dracula",
+    description: "Rich, vibrant plum tones with neon accents",
+    icon: Terminal,
+    class: "theme-dracula",
+    colors: ["bg-[#282a36]", "border-[#bd93f9]", "text-[#f8f8f2]"],
+  },
+  {
+    id: "theme-terracotta",
+    name: "Cozy Terracotta",
+    description: "Warm organic clay-brown tones with earthy accents",
+    icon: Sun,
+    class: "theme-terracotta",
+    colors: ["bg-[#231c19]", "border-[#d35400]", "text-[#ede6e0]"],
+  },
+  {
     id: "theme-hacker",
     name: "Hacker Green",
     description: "High contrast terminal aesthetic with neon phosphor glow",
@@ -151,6 +177,29 @@ const SYNTAX_THEMES = [
   { id: "github-light", name: "GitHub Light", type: "Light" },
 ];
 
+const BG_PATTERNS = [
+  {
+    id: "flat",
+    name: "Solid Flat",
+    description: "Standard theme background without pattern",
+  },
+  {
+    id: "dots",
+    name: "Subtle Dots",
+    description: "Premium engineering dotted grid matrix",
+  },
+  {
+    id: "grid",
+    name: "Mesh Grid",
+    description: "Precise engineering overlapping coordinates",
+  },
+  {
+    id: "gradient",
+    name: "Soft Glow",
+    description: "Ambient top radial light source depth fade",
+  },
+];
+
 export function AppearanceSettingsForm({ initialPreferences }: AppearanceSettingsFormProps) {
   const { addToast } = useToast();
   const router = useRouter();
@@ -158,27 +207,29 @@ export function AppearanceSettingsForm({ initialPreferences }: AppearanceSetting
   const [appTheme, setAppTheme] = useState(initialPreferences.appTheme);
   const [snippetDensity, setSnippetDensity] = useState<"compact" | "preview" | "full">(initialPreferences.snippetDensity);
   const [syntaxTheme, setSyntaxTheme] = useState(initialPreferences.syntaxTheme);
+  const [bgPattern, setBgPattern] = useState(initialPreferences.bgPattern ?? "flat");
   const [isSaving, setIsSaving] = useState(false);
   const isSavedRef = useRef(false);
 
-  // Apply visual theme preview on HTML document tag dynamically
+  // Apply visual theme and pattern preview on HTML document tag dynamically
   useEffect(() => {
-    document.documentElement.className = appTheme;
-  }, [appTheme]);
+    document.documentElement.className = `${appTheme} bg-pattern-${bgPattern}`;
+  }, [appTheme, bgPattern]);
 
-  // Restore initial theme on cancel or unmount if not saved
+  // Restore initial theme and pattern on cancel or unmount if not saved
   useEffect(() => {
     return () => {
       if (!isSavedRef.current) {
-        document.documentElement.className = initialPreferences.appTheme;
+        document.documentElement.className = `${initialPreferences.appTheme} bg-pattern-${initialPreferences.bgPattern ?? "flat"}`;
       }
     };
-  }, [initialPreferences.appTheme]);
+  }, [initialPreferences.appTheme, initialPreferences.bgPattern]);
 
   const handleReset = () => {
     setAppTheme(initialPreferences.appTheme);
     setSnippetDensity(initialPreferences.snippetDensity);
     setSyntaxTheme(initialPreferences.syntaxTheme);
+    setBgPattern(initialPreferences.bgPattern ?? "flat");
     addToast("Settings reverted to saved values", "info");
   };
 
@@ -193,6 +244,7 @@ export function AppearanceSettingsForm({ initialPreferences }: AppearanceSetting
           appTheme,
           snippetDensity,
           syntaxTheme,
+          bgPattern,
         }),
       });
 
@@ -322,6 +374,45 @@ export function AppearanceSettingsForm({ initialPreferences }: AppearanceSetting
           </div>
         </div>
 
+        {/* BACKGROUND PATTERN SECTION */}
+        <div className="rounded-xl border border-border bg-card/40 p-6 backdrop-blur-md shadow-xl space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+              <Grid className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">Background Pattern</h2>
+              <p className="text-xs text-muted-foreground">Choose a high-performance pure CSS backdrop pattern</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {BG_PATTERNS.map((pattern) => {
+              const isSelected = bgPattern === pattern.id;
+              return (
+                <button
+                  key={pattern.id}
+                  type="button"
+                  onClick={() => setBgPattern(pattern.id)}
+                  className={`flex flex-col p-3 rounded-lg border text-left transition-all duration-300 cursor-pointer ${
+                    isSelected
+                      ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                      : "border-border bg-muted/10 hover:border-muted-foreground/30 hover:bg-muted/20"
+                  }`}
+                >
+                  <span className="text-xs font-semibold block">{pattern.name}</span>
+                  <span className="text-[10px] text-muted-foreground block mb-2">{pattern.description}</span>
+                  
+                  {/* Miniature swatch visual representing the pattern */}
+                  <div
+                    className={`mt-auto h-8 w-full rounded border border-border/40 bg-background bg-pattern-container bg-pattern-${pattern.id}`}
+                  />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* SYNTAX HIGHLIGHTING SECTION */}
         <div className="rounded-xl border border-border bg-card/40 p-6 backdrop-blur-md shadow-xl space-y-4">
           <div className="flex items-center gap-3">
@@ -405,7 +496,7 @@ export function AppearanceSettingsForm({ initialPreferences }: AppearanceSetting
           </span>
         </div>
 
-        <div className="p-1 rounded-2xl border border-border bg-card/60 backdrop-blur-md shadow-2xl relative overflow-hidden transition-all duration-300">
+        <div className={`p-1 rounded-2xl border border-border bg-background shadow-2xl relative overflow-hidden transition-all duration-300 bg-pattern-container bg-pattern-${bgPattern}`}>
           
           {/* Glassmorphic card frame */}
           <div className="p-4 space-y-4">
