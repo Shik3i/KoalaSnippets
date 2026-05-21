@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { CodeEditor } from "@/features/snippets/components/code-editor";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sidebar } from "@/components/layout/sidebar";
+import { Sidebar } from "@/features/core/components/sidebar";
 import { useToast } from "@/components/ui/toast";
-import { useKeyboardShortcuts } from "@/lib/keyboard-shortcuts";
+import { useKeyboardShortcuts } from "@/features/snippets/utils/keyboard-shortcuts";
 import { X, Plus } from "lucide-react";
 
 export default function NewSnippetPage() {
@@ -108,10 +109,10 @@ export default function NewSnippetPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="code">Code</Label>
-                <Textarea
+                <CodeEditor
                   id="code"
                   value={code}
-                  onChange={(e) => setCode(e.target.value)}
+                  onChange={setCode}
                   placeholder="Paste your code here..."
                   rows={12}
                   className="font-mono text-sm"

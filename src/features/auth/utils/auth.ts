@@ -30,11 +30,14 @@ export async function verifyPassword(password: string, hashStr: string): Promise
 
 function extractSalt(hashStr: string): string {
   const params = hashStr.split("$");
-  const saltParam = params.find((p) => p.startsWith("s="));
+  if (params.length < 5) {
+    throw new Error("Invalid hash format");
+  }
+  const saltParam = params[4];
   if (!saltParam) {
     throw new Error("Invalid hash format: salt not found");
   }
-  return Buffer.from(saltParam.split("=")[1], "base64").toString("hex");
+  return Buffer.from(saltParam, "base64").toString("hex");
 }
 
 export function generateSessionToken(): string {
@@ -52,3 +55,4 @@ export function generateShareToken(): string {
 export function generateId(): string {
   return crypto.randomUUID();
 }
+

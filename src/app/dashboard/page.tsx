@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
-import { Sidebar } from "@/components/layout/sidebar";
-import { SnippetCard } from "@/components/snippets/snippet-card";
-import { SnippetSearchHeader } from "@/components/snippets/search-header";
+import { getSession } from "@/features/auth/utils/session";
+import { Sidebar } from "@/features/core/components/sidebar";
+import { SnippetCard } from "@/features/snippets/components/snippet-card";
+import { SnippetSearchHeader } from "@/features/snippets/components/search-header";
 import { db } from "@/db";
 import { snippets } from "@/db/schema";
 import { eq, desc, like, or, and } from "drizzle-orm";

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn } from "@/features/core/utils/utils";
 import { useToast } from "@/components/ui/toast";
 import {
   Pencil,

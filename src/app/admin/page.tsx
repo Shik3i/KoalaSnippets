@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
-import { Sidebar } from "@/components/layout/sidebar";
-import { AdminMetrics } from "@/components/admin/admin-metrics";
-import { AdminUserList } from "@/components/admin/admin-user-list";
-import { AdminBackupList } from "@/components/admin/admin-backup-list";
+import { getSession } from "@/features/auth/utils/session";
+import { Sidebar } from "@/features/core/components/sidebar";
+import { AdminMetrics } from "@/features/admin/components/admin-metrics";
+import { AdminUserList } from "@/features/admin/components/admin-user-list";
+import { AdminBackupList } from "@/features/admin/components/admin-backup-list";
 
 export const dynamic = "force-dynamic";
 

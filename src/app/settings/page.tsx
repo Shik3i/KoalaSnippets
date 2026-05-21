@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
-import { Sidebar } from "@/components/layout/sidebar";
-import { PasswordChangeForm } from "@/components/settings/password-change-form";
+import { getSession } from "@/features/auth/utils/session";
+import { Sidebar } from "@/features/core/components/sidebar";
+import { PasswordChangeForm } from "@/features/auth/components/password-change-form";
 
 export const dynamic = "force-dynamic";
 

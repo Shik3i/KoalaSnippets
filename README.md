@@ -20,8 +20,10 @@ KoalaSnippets is a self-hosted web application for storing, organizing, and shar
 - ⚡ **Blazing Fast Search** — Server-side parameterized queries with an "include code in search" toggle. No client-side filtering bottlenecks.
 - 🎨 **Beautiful 2-Pane UI** — Responsive card grid, dark mode by default, clean shadcn/ui components, JetBrains Mono for code.
 - 💻 **Developer Ready** — Shiki server-side syntax highlighting for 30+ languages, one-click copy-to-clipboard, tag-based organization.
-- ⌨️ **Keyboard Shortcuts** — `Cmd+K` to focus search, `Cmd+S` to save while editing.
+- ⌨️ **Premium Custom `CodeEditor`** — Zero-dependency native code editor supporting automatic Tab indentation spaces, matching brackets/quotes auto-closing, overtyping skip, and backspace pair matching deletions.
+- 🔍 **Glassmorphic `CommandPalette`** — Global `Ctrl+K` / `⌘K` frosted-glass overlay HUD to search snippets in real-time or execute slash commands (`/new`, `/settings`, `/backups`, `/home`, `/dashboard`).
 - 📥 **Download Code** — Download snippets as files with correct extensions.
+- 🚀 **High Performance & WAL Mode** — Hardened SQLite with Write-Ahead Logging (WAL), busy timeout configuration, and normal synchronous writes alongside lazy-loaded Shiki languages for ultra-fast response.
 - 🔄 **Automated Backups** — SQLite `VACUUM INTO` with GFS retention (7 daily, 4 weekly, 12 monthly).
 - 🛡️ **Admin Dashboard** — RBAC with admin seeding, user management, backup management, system metrics.
 - 📊 **Public Statistics** — Community metrics page with lifetime counters.
@@ -36,7 +38,7 @@ KoalaSnippets is a self-hosted web application for storing, organizing, and shar
 | Styling | Tailwind CSS v4 + shadcn/ui |
 | Database | SQLite (better-sqlite3) |
 | ORM | Drizzle ORM |
-| Syntax Highlighting | Shiki (server-side, 30+ languages) |
+| Syntax Highlighting | Shiki (server-side with lazy-loading language modules) |
 | Authentication | Session cookies + Argon2id + Pepper + RBAC |
 | Fonts | next/font/google (Inter, JetBrains Mono) |
 | Icons | lucide-react (bundled) |
@@ -72,8 +74,10 @@ AUTH_PEPPER=your-long-random-string-here
 SESSION_SECRET=another-long-random-string
 
 # Optional: Admin user seeded on first boot
+# CRITICAL: These default credentials ('admin' / 'admin') are for local testing only
+# and MUST be changed to secure values before deploying to production!
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD=a-very-secure-password
+ADMIN_PASSWORD=admin
 
 # Optional: Enable/disable user registration (default: false)
 ALLOW_REGISTRATION=true
@@ -84,6 +88,9 @@ DATABASE_URL=file:./data/koalasnippets.db
 # Optional: Backup directory (default: ./backups)
 BACKUP_DIR=./backups
 ```
+
+> [!WARNING]
+> The default seeded administrator credentials (`ADMIN_USERNAME=admin` / `ADMIN_PASSWORD=admin`) are strictly for local development and verification. You **MUST** change them to secure random values before pushing to staging or running in production!
 
 Generate secure random strings:
 ```bash
@@ -176,16 +183,14 @@ KoalaSnippets/
 │   │   ├── stats/          # Public statistics page
 │   │   ├── impressum/      # German imprint
 │   │   └── privacy/        # Privacy policy
+│   ├── features/           # Domain-driven features folders (Restructured)
+│   │   ├── admin/          # Backup UI lists, metrics, scheduling logic & admin guards
+│   │   ├── auth/           # Login/register forms, session handlers & crypt auth utils
+│   │   ├── snippets/       # Snippet cards, search header, custom CodeEditor & lazy Shiki highlighting
+│   │   └── core/           # Common layouts (sidebar, detail-view), global rate limiters, CommandPalette & styles
 │   ├── components/
-│   │   ├── layout/         # Sidebar, detail view
-│   │   ├── snippets/       # SnippetCard, SnippetSearchHeader
-│   │   ├── admin/          # Admin metrics, user list, backup list
-│   │   ├── stats/          # Public stats counter cards
-│   │   ├── ui/             # shadcn/ui primitives + toast
-│   │   ├── auth/           # Login/register forms
-│   │   └── settings/       # Password change form
-│   ├── db/                 # Drizzle schema, migrations, connection
-│   └── lib/                # Auth, session, Shiki, backup, seed, etc.
+│   │   └── ui/             # shadcn/ui primitives + toast notification providers
+│   ├── db/                 # Drizzle schema, migrations, connection (WAL enabled)
 ├── instrumentation.ts      # Server lifecycle hooks (backup, seeding)
 ├── Dockerfile              # Multi-stage production build
 ├── docker-compose.yml      # Docker orchestration

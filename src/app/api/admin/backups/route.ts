@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { requireAdmin } from "@/lib/admin-guard";
-import { runVacuumBackup } from "@/lib/backup";
+import { requireAdmin } from "@/features/admin/utils/admin-guard";
+import { runVacuumBackup } from "@/features/admin/utils/backup";
 
 const BACKUP_DIR = process.env.BACKUP_DIR ?? path.join(process.cwd(), "backups");
 
@@ -15,25 +15,30 @@ export async function GET(request: Request) {
   const download = url.searchParams.get("download");
 
   if (download) {
-    const filePath = path.join(BACKUP_DIR, download);
-    const resolved = path.resolve(filePath);
-    const resolvedDir = path.resolve(BACKUP_DIR);
+    try {
+      const filePath = path.join(BACKUP_DIR, download);
+      const resolved = path.resolve(filePath);
+      const resolvedDir = path.resolve(BACKUP_DIR);
+      const resolvedDirWithSep = resolvedDir.endsWith(path.sep) ? resolvedDir : resolvedDir + path.sep;
 
-    if (!resolved.startsWith(resolvedDir)) {
-      return NextResponse.json({ error: "Invalid path" }, { status: 400 });
+      if (!resolved.startsWith(resolvedDirWithSep) && resolved !== resolvedDir) {
+        return NextResponse.json({ error: "Invalid path" }, { status: 400 });
+      }
+
+      if (!fs.existsSync(resolved) || !fs.statSync(resolved).isFile()) {
+        return NextResponse.json({ error: "Backup not found" }, { status: 404 });
+      }
+
+      const fileBuffer = fs.readFileSync(resolved);
+      return new NextResponse(fileBuffer, {
+        headers: {
+          "Content-Type": "application/octet-stream",
+          "Content-Disposition": `attachment; filename="${download}"`,
+        },
+      });
+    } catch {
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
-
-    if (!fs.existsSync(resolved)) {
-      return NextResponse.json({ error: "Backup not found" }, { status: 404 });
-    }
-
-    const fileBuffer = fs.readFileSync(resolved);
-    return new NextResponse(fileBuffer, {
-      headers: {
-        "Content-Type": "application/octet-stream",
-        "Content-Disposition": `attachment; filename="${download}"`,
-      },
-    });
   }
 
   if (!fs.existsSync(BACKUP_DIR)) {

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { users, siteStatistics } from "@/db/schema";
-import { hashPassword, generateId } from "@/lib/auth";
-import { registerSchema } from "@/lib/validations";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { hashPassword, generateId } from "@/features/auth/utils/auth";
+import { registerSchema } from "@/features/core/utils/validations";
+import { checkRateLimit } from "@/features/core/utils/rate-limit";
 import { eq, sql } from "drizzle-orm";
 
 export async function POST(request: Request) {

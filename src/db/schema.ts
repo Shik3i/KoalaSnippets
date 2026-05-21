@@ -16,7 +16,7 @@ export const snippets = sqliteTable("snippets", {
   code: text("code").notNull(),
   language: text("language").notNull(),
   tags: text("tags", { mode: "json" }).$type<string[]>(),
-  authorId: text("author_id").notNull().references(() => users.id),
+  authorId: text("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   visibility: text("visibility", { enum: ["PRIVATE", "SHARED", "PUBLIC"] }).notNull().default("PRIVATE"),
   shareToken: text("share_token").unique(),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
@@ -25,7 +25,7 @@ export const snippets = sqliteTable("snippets", {
 
 export const sessions = sqliteTable("sessions", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull().references(() => users.id),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   tokenHash: text("token_hash").notNull(),
   expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),

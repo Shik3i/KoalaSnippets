@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { users, sessions } from "@/db/schema";
-import { getSession } from "@/lib/session";
-import { verifyPassword, hashPassword } from "@/lib/auth";
-import { passwordChangeSchema } from "@/lib/validations";
+import { getSession } from "@/features/auth/utils/session";
+import { verifyPassword, hashPassword } from "@/features/auth/utils/auth";
+import { passwordChangeSchema } from "@/features/core/utils/validations";
 import { eq } from "drizzle-orm";
 
 export async function PUT(request: Request) {

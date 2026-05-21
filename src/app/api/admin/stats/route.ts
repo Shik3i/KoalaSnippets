@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import { db } from "@/db";
 import { siteStatistics } from "@/db/schema";
-import { requireAdmin } from "@/lib/admin-guard";
+import { requireAdmin } from "@/features/admin/utils/admin-guard";
 import { eq } from "drizzle-orm";
 
 export async function GET() {

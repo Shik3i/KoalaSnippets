@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { snippets, siteStatistics } from "@/db/schema";
-import { getSession } from "@/lib/session";
-import { snippetSchema } from "@/lib/validations";
-import { generateId, generateShareToken } from "@/lib/auth";
+import { getSession } from "@/features/auth/utils/session";
+import { snippetSchema } from "@/features/core/utils/validations";
+import { generateId, generateShareToken } from "@/features/auth/utils/auth";
 import { eq, desc, like, or, and, sql } from "drizzle-orm";
 
 const PAGE_SIZE = 50;

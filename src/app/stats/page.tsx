@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { siteStatistics } from "@/db/schema";
-import { Sidebar } from "@/components/layout/sidebar";
-import { PublicStatsCards } from "@/components/stats/public-stats-cards";
+import { Sidebar } from "@/features/core/components/sidebar";
+import { PublicStatsCards } from "@/features/core/components/public-stats-cards";
 import { eq } from "drizzle-orm";
 import type { Metadata } from "next";
 

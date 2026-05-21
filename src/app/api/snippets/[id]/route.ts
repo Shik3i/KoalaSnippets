@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { snippets } from "@/db/schema";
-import { getSession } from "@/lib/session";
-import { updateSnippetSchema } from "@/lib/validations";
-import { generateShareToken } from "@/lib/auth";
+import { getSession } from "@/features/auth/utils/session";
+import { updateSnippetSchema } from "@/features/core/utils/validations";
+import { generateShareToken } from "@/features/auth/utils/auth";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
 

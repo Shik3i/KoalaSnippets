@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn } from "@/features/core/utils/utils";
 import { Lock, Globe, Link2 } from "lucide-react";
 
 interface SnippetCardProps {

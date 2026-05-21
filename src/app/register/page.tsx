@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { RegisterForm } from "@/components/auth/register-form";
+import { RegisterForm } from "@/features/auth/components/register-form";
 
 export default function RegisterPage() {
   if (process.env.ALLOW_REGISTRATION !== "true") {

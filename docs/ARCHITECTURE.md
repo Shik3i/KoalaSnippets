@@ -13,7 +13,7 @@ KoalaSnippets is a self-hosted snippet management application built with Next.js
 | Styling     | Tailwind CSS v4 + shadcn/ui components |
 | Database    | SQLite via better-sqlite3           |
 | ORM         | Drizzle ORM                         |
-| Highlighting| Shiki (server-side)                 |
+| Highlighting| Shiki (server-side, lazy loading)   |
 | Auth        | Session/JWT + Argon2id + Pepper     |
 | Icons       | lucide-react (bundled)              |
 | Fonts       | next/font/google (zero layout shift, locally hosted) |
@@ -24,14 +24,14 @@ KoalaSnippets is a self-hosted snippet management application built with Next.js
 
 ```
 /app
-  /layout.tsx              # Root layout (fonts, hydration fix)
+  /layout.tsx              # Root layout (fonts, CommandPalette mount, session state check)
   /page.tsx                # Public snippet explorer (PUBLIC visibility, responsive grid)
   /login/page.tsx          # Authentication page
   /register/page.tsx       # Registration (guarded by ALLOW_REGISTRATION)
   /snippets/
     /[id]/page.tsx         # Dedicated snippet detail view (full-width, back button)
   /dashboard/page.tsx      # User's private snippet management (responsive grid)
-  /dashboard/new/page.tsx  # Create new snippet form
+  /dashboard/new/page.tsx  # Create new snippet form (uses Custom CodeEditor)
   /settings/page.tsx       # User settings (password change)
   /admin/page.tsx          # Admin dashboard (RBAC: ADMIN only)
   /stats/page.tsx          # Public statistics page
@@ -106,29 +106,27 @@ DETAIL VIEW (/snippets/[id]):
 - **Tablet (768px-1024px):** Sidebar visible, 2-column card grid (`md:grid-cols-2`)
 - **Mobile (< 768px):** Sidebar collapses to drawer, 1-column card grid
 
-### Component Architecture
+### Component & Domain Architecture (Restructured)
+
+To support logical scalability and maintainability, the project implements a clean, domain-driven directory structure under `src/features/`.
 
 ```
-src/components/
-  layout/
-    sidebar.tsx          # Left sidebar with nav, tags, auth-aware footer, admin link
-    detail-view.tsx      # Full-width snippet detail + code block + download
-  snippets/
-    snippet-card.tsx     # Responsive grid card (links to /snippets/[id])
-    search-header.tsx    # Sticky search bar with debounce + Cmd+K hint
-  ui/                    # shadcn/ui primitives (button, input, card, badge, etc.)
-    toast.tsx            # Toast notification system (context + container)
-  admin/
-    admin-metrics.tsx    # System metrics cards (DB size, users, snippets)
-    admin-user-list.tsx  # User management table with delete action
-    admin-backup-list.tsx# Backup management with trigger/download
-  stats/
-    public-stats-cards.tsx  # Public statistics counter cards
-  auth/
-    login-form.tsx
-    register-form.tsx
-  settings/
-    password-change-form.tsx
+src/
+  features/
+    admin/                 # Administrative tools and safeguards
+      components/          # AdminMetrics, AdminUserList, AdminBackupList
+      utils/               # AdminGuards, Backup processes and interval schedulers
+    auth/                  # Authentication forms and cryptographic wrappers
+      components/          # LoginForm, RegisterForm, PasswordChangeForm
+      utils/               # Session storage handles, Argon2 hashing & pepper seeding
+    snippets/              # Snippet operations and UI
+      components/          # SnippetCard, SnippetSearchHeader, Custom CodeEditor
+      utils/               # Keyboard shortcuts & lazy-loaded Shiki syntax highlight
+    core/                  # Domain-independent structure and layouts
+      components/          # Global Sidebar, DetailView, glassmorphic CommandPalette
+      utils/               # Tailwind style merges, validations, seed metrics, rate limiters
+  components/
+    ui/                    # shadcn/ui base primitive layouts (buttons, inputs, cards, toasts)
 ```
 
 ## Search Architecture
@@ -142,9 +140,12 @@ Search is performed server-side via Drizzle parameterized `LIKE` queries. The `S
 
 All queries use Drizzle's parameterized operators — no string concatenation with user input.
 
+### Global `CommandPalette` Search HUD (`Ctrl+K`)
+In addition to the sticky search header, users can trigger a premium floating command palette HUD (`Ctrl+K` or `⌘K`). It queries the `/api/snippets?q=...` API endpoint on-demand with debounced triggers, and enables keyboard navigation (`ArrowUp`/`ArrowDown`/`Enter`) alongside direct slash-commands (`/new`, `/settings`, `/backups`, `/home`, `/dashboard`).
+
 ### Rate Limiting
 
-In-memory `Map`-based rate limiter (`src/lib/rate-limit.ts`):
+In-memory `Map`-based rate limiter (`src/features/core/utils/rate-limit.ts`):
 - Login: 5 attempts per 15 minutes per IP
 - Registration: 3 attempts per 60 minutes per IP
 - Auto-cleanup every 5 minutes
@@ -203,6 +204,13 @@ site_statistics (
 - `snippets(share_token)` - Fast token lookup for shared links
 - `sessions(token_hash)` - Fast session validation
 - `sessions(user_id)` - Fast user session lookup
+
+### SQLite Hardening (WAL Mode & Parameters)
+
+To ensure the database is highly robust and performs well under parallel access, we configure the connection under `src/db/index.ts` with hardened settings:
+- **Write-Ahead Logging (WAL):** `PRAGMA journal_mode = WAL` enables concurrent readers and writers without lock contention.
+- **Normal Synchronization:** `PRAGMA synchronous = NORMAL` lowers flush overhead, optimizing disk write speed while maintaining corruption safety.
+- **Busy Timeout:** `busy_timeout = 5000` tells better-sqlite3 to wait up to 5 seconds when database files are locked, completely avoiding immediate SQLITE_BUSY locking crashes.
 
 ### Visibility Logic
 
@@ -266,8 +274,8 @@ Backups older than these rules are automatically deleted during each backup cycl
 
 | File | Purpose |
 |------|---------|
-| `src/lib/backup.ts` | Core backup logic: VACUUM INTO, GFS retention, date parsing |
-| `src/lib/backup-scheduler.ts` | Interval-based scheduler (6-hour cycle) |
+| `src/features/admin/utils/backup.ts` | Core backup logic: VACUUM INTO, GFS retention, date parsing |
+| `src/features/admin/utils/backup-scheduler.ts` | Interval-based scheduler (6-hour cycle) |
 | `src/instrumentation.ts` | Next.js server lifecycle hook to start scheduler |
 
 ### Health Check
@@ -276,14 +284,24 @@ A lightweight `GET /api/health` endpoint returns `{"status": "ok", "timestamp": 
 
 ## Power-User Features
 
+### Premium Custom `CodeEditor`
+In `src/features/snippets/components/code-editor.tsx`, a custom browser-native code editor is deployed to handle tab indentation and bracket auto-closing:
+- **Tab capture:** Intercepts default key triggers to insert 2 clean spaces, avoiding losing control focus.
+- **Bracket/Quote auto-close:** Autocompletes matching elements (`(`, `[`, `{`, `"`, `'`, `` ` ``) instantly while keeping the caret centered.
+- **Overtyping skip:** Ignores repeated closing elements if the user types them manually right before the caret.
+- **Backspace matching-pair deletion:** Hitting `Backspace` between matching brackets or quotes deletes both characters at once.
+
+### Shiki Performance (Lazy-Loaded Languages)
+To keep memory usage minimal and server starts instantaneous, `src/features/snippets/utils/shiki.ts` is configured to lazy-load syntax parsing libraries. It loads only 5 core languages on boot, and dynamically executes `hl.loadLanguage(...)` if the user opens a snippet containing any of the other 31 supported languages.
+
 ### Keyboard Shortcuts
 
 | Shortcut | Action |
 |----------|--------|
-| `Cmd+K` / `Ctrl+K` | Focuses and selects the search bar input |
+| `Cmd+K` / `Ctrl+K` | Launches and centers the search CommandPalette HUD |
 | `Cmd+S` / `Ctrl+S` | Triggers form submission while editing/creating a snippet |
 
-Shortcuts are implemented via a global `keydown` listener (`src/lib/keyboard-shortcuts.ts`) and are active on all pages. The search bar displays a `⌘K` hint badge when not actively searching.
+Shortcuts are implemented via a global `keydown` listener (`src/features/snippets/utils/keyboard-shortcuts.ts`) and are active on all pages.
 
 ### Download Code
 

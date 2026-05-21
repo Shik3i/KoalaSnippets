@@ -1,4 +1,4 @@
-import { hashPassword, generateId } from "@/lib/auth";
+import { hashPassword, generateId } from "@/features/auth/utils/auth";
 import { db } from "@/db";
 import { users, siteStatistics } from "@/db/schema";
 import { eq } from "drizzle-orm";

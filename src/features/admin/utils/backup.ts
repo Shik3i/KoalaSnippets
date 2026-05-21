@@ -38,11 +38,10 @@ export function runVacuumBackup(): string {
   return backupPath;
 }
 
-function parseBackupDate(filename: string): Date {
-  const dateStr = filename.replace("backup-", "").replace(".db", "");
-  const normalized = dateStr
-    .replace(/-(\d{2})-(\d{2})-(\d{2})\.(\d{3})$/, "T$1:$2:$3.$4")
-    .replace(" ", "T");
+export function parseBackupDate(filename: string): Date {
+  const basename = path.basename(filename);
+  const dateStr = basename.replace("backup-", "").replace(".db", "");
+  const normalized = dateStr.replace(/T(\d{2})-(\d{2})-(\d{2})-(\d{3})Z$/, "T$1:$2:$3.$4Z");
   return new Date(normalized);
 }
 

@@ -25,11 +25,11 @@ These rules MUST be followed by any AI agent working on this codebase.
 - Schema changes go through Drizzle migrations only (`drizzle-kit generate`).
 - The SQLite database file location is defined by `DATABASE_URL` env var.
 
-### Shiki Syntax Highlighting
+### Shiki Syntax Highlighting (Lazy-Loaded)
 - Shiki runs server-side only. No client-side highlighting.
-- Use React Server Components to render highlighted code.
-- Cache Shiki theme loading to avoid per-request filesystem reads.
+- Use React Server Components or secure API routes to fetch/render highlighted code.
 - Supported themes: GitHub Dark (default), GitHub Light.
+- **Language Lazy-Loading:** Shiki is initialized with a minimal set of core languages. Other languages are loaded dynamically on demand using `await hl.loadLanguage(...)` to keep memory minimal.
 
 ### Security Rules
 - Passwords: Argon2id + per-user Salt + application-level Pepper (env var).
@@ -46,19 +46,22 @@ These rules MUST be followed by any AI agent working on this codebase.
 - Dark mode by default.
 - All UI components built with shadcn/ui pattern (copy-paste, no heavy UI lib).
 - Responsive: sidebar collapses to drawer on mobile.
+- **Command Palette (`Ctrl+K`):** Global frosted-glass search palette for snippets and slash navigations.
+- **Code Editor:** Zero-dependency native editor for code input (`CodeEditor`) supporting Tab capture, bracket auto-close, and pair matching deletion.
 
-### File Organization
+### File Organization (Feature-Driven)
+The codebase uses a domain-driven layout for high modularity:
 ```
 src/
   app/          # Next.js App Router pages & API routes
-  components/   # React components (server & client)
-    layout/     # Sidebar, detail view
-    snippets/   # SnippetCard, SnippetSearchHeader
-    ui/         # shadcn/ui primitives
-    auth/       # Login/register forms
-    settings/   # Password change form
+  features/     # Module-specific directories
+    admin/      # administrative controls, metrics, database backup and scheduler processes
+    auth/       # sign-in, registers, passwords and Argon2 crypt utilities
+    snippets/   # code list cards, search filters, custom editor UI & Shiki syntax highlighter
+    core/       # sidebars, details, command palette overlays, utility libraries & global CSS styles
+  components/
+    ui/         # shadcn/ui primitives + toasts
   db/           # Drizzle schema, migrations, connection
-  lib/          # Utilities (auth, session, shiki, rate-limit, validations)
 ```
 
 ### File Size Limit

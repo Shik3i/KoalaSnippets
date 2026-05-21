@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { users } from "@/db/schema";
-import { verifyPassword } from "@/lib/auth";
-import { createSession, setSessionCookie } from "@/lib/session";
-import { loginSchema } from "@/lib/validations";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { verifyPassword } from "@/features/auth/utils/auth";
+import { createSession, setSessionCookie } from "@/features/auth/utils/session";
+import { loginSchema } from "@/features/core/utils/validations";
+import { checkRateLimit } from "@/features/core/utils/rate-limit";
 import { eq } from "drizzle-orm";
 
 export async function POST(request: Request) {
