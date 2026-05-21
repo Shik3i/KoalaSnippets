@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export default async function AppearanceSettingsPage() {
   const session = await getSession();
   if (!session) {
-    redirect("/login");
+    redirect("/login?expired=1");
   }
 
   const prefs = session.user.preferences;

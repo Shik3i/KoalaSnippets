@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ q?: string; includeCode?: string }> }) {
   const session = await getSession();
   if (!session) {
-    redirect("/login");
+    redirect("/login?expired=1");
   }
 
   const { q, includeCode } = await searchParams;

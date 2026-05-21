@@ -39,6 +39,11 @@ export async function middleware(request: NextRequest) {
   }
 
   if (pathname === "/login" || pathname === "/register") {
+    if (request.nextUrl.searchParams.has("expired")) {
+      const response = NextResponse.next();
+      response.cookies.delete("ks_session");
+      return response;
+    }
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
