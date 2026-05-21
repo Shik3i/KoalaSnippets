@@ -60,8 +60,10 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Cannot delete admin users" }, { status: 403 });
   }
 
-  await db.delete(snippets).where(eq(snippets.authorId, userId));
-  await db.delete(users).where(eq(users.id, userId));
+  await db.transaction(async (tx) => {
+    await tx.delete(snippets).where(eq(snippets.authorId, userId));
+    await tx.delete(users).where(eq(users.id, userId));
+  });
 
   return NextResponse.json({ success: true });
 }

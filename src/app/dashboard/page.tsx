@@ -8,6 +8,7 @@ import { db } from "@/db";
 import { snippets } from "@/db/schema";
 import { eq, desc, like, or, and } from "drizzle-orm";
 import { sql } from "drizzle-orm";
+import { escapeLike } from "@/features/core/utils/sql";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   const { q, includeCode } = await searchParams;
   const query = q ?? "";
+  const escapedQuery = escapeLike(query);
   const includeCodeBool = includeCode === "true";
 
   const baseQuery = db.select().from(snippets);
@@ -26,12 +28,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   if (query) {
     const searchConditions = [
-      like(snippets.title, `%${query}%`),
-      like(snippets.language, `%${query}%`),
-      sql`snippets.tags LIKE ${`%${query}%`}`,
+      like(snippets.title, `%${escapedQuery}%`),
+      like(snippets.language, `%${escapedQuery}%`),
+      sql`snippets.tags LIKE ${`%${escapedQuery}%`}`,
     ];
     if (includeCodeBool) {
-      searchConditions.push(like(snippets.code, `%${query}%`));
+      searchConditions.push(like(snippets.code, `%${escapedQuery}%`));
     }
     const searchOr = or(...searchConditions);
     if (searchOr) {

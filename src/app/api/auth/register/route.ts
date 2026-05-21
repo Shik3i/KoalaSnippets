@@ -40,23 +40,25 @@ export async function POST(request: Request) {
 
     const passwordHash = await hashPassword(password);
 
-    await db.insert(users).values({
-      id: generateId(),
-      username,
-      passwordHash,
-      role: "USER",
-      createdAt: new Date(),
-      preferences: {
-        appTheme: "theme-dark",
-        snippetDensity: "compact",
-        syntaxTheme: "github-dark",
-        bgPattern: "flat",
-      },
-    });
+    await db.transaction(async (tx) => {
+      await tx.insert(users).values({
+        id: generateId(),
+        username,
+        passwordHash,
+        role: "USER",
+        createdAt: new Date(),
+        preferences: {
+          appTheme: "theme-dark",
+          snippetDensity: "compact",
+          syntaxTheme: "github-dark",
+          bgPattern: "flat",
+        },
+      });
 
-    await db.update(siteStatistics)
-      .set({ totalUsersCreated: sql`total_users_created + 1` })
-      .where(eq(siteStatistics.id, 1));
+      await tx.update(siteStatistics)
+        .set({ totalUsersCreated: sql`total_users_created + 1` })
+        .where(eq(siteStatistics.id, 1));
+    });
 
     const res = NextResponse.json({ success: true }, { status: 201 });
     return res;

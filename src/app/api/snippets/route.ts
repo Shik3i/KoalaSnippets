@@ -77,6 +77,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const contentLength = request.headers.get("content-length");
+  if (contentLength && parseInt(contentLength, 10) > 5 * 1024 * 1024) {
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  }
+
   try {
     const body = await request.json();
     const parsed = snippetSchema.safeParse(body);
