@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { db } from "@/db";
 import { snippets } from "@/db/schema";
 import { getSession } from "@/lib/session";
 import { highlightCode } from "@/lib/shiki";
+import { Sidebar } from "@/components/layout/sidebar";
 import { DetailView } from "@/components/layout/detail-view";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
@@ -46,23 +49,38 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
 
   const highlightedCode = await highlightCode(snippet.code, snippet.language);
   const isOwner = session?.user.id === snippet.authorId;
+  const backUrl = snippet.visibility === "PUBLIC" ? "/public" : "/dashboard";
 
   return (
     <div className="flex h-screen">
-      <div className="flex-1 overflow-hidden">
-        <DetailView
-          id={snippet.id}
-          title={snippet.title}
-          description={snippet.description ?? undefined}
-          code={snippet.code}
-          language={snippet.language}
-          tags={snippet.tags ?? undefined}
-          visibility={snippet.visibility as "PRIVATE" | "SHARED" | "PUBLIC"}
-          createdAt={snippet.createdAt}
-          updatedAt={snippet.updatedAt}
-          highlightedCode={highlightedCode}
-          isOwner={isOwner}
-        />
+      <Sidebar isAuthenticated={!!session} />
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="border-b border-border p-4">
+          <Link
+            href={backUrl}
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft size={14} suppressHydrationWarning />
+            Back to list
+          </Link>
+        </div>
+
+        <div className="flex-1 overflow-hidden">
+          <DetailView
+            id={snippet.id}
+            title={snippet.title}
+            description={snippet.description ?? undefined}
+            code={snippet.code}
+            language={snippet.language}
+            tags={snippet.tags ?? undefined}
+            visibility={snippet.visibility as "PRIVATE" | "SHARED" | "PUBLIC"}
+            createdAt={snippet.createdAt}
+            updatedAt={snippet.updatedAt}
+            highlightedCode={highlightedCode}
+            isOwner={isOwner}
+          />
+        </div>
       </div>
     </div>
   );

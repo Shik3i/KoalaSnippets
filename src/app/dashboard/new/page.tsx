@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Sidebar } from "@/components/layout/sidebar";
 import { X, Plus } from "lucide-react";
 
 export default function NewSnippetPage() {
@@ -64,6 +65,7 @@ export default function NewSnippetPage() {
 
   return (
     <div className="flex h-screen">
+      <Sidebar isAuthenticated={true} />
       <div className="flex-1 overflow-auto p-6">
         <Card className="max-w-2xl mx-auto">
           <CardHeader>

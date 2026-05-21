@@ -1,0 +1,70 @@
+"use client";
+
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { Lock, Globe, Link2 } from "lucide-react";
+
+interface SnippetCardProps {
+  id: string;
+  title: string;
+  description?: string;
+  language: string;
+  tags?: string[];
+  visibility: "PRIVATE" | "SHARED" | "PUBLIC";
+  createdAt: Date;
+}
+
+const visibilityConfig = {
+  PRIVATE: { icon: Lock, label: "Private", color: "text-muted-foreground" },
+  SHARED: { icon: Link2, label: "Shared", color: "text-info" },
+  PUBLIC: { icon: Globe, label: "Public", color: "text-success" },
+};
+
+export function SnippetCard({ id, title, description, language, tags, visibility, createdAt }: SnippetCardProps) {
+  const VisIcon = visibilityConfig[visibility].icon;
+
+  return (
+    <Link
+      href={`/snippets/${id}`}
+      className={cn(
+        "group block rounded-lg border border-border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-sm"
+      )}
+    >
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <h3 className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+          {title}
+        </h3>
+        <VisIcon size={12} className={cn("shrink-0 mt-1", visibilityConfig[visibility].color)} suppressHydrationWarning />
+      </div>
+
+      <div className="flex items-center gap-2 mb-2">
+        <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+          {language}
+        </Badge>
+        <span className="text-xs text-muted-foreground">
+          {new Date(createdAt).toLocaleDateString()}
+        </span>
+      </div>
+
+      {description && (
+        <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+          {description}
+        </p>
+      )}
+
+      {tags && tags.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {tags.slice(0, 3).map((tag) => (
+            <Badge key={tag} variant="outline" className="text-[10px] h-4 px-1">
+              {tag}
+            </Badge>
+          ))}
+          {tags.length > 3 && (
+            <span className="text-[10px] text-muted-foreground">+{tags.length - 3}</span>
+          )}
+        </div>
+      )}
+    </Link>
+  );
+}
