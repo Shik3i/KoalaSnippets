@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { ProtectedEmail } from "@/components/ui/protected-email";
 
 export default function ImpressumPage() {
+  const email = process.env.CONTACT_EMAIL || "";
+  const encodedEmail = Buffer.from(email).toString("base64");
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-3xl mx-auto px-6 py-12">
@@ -26,8 +30,10 @@ export default function ImpressumPage() {
           <section>
             <h2 className="text-xl font-semibold mb-3">Kontakt</h2>
             <p className="text-muted-foreground">
-              Bei Fragen oder Anliegen k&ouml;nnen Sie uns &uuml;ber die im jeweiligen
-              Hosting-Environment hinterlegten Kontaktm&ouml;glichkeiten erreichen.
+              Bei Fragen oder Anliegen k&ouml;nnen Sie uns &uuml;ber die folgende E-Mail-Adresse erreichen:
+            </p>
+            <p className="text-muted-foreground">
+              <ProtectedEmail encodedEmail={encodedEmail} />
             </p>
           </section>
 

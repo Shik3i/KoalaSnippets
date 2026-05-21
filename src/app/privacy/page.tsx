@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { ProtectedEmail } from "@/components/ui/protected-email";
 
 export default function PrivacyPage() {
+  const email = process.env.CONTACT_EMAIL || "";
+  const encodedEmail = Buffer.from(email).toString("base64");
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-3xl mx-auto px-6 py-12">
@@ -123,6 +127,16 @@ export default function PrivacyPage() {
               Diese Anwendung &uuml;bertr&auml;gt sensible Daten (Passw&ouml;rter, Session-Tokens)
               ausschlie&szlig;lich &uuml;ber verschl&uuml;sselte Verbindungen. Wir empfehlen den
               Einsatz von Caddy als Reverse Proxy mit automatischer TLS-Verschl&uuml;sselung.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-3">9. Kontakt</h2>
+            <p className="text-muted-foreground">
+              Bei Fragen zum Datenschutz k&ouml;nnen Sie uns &uuml;ber die folgende E-Mail-Adresse erreichen:
+            </p>
+            <p className="text-muted-foreground">
+              <ProtectedEmail encodedEmail={encodedEmail} />
             </p>
           </section>
         </div>
