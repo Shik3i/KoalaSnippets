@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, FileCode } from "lucide-react";
 
@@ -9,18 +10,21 @@ interface PublicStatsCardsProps {
 }
 
 export function PublicStatsCards({ totalUsersCreated, totalSnippetsCreated }: PublicStatsCardsProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
   const cards = [
     {
       icon: Users,
       label: "Total Users Created",
-      value: totalUsersCreated.toLocaleString(),
+      value: mounted ? totalUsersCreated.toLocaleString() : "",
       gradient: "from-primary/10 to-primary/5",
       iconColor: "text-primary",
     },
     {
       icon: FileCode,
       label: "Total Snippets Created",
-      value: totalSnippetsCreated.toLocaleString(),
+      value: mounted ? totalSnippetsCreated.toLocaleString() : "",
       gradient: "from-success/10 to-success/5",
       iconColor: "text-success",
     },

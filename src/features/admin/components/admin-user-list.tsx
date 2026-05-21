@@ -15,6 +15,8 @@ interface AdminUser {
 }
 
 export function AdminUserList() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -88,7 +90,7 @@ export function AdminUserList() {
                   </td>
                   <td className="py-2.5 px-3 text-muted-foreground">{user.snippetCount}</td>
                   <td className="py-2.5 px-3 text-muted-foreground">
-                    {new Date(user.createdAt).toLocaleDateString()}
+                    {mounted ? new Date(user.createdAt).toLocaleDateString() : ""}
                   </td>
                   <td className="py-2.5 px-3 text-right">
                     {user.role !== "ADMIN" && (

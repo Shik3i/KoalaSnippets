@@ -18,6 +18,8 @@ function formatBytes(bytes: number): string {
 }
 
 export function AdminBackupList() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const [backups, setBackups] = useState<BackupFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [triggering, setTriggering] = useState(false);
@@ -96,7 +98,7 @@ export function AdminBackupList() {
                     <td className="py-2.5 px-3 font-mono text-xs">{backup.filename}</td>
                     <td className="py-2.5 px-3 text-muted-foreground">{formatBytes(backup.size)}</td>
                     <td className="py-2.5 px-3 text-muted-foreground">
-                      {new Date(backup.createdAt).toLocaleString()}
+                      {mounted ? new Date(backup.createdAt).toLocaleString() : ""}
                     </td>
                     <td className="py-2.5 px-3 text-right">
                       <Button

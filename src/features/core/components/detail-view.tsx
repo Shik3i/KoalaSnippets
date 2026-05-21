@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/features/core/utils/utils";
@@ -95,6 +95,8 @@ export function DetailView({
   onDelete,
   onToggleVisibility,
 }: DetailViewProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const [copied, setCopied] = useState(false);
   const { addToast } = useToast();
   const VisIcon = visibilityConfig[visibility].icon;
@@ -144,7 +146,7 @@ export function DetailView({
                 {visibilityConfig[visibility].label}
               </span>
               <span className="text-xs text-muted-foreground">
-                Updated {updatedAt.toLocaleDateString()}
+                {mounted ? `Updated ${updatedAt.toLocaleDateString()}` : ""}
               </span>
             </div>
           </div>

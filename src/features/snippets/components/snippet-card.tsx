@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/features/core/utils/utils";
@@ -34,6 +35,8 @@ export function SnippetCard({
   snippetDensity = "compact",
   highlightedCode,
 }: SnippetCardProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const VisIcon = visibilityConfig[visibility].icon;
 
   return (
@@ -56,7 +59,7 @@ export function SnippetCard({
           {language}
         </Badge>
         <span className="text-xs text-muted-foreground">
-          {new Date(createdAt).toLocaleDateString()}
+          {mounted ? new Date(createdAt).toLocaleDateString() : ""}
         </span>
       </div>
 

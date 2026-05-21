@@ -17,6 +17,8 @@ function formatBytes(bytes: number): string {
 }
 
 export function AdminMetrics() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const [metrics, setMetrics] = useState<MetricsData | null>(null);
 
   useEffect(() => {
@@ -41,8 +43,8 @@ export function AdminMetrics() {
 
   const cards = [
     { icon: Database, label: "Database Size", value: formatBytes(metrics.dbSize), color: "text-primary" },
-    { icon: Users, label: "Total Users Created", value: metrics.totalUsersCreated.toLocaleString(), color: "text-success" },
-    { icon: FileCode, label: "Total Snippets Created", value: metrics.totalSnippetsCreated.toLocaleString(), color: "text-info" },
+    { icon: Users, label: "Total Users Created", value: mounted ? metrics.totalUsersCreated.toLocaleString() : "", color: "text-success" },
+    { icon: FileCode, label: "Total Snippets Created", value: mounted ? metrics.totalSnippetsCreated.toLocaleString() : "", color: "text-info" },
   ];
 
   return (
