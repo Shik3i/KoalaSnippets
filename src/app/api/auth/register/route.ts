@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { users, siteStatistics } from "@/db/schema";
+import { users, siteStatistics, siteSettings } from "@/db/schema";
 import { hashPassword, generateId } from "@/features/auth/utils/auth";
 import { registerSchema } from "@/features/core/utils/validations";
 import { checkRateLimit } from "@/features/core/utils/rate-limit";
@@ -14,7 +14,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
   }
 
-  if (process.env.ALLOW_REGISTRATION !== "true") {
+  const settings = await db.select().from(siteSettings).where(eq(siteSettings.id, 1)).get();
+  if (!settings?.registrationEnabled) {
     return NextResponse.json({ error: "Registration is disabled" }, { status: 403 });
   }
 

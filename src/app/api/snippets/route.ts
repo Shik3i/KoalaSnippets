@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { snippets, siteStatistics } from "@/db/schema";
+import { snippets, siteStatistics, siteSettings, snippetFiles } from "@/db/schema";
 import { getSession } from "@/features/auth/utils/session";
 import { snippetSchema } from "@/features/core/utils/validations";
 import { generateId, generateShareToken } from "@/features/auth/utils/auth";
-import { eq, desc, like, or, and, sql } from "drizzle-orm";
+import { eq, desc, like, or, and, sql, count } from "drizzle-orm";
 import { getSafePage, verifyCsrf } from "@/features/core/utils/security";
 
 export const dynamic = "force-dynamic";
@@ -42,9 +42,10 @@ export async function GET(request: Request) {
       like(snippets.tags, `%${escapedQuery}%`),
     ];
 
-    if (includeCode) {
-      searchConditions.push(like(snippets.code, `%${escapedQuery}%`));
-    }
+    // Code search disabled temporarily during multi-file transition
+    // if (includeCode) {
+    //   searchConditions.push(like(snippets.code, `%${escapedQuery}%`));
+    // }
 
     conditions.push(or(...searchConditions));
   }
@@ -61,7 +62,7 @@ export async function GET(request: Request) {
       id: s.id,
       title: s.title,
       description: s.description,
-      language: s.language,
+      // language: s.language,
       tags: s.tags,
       visibility: s.visibility,
       createdAt: s.createdAt,
@@ -82,6 +83,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const settings = await db.select().from(siteSettings).where(eq(siteSettings.id, 1)).get();
+  const maxSnippets = settings?.maxSnippetsPerUser ?? 1000;
+  const maxChars = settings?.maxCharsPerSnippet ?? 250000;
+
+  const currentCount = await db.select({ c: count() }).from(snippets).where(eq(snippets.authorId, session.user.id)).get();
+  if (currentCount && currentCount.c >= maxSnippets) {
+    return NextResponse.json({ error: `Snippet quota exceeded (Max: ${maxSnippets})` }, { status: 403 });
+  }
+
   const contentLength = request.headers.get("content-length");
   if (contentLength && parseInt(contentLength, 10) > 5 * 1024 * 1024) {
     return NextResponse.json({ error: "Payload too large" }, { status: 413 });
@@ -97,14 +107,16 @@ export async function POST(request: Request) {
 
     const { title, description, code, language, tags, visibility } = parsed.data;
 
+    if (code.length > maxChars) {
+      return NextResponse.json({ error: `Snippet code too long (Max: ${maxChars} chars)` }, { status: 400 });
+    }
+
     const normalizedTags = tags?.map((t) => t.toLowerCase()) ?? null;
 
     const snippetData: typeof snippets.$inferInsert = {
       id: generateId(),
       title,
       description: description ?? null,
-      code,
-      language,
       tags: normalizedTags,
       authorId: session.user.id,
       visibility,
@@ -115,6 +127,14 @@ export async function POST(request: Request) {
 
     await db.transaction(async (tx) => {
       await tx.insert(snippets).values(snippetData);
+
+      await tx.insert(snippetFiles).values({
+        id: generateId(),
+        snippetId: snippetData.id,
+        filename: "index",
+        code,
+        language
+      });
       
       await tx.update(siteStatistics)
         .set({ totalSnippetsCreated: sql`total_snippets_created + 1` })

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { snippets } from "@/db/schema";
+import { snippets, snippetFiles, siteSettings } from "@/db/schema";
 import { getSession } from "@/features/auth/utils/session";
 import { updateSnippetSchema } from "@/features/core/utils/validations";
 import { generateShareToken } from "@/features/auth/utils/auth";
@@ -33,6 +33,10 @@ export async function GET(
 
   const isOwner = session && snippet.authorId === session.user.id;
 
+  if (snippet.expiresAt && new Date() > snippet.expiresAt && !isOwner) {
+    return NextResponse.json({ error: "Snippet has expired" }, { status: 410 });
+  }
+
   if (!isOwner) {
     if (snippet.visibility === "PRIVATE") {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -45,12 +49,14 @@ export async function GET(
     }
   }
 
+  const file = await db.select().from(snippetFiles).where(eq(snippetFiles.snippetId, id)).get();
+
   return NextResponse.json({
     id: snippet.id,
     title: snippet.title,
     description: snippet.description,
-    code: snippet.code,
-    language: snippet.language,
+    code: file?.code ?? "",
+    language: file?.language ?? "plaintext",
     tags: snippet.tags,
     visibility: snippet.visibility,
     shareToken: snippet.visibility === "SHARED" ? snippet.shareToken : undefined,
@@ -89,21 +95,42 @@ export async function PUT(
     }
 
     const updates: Record<string, unknown> = { ...parsed.data, updatedAt: new Date() };
+    const { code, language, ...snippetUpdates } = updates;
 
-    if (updates.visibility === "SHARED" && !snippet.shareToken) {
-      updates.shareToken = generateShareToken();
+    if (snippetUpdates.visibility === "SHARED" && !snippet.shareToken) {
+      snippetUpdates.shareToken = generateShareToken();
     }
 
-    if ('visibility' in updates && updates.visibility !== "SHARED") {
-      updates.shareToken = null;
+    if ('visibility' in snippetUpdates && snippetUpdates.visibility !== "SHARED") {
+      snippetUpdates.shareToken = null;
     }
 
-    await db.update(snippets).set(updates).where(eq(snippets.id, id));
+    await db.transaction(async (tx) => {
+      if (Object.keys(snippetUpdates).length > 0) {
+        await tx.update(snippets).set(snippetUpdates).where(eq(snippets.id, id));
+      }
+
+      if (code !== undefined || language !== undefined) {
+        const settings = await tx.select().from(siteSettings).where(eq(siteSettings.id, 1)).get();
+        const maxChars = settings?.maxCharsPerSnippet ?? 250000;
+        
+        if (typeof code === 'string' && code.length > maxChars) {
+          throw new Error(`Snippet code too long (Max: ${maxChars} chars)`);
+        }
+
+        const fileUpdate: Record<string, unknown> = {};
+        if (code !== undefined) fileUpdate.code = code;
+        if (language !== undefined) fileUpdate.language = language;
+        
+        await tx.update(snippetFiles).set(fileUpdate).where(eq(snippetFiles.snippetId, id));
+      }
+    });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("[Snippets API PUT Error]", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: message.includes("too long") ? 400 : 500 });
   }
 }
 
