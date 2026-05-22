@@ -213,6 +213,31 @@ const BG_PATTERNS = [
     name: "Flowing Silk",
     description: "Soft diagonal flowing silk animation back & forth",
   },
+  {
+    id: "topo",
+    name: "Topographic Map",
+    description: "Elegant contour lines mapping elevation",
+  },
+  {
+    id: "nodes",
+    name: "Constellation",
+    description: "Floating network of connected nodes",
+  },
+  {
+    id: "hex",
+    name: "Hexagon Grid",
+    description: "Cyberpunk structural honeycomb matrix",
+  },
+  {
+    id: "matrix",
+    name: "Binary Matrix",
+    description: "Slow drifting vertical binary sequences",
+  },
+  {
+    id: "circuit",
+    name: "Circuit Board",
+    description: "Tech-inspired orthogonal data paths",
+  },
 ];
 
 export function AppearanceSettingsForm({ initialPreferences }: AppearanceSettingsFormProps) {

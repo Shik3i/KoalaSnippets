@@ -27,7 +27,7 @@ const appearanceSettingsSchema = z.object({
     "github-light",
     "monokai",
   ]).optional(),
-  bgPattern: z.enum(["flat", "dots", "grid", "gradient", "drift", "aurora", "silk"]).optional(),
+  bgPattern: z.enum(["flat", "dots", "grid", "gradient", "drift", "aurora", "silk", "topo", "nodes", "hex", "matrix", "circuit"]).optional(),
 });
 
 export async function PUT(request: Request) {
