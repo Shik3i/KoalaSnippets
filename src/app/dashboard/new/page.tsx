@@ -37,23 +37,42 @@ function readDuplicateData(): DuplicateData | null {
   }
 }
 
+interface EditData extends DuplicateData {
+  id: string;
+}
+
+function readEditData(): EditData | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem("edit_snippet");
+    if (!raw) return null;
+    sessionStorage.removeItem("edit_snippet");
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
 export default function NewSnippetPage() {
   const router = useRouter();
   const { addToast } = useToast();
 
   const duplicateData = useMemo(() => readDuplicateData(), []);
+  const editData = useMemo(() => readEditData(), []);
+  const initialData = editData || duplicateData;
+  const isEditing = !!editData;
 
-  const [title, setTitle] = useState(duplicateData?.title ?? "");
-  const [description, setDescription] = useState(duplicateData?.description ?? "");
-  const [code, setCode] = useState(duplicateData?.code ?? "");
-  const [language, setLanguage] = useState(duplicateData?.language ?? "typescript");
+  const [title, setTitle] = useState(initialData?.title ?? "");
+  const [description, setDescription] = useState(initialData?.description ?? "");
+  const [code, setCode] = useState(initialData?.code ?? "");
+  const [language, setLanguage] = useState(initialData?.language ?? "typescript");
   const [languageSearch, setLanguageSearch] = useState("");
   const [languageOpen, setLanguageOpen] = useState(false);
-  const [tags, setTags] = useState<string[]>(duplicateData?.tags ?? []);
+  const [tags, setTags] = useState<string[]>(initialData?.tags ?? []);
   const [tagInput, setTagInput] = useState("");
   const [tagOpen, setTagOpen] = useState(false);
   const [existingTags, setExistingTags] = useState<string[]>([]);
-  const [visibility, setVisibility] = useState<"PRIVATE" | "SHARED" | "PUBLIC">(duplicateData?.visibility ?? "PRIVATE");
+  const [visibility, setVisibility] = useState<"PRIVATE" | "SHARED" | "PUBLIC">(initialData?.visibility ?? "PRIVATE");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -67,8 +86,10 @@ export default function NewSnippetPage() {
   useEffect(() => {
     if (duplicateData) {
       addToast("Pre-filled with duplicated snippet", "info");
+    } else if (editData) {
+      addToast("Editing snippet", "info");
     }
-  }, [duplicateData, addToast]);
+  }, [duplicateData, editData, addToast]);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -76,25 +97,29 @@ export default function NewSnippetPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/snippets", {
-        method: "POST",
+      const url = isEditing ? `/api/snippets/${editData.id}` : "/api/snippets";
+      const method = isEditing ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, description, code, language, tags: tags.map((t) => t.toLowerCase()), visibility }),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Failed to create snippet");
+        setError(data.error ?? (isEditing ? "Failed to update snippet" : "Failed to create snippet"));
         return;
       }
 
-      addToast("Snippet saved!", "success");
+      addToast(isEditing ? "Snippet updated!" : "Snippet saved!", "success");
       await revalidateDashboard();
       
+      const snippetId = isEditing ? editData.id : data.id;
       if (visibility === "SHARED" && data.shareToken) {
-        router.push(`/snippets/${data.id}?token=${data.shareToken}`);
+        router.push(`/snippets/${snippetId}?token=${data.shareToken}`);
       } else {
-        router.push(`/snippets/${data.id}`);
+        router.push(`/snippets/${snippetId}`);
       }
     } catch {
       setError("An error occurred. Please try again.");
@@ -128,7 +153,7 @@ export default function NewSnippetPage() {
       <div className="flex-1 overflow-auto p-6">
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
-            <CardTitle>New Snippet</CardTitle>
+            <CardTitle>{isEditing ? "Edit Snippet" : "New Snippet"}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -302,7 +327,7 @@ export default function NewSnippetPage() {
 
               <div className="flex gap-2 pt-2">
                 <Button type="submit" disabled={loading}>
-                  {loading ? "Creating..." : "Create Snippet"}
+                  {loading ? (isEditing ? "Updating..." : "Creating...") : (isEditing ? "Update Snippet" : "Create Snippet")}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => router.back()}>
                   Cancel

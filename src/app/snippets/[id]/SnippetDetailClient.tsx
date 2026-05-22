@@ -27,6 +27,16 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleEdit = () => {
+    const editData = {
+      id: props.id,
+      title: props.title,
+      description: props.description ?? "",
+      code: props.code,
+      language: props.language,
+      tags: props.tags ?? [],
+      visibility: props.visibility,
+    };
+    sessionStorage.setItem("edit_snippet", JSON.stringify(editData));
     router.push("/dashboard/new");
   };
 
