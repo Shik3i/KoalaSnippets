@@ -171,6 +171,7 @@ export default function NewSnippetPage() {
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="My awesome snippet"
                   required
+                  maxLength={200}
                 />
               </div>
 
@@ -182,6 +183,7 @@ export default function NewSnippetPage() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="What does this snippet do?"
                   rows={2}
+                  maxLength={2000}
                 />
               </div>
 
@@ -195,6 +197,7 @@ export default function NewSnippetPage() {
                   rows={12}
                   className="font-mono text-sm"
                   required
+                  maxLength={250000}
                 />
               </div>
 
