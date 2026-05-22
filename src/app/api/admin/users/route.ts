@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { users, snippets } from "@/db/schema";
 import { requireAdmin } from "@/features/admin/utils/admin-guard";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, count } from "drizzle-orm";
 import { verifyCsrf } from "@/features/core/utils/security";
 
 export const dynamic = "force-dynamic";
@@ -24,13 +24,13 @@ export async function GET() {
     .all();
 
   const snippetCounts = await db
-    .select({ authorId: snippets.authorId, count: snippets.id })
+    .select({ authorId: snippets.authorId, count: count(snippets.id) })
     .from(snippets)
     .groupBy(snippets.authorId);
 
   const countMap = new Map<string, number>();
   for (const row of snippetCounts) {
-    countMap.set(row.authorId, (countMap.get(row.authorId) ?? 0) + 1);
+    countMap.set(row.authorId, row.count);
   }
 
   return NextResponse.json({

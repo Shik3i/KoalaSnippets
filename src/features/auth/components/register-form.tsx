@@ -84,6 +84,8 @@ export function RegisterForm() {
               autoComplete="new-password"
               required
               minLength={8}
+              pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}"
+              title="Min 8 chars, must include uppercase, lowercase, and number"
             />
             <p className="text-xs text-muted-foreground">
               Min 8 chars, must include uppercase, lowercase, and number

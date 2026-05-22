@@ -18,7 +18,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Registration is disabled" }, { status: 403 });
   }
 
-  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  const ips = forwardedFor ? forwardedFor.split(",") : [];
+  const ip = ips.length > 0 ? ips[ips.length - 1].trim() : "unknown";
   const limit = checkRateLimit(`register:${ip}`, 3, 60 * 60 * 1000);
 
   if (!limit.allowed) {

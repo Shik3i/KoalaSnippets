@@ -94,7 +94,7 @@ export async function PUT(
       updates.shareToken = generateShareToken();
     }
 
-    if (updates.visibility !== "SHARED") {
+    if ('visibility' in updates && updates.visibility !== "SHARED") {
       updates.shareToken = null;
     }
 

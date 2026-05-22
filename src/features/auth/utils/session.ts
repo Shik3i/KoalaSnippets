@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { db } from "@/db";
 import { sessions, users } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, lt } from "drizzle-orm";
 import { hashSessionToken, generateSessionToken } from "./auth";
 
 const SESSION_COOKIE_NAME = "ks_session";
@@ -108,4 +108,8 @@ export async function setSessionCookie(token: string) {
     path: "/",
     maxAge: SESSION_DURATION_DAYS * 24 * 60 * 60,
   });
+}
+
+export async function cleanupExpiredSessions() {
+  await db.delete(sessions).where(lt(sessions.expiresAt, new Date()));
 }

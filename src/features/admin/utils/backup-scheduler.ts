@@ -1,4 +1,5 @@
 import { runBackupWithRetention } from "./backup";
+import { cleanupExpiredSessions } from "@/features/auth/utils/session";
 
 const BACKUP_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
@@ -13,6 +14,7 @@ export function startBackupScheduler() {
 
   try {
     runBackupWithRetention();
+    cleanupExpiredSessions().catch(console.error);
   } catch (err) {
     console.error("[backup] Initial backup failed:", err);
   }
@@ -20,6 +22,7 @@ export function startBackupScheduler() {
   backupInterval = setInterval(() => {
     try {
       const result = runBackupWithRetention();
+      cleanupExpiredSessions().catch(console.error);
       console.log(`[backup] Backup completed: ${result.backupPath} (${result.deleted} old backups removed)`);
     } catch (err) {
       console.error("[backup] Backup failed:", err);

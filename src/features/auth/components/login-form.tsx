@@ -33,7 +33,12 @@ export function LoginForm() {
         return;
       }
 
-      router.push("/dashboard");
+      const params = new URLSearchParams(window.location.search);
+      let from = params.get("from") ?? "/dashboard";
+      if (!from.startsWith("/") || from.startsWith("//")) {
+        from = "/dashboard";
+      }
+      router.push(from);
       router.refresh();
     } catch {
       setError("An error occurred. Please try again.");

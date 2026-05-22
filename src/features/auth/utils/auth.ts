@@ -13,34 +13,19 @@ if (!PEPPER) {
 const pepper = PEPPER ?? "dev-pepper-not-for-production";
 
 export async function hashPassword(password: string): Promise<string> {
-  const salt = crypto.randomBytes(16);
-  const pepperedPassword = `${password}${pepper}${salt.toString("hex")}`;
+  const pepperedPassword = `${password}${pepper}`;
 
   return hash(pepperedPassword, {
     type: 2,
     memoryCost: 65536,
     timeCost: 3,
     parallelism: 1,
-    salt,
   });
 }
 
 export async function verifyPassword(password: string, hashStr: string): Promise<boolean> {
-  const salt = extractSalt(hashStr);
-  const pepperedPassword = `${password}${pepper}${salt}`;
+  const pepperedPassword = `${password}${pepper}`;
   return verify(hashStr, pepperedPassword);
-}
-
-function extractSalt(hashStr: string): string {
-  const params = hashStr.split("$");
-  if (params.length < 5) {
-    throw new Error("Invalid hash format");
-  }
-  const saltParam = params[4];
-  if (!saltParam) {
-    throw new Error("Invalid hash format: salt not found");
-  }
-  return Buffer.from(saltParam, "base64").toString("hex");
 }
 
 export function generateSessionToken(): string {
