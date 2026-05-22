@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/features/auth/utils/session";
 import { Sidebar } from "@/features/core/components/sidebar";
 import { AdminMetrics } from "@/features/admin/components/admin-metrics";
+import { AdminPublicSnippets } from "@/features/admin/components/admin-public-snippets";
 import { AdminUserList } from "@/features/admin/components/admin-user-list";
 import { AdminBackupList } from "@/features/admin/components/admin-backup-list";
 
@@ -21,10 +22,11 @@ export default async function AdminPage() {
         <div className="max-w-6xl mx-auto space-y-8">
           <div>
             <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
-            <p className="text-muted-foreground mt-1">System metrics, user management, and backups</p>
+            <p className="text-muted-foreground mt-1">System metrics, public moderation, user management, and backups</p>
           </div>
 
           <AdminMetrics />
+          <AdminPublicSnippets />
           <AdminUserList />
           <AdminBackupList />
         </div>

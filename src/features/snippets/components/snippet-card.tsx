@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/features/core/utils/utils";
@@ -16,6 +16,8 @@ interface SnippetCardProps {
   createdAt: Date;
   snippetDensity?: "compact" | "preview" | "full";
   highlightedCode?: string;
+  selected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
 const visibilityConfig = {
@@ -34,20 +36,38 @@ export function SnippetCard({
   createdAt,
   snippetDensity = "compact",
   highlightedCode,
+  selected = false,
+  onToggleSelect,
 }: SnippetCardProps) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const VisIcon = visibilityConfig[visibility].icon;
 
   return (
     <Link
       href={`/snippets/${id}`}
       className={cn(
-        "group block rounded-lg border border-border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-sm"
+        "group block rounded-lg border border-border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-sm relative",
+        selected && "border-primary/50 ring-1 ring-primary/30 bg-primary/5"
       )}
       aria-label={`View snippet: ${title}`}
     >
-      <div className="flex items-start justify-between gap-2 mb-2">
+      {onToggleSelect && (
+        <div className="absolute top-2 left-2 z-10" onClick={(e) => e.preventDefault()}>
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={() => onToggleSelect(id)}
+            className="rounded border-border text-primary focus:ring-ring cursor-pointer"
+            aria-label={`Select ${title}`}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+      <div className={cn("flex items-start justify-between gap-2 mb-2", onToggleSelect && "ml-6")}>
         <h3 className="font-medium text-sm truncate group-hover:text-primary transition-colors">
           {title}
         </h3>

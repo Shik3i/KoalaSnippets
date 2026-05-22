@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,20 +16,44 @@ import { SUPPORTED_LANGUAGES } from "@/features/snippets/utils/shiki";
 import { revalidateDashboard } from "@/features/core/actions/revalidate";
 import { X, Plus, ChevronDown } from "lucide-react";
 
+interface DuplicateData {
+  title: string;
+  description: string;
+  code: string;
+  language: string;
+  tags: string[];
+  visibility: "PRIVATE" | "SHARED" | "PUBLIC";
+}
+
+function readDuplicateData(): DuplicateData | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem("duplicate_snippet");
+    if (!raw) return null;
+    sessionStorage.removeItem("duplicate_snippet");
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
 export default function NewSnippetPage() {
   const router = useRouter();
   const { addToast } = useToast();
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [code, setCode] = useState("");
-  const [language, setLanguage] = useState("typescript");
+
+  const duplicateData = useMemo(() => readDuplicateData(), []);
+
+  const [title, setTitle] = useState(duplicateData?.title ?? "");
+  const [description, setDescription] = useState(duplicateData?.description ?? "");
+  const [code, setCode] = useState(duplicateData?.code ?? "");
+  const [language, setLanguage] = useState(duplicateData?.language ?? "typescript");
   const [languageSearch, setLanguageSearch] = useState("");
   const [languageOpen, setLanguageOpen] = useState(false);
-  const [tags, setTags] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>(duplicateData?.tags ?? []);
   const [tagInput, setTagInput] = useState("");
   const [tagOpen, setTagOpen] = useState(false);
   const [existingTags, setExistingTags] = useState<string[]>([]);
-  const [visibility, setVisibility] = useState<"PRIVATE" | "SHARED" | "PUBLIC">("PRIVATE");
+  const [visibility, setVisibility] = useState<"PRIVATE" | "SHARED" | "PUBLIC">(duplicateData?.visibility ?? "PRIVATE");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -39,6 +63,12 @@ export default function NewSnippetPage() {
       .then((data) => setExistingTags(data.tags ?? []))
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (duplicateData) {
+      addToast("Pre-filled with duplicated snippet", "info");
+    }
+  }, [duplicateData, addToast]);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();

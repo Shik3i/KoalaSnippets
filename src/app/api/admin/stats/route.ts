@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { db } from "@/db";
-import { siteStatistics } from "@/db/schema";
+import { siteStatistics, snippets } from "@/db/schema";
 import { requireAdmin } from "@/features/admin/utils/admin-guard";
-import { eq } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
@@ -21,9 +21,24 @@ export async function GET() {
     dbSize = fs.statSync(dbPath).size;
   }
 
+  const languageStats = await db
+    .select({
+      language: snippets.language,
+      count: sql<number>`COUNT(*)`,
+    })
+    .from(snippets)
+    .groupBy(snippets.language)
+    .orderBy(desc(sql`COUNT(*)`))
+    .limit(10)
+    .all();
+
   return NextResponse.json({
     totalUsersCreated: stats?.totalUsersCreated ?? 0,
     totalSnippetsCreated: stats?.totalSnippetsCreated ?? 0,
     dbSize,
+    languageBreakdown: languageStats.map((s) => ({
+      language: s.language,
+      count: Number(s.count),
+    })),
   });
 }

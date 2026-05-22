@@ -30,6 +30,19 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
     router.push("/dashboard/new");
   };
 
+  const handleDuplicate = () => {
+    const duplicateData = {
+      title: props.title,
+      description: props.description ?? "",
+      code: props.code,
+      language: props.language,
+      tags: props.tags ?? [],
+      visibility: props.visibility,
+    };
+    sessionStorage.setItem("duplicate_snippet", JSON.stringify(duplicateData));
+    router.push("/dashboard/new");
+  };
+
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this snippet? This action cannot be undone.")) return;
 
@@ -79,6 +92,7 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
       isSubmitting={isSubmitting}
       onEdit={handleEdit}
       onDelete={handleDelete}
+      onDuplicate={handleDuplicate}
       onToggleVisibility={handleToggleVisibility}
     />
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/features/core/utils/utils";
@@ -15,6 +15,7 @@ import {
   Link2,
   Check,
   Download,
+  CopyPlus,
 } from "lucide-react";
 
 interface DetailViewProps {
@@ -33,6 +34,7 @@ interface DetailViewProps {
   isSubmitting?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
+  onDuplicate?: () => void;
   onToggleVisibility?: () => void;
 }
 
@@ -95,10 +97,14 @@ export function DetailView({
   isSubmitting,
   onEdit,
   onDelete,
+  onDuplicate,
   onToggleVisibility,
 }: DetailViewProps) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const [copied, setCopied] = useState(false);
   const { addToast } = useToast();
   const VisIcon = visibilityConfig[visibility].icon;
@@ -106,7 +112,7 @@ export function DetailView({
   const handleCopy = async () => {
     await navigator.clipboard.writeText(code);
     setCopied(true);
-    addToast("Link copied!", "success");
+    addToast("Code copied!", "success");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -158,6 +164,9 @@ export function DetailView({
               <>
                 <Button variant="ghost" size="icon" onClick={onEdit} aria-label="Edit snippet" disabled={isSubmitting}>
                   <Pencil size={16} suppressHydrationWarning />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={onDuplicate} aria-label="Duplicate snippet" disabled={isSubmitting}>
+                  <CopyPlus size={16} suppressHydrationWarning />
                 </Button>
                 <Button variant="ghost" size="icon" onClick={onToggleVisibility} aria-label="Toggle visibility" disabled={isSubmitting}>
                   <VisIcon size={16} suppressHydrationWarning />

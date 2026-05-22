@@ -1,27 +1,35 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getSession } from "@/features/auth/utils/session";
 import { Sidebar } from "@/features/core/components/sidebar";
-import { SnippetCard } from "@/features/snippets/components/snippet-card";
 import { SnippetSearchHeader } from "@/features/snippets/components/search-header";
+import { DashboardContent } from "@/features/snippets/components/dashboard-content";
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { db } from "@/db";
 import { snippets } from "@/db/schema";
-import { eq, desc, like, or, and } from "drizzle-orm";
+import { eq, desc, asc, like, or, and } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { escapeLike } from "@/features/core/utils/sql";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ q?: string; includeCode?: string }> }) {
+interface DashboardSearchParams {
+  q?: string;
+  includeCode?: string;
+  sort?: string;
+}
+
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<DashboardSearchParams> }) {
   const session = await getSession();
   if (!session) {
     redirect("/login?expired=1");
   }
 
-  const { q, includeCode } = await searchParams;
+  const { q, includeCode, sort } = await searchParams;
   const query = q ?? "";
   const escapedQuery = escapeLike(query);
   const includeCodeBool = includeCode === "true";
+  const sortMode = (["newest", "oldest", "alphabetical"].includes(sort ?? "") ? sort : "newest") as "newest" | "oldest" | "alphabetical";
 
   const baseQuery = db.select().from(snippets);
   const conditions = [eq(snippets.authorId, session.user.id)];
@@ -41,10 +49,17 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     }
   }
 
+  const orderBy =
+    sortMode === "oldest"
+      ? asc(snippets.createdAt)
+      : sortMode === "alphabetical"
+        ? asc(snippets.title)
+        : desc(snippets.createdAt);
+
   const whereClause = and(...conditions);
   const userSnippets = await (whereClause
-    ? baseQuery.where(whereClause).orderBy(desc(snippets.createdAt)).all()
-    : baseQuery.orderBy(desc(snippets.createdAt)).all()
+    ? baseQuery.where(whereClause).orderBy(orderBy).all()
+    : baseQuery.orderBy(orderBy).all()
   );
 
   const languages = [...new Set(userSnippets.map((s) => s.language))].sort();
@@ -73,6 +88,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     })
   );
 
+  const cookieStore = await cookies();
+  const viewMode = (cookieStore.get("snippet_view")?.value === "table" ? "table" : "grid") as "grid" | "table";
+
   return (
     <div className="flex h-screen">
       <Sidebar
@@ -84,32 +102,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <SnippetSearchHeader />
-
-        <div className="flex-1 overflow-y-auto p-4">
-          {highlightedSnippets.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-              <p className="text-lg mb-2">No snippets yet</p>
-              <p className="text-sm">Click &quot;New Snippet&quot; to create your first one</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {highlightedSnippets.map((s) => (
-                <SnippetCard
-                  key={s.id}
-                  id={s.id}
-                  title={s.title}
-                  description={s.description ?? undefined}
-                  language={s.language}
-                  tags={s.tags ?? undefined}
-                  visibility={s.visibility as "PRIVATE" | "SHARED" | "PUBLIC"}
-                  createdAt={s.createdAt}
-                  snippetDensity={density}
-                  highlightedCode={s.highlightedCode}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        <DashboardContent
+          snippets={highlightedSnippets.map((s) => ({
+            ...s,
+            visibility: s.visibility as "PRIVATE" | "SHARED" | "PUBLIC",
+          }))}
+          viewMode={viewMode}
+          sort={sortMode}
+          density={density}
+        />
       </div>
     </div>
   );
