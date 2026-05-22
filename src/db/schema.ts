@@ -26,12 +26,13 @@ export const snippets = sqliteTable("snippets", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
-  code: text("code").notNull(),
-  language: text("language").notNull(),
   tags: text("tags", { mode: "json" }).$type<string[]>(),
   authorId: text("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   visibility: text("visibility", { enum: ["PRIVATE", "SHARED", "PUBLIC"] }).notNull().default("PRIVATE"),
   shareToken: text("share_token").unique(),
+  isPinned: integer("is_pinned", { mode: "boolean" }).notNull().default(false),
+  expiresAt: integer("expires_at", { mode: "timestamp" }),
+  collectionId: text("collection_id").references(() => collections.id, { onDelete: "set null" }),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
@@ -44,6 +45,28 @@ export const sessions = sqliteTable("sessions", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
 
+export const siteSettings = sqliteTable("site_settings", {
+  id: integer("id").primaryKey(),
+  registrationEnabled: integer("registration_enabled", { mode: "boolean" }).notNull().default(true),
+  globalAnnouncement: text("global_announcement"),
+  maxSnippetsPerUser: integer("max_snippets_per_user").notNull().default(1000),
+  maxCharsPerSnippet: integer("max_chars_per_snippet").notNull().default(250000),
+});
+
+export const collections = sqliteTable("collections", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+});
+
+export const snippetFiles = sqliteTable("snippet_files", {
+  id: text("id").primaryKey(),
+  snippetId: text("snippet_id").notNull().references(() => snippets.id, { onDelete: "cascade" }),
+  filename: text("filename").notNull(),
+  code: text("code").notNull(),
+  language: text("language").notNull(),
+});
+
 export const siteStatistics = sqliteTable("site_statistics", {
   id: integer("id").primaryKey(),
   totalUsersCreated: integer("total_users_created").notNull().default(0),
@@ -53,12 +76,33 @@ export const siteStatistics = sqliteTable("site_statistics", {
 export const usersRelations = relations(users, ({ many }) => ({
   snippets: many(snippets),
   sessions: many(sessions),
+  collections: many(collections),
 }));
 
-export const snippetsRelations = relations(snippets, ({ one }) => ({
+export const collectionsRelations = relations(collections, ({ one, many }) => ({
+  user: one(users, {
+    fields: [collections.userId],
+    references: [users.id],
+  }),
+  snippets: many(snippets),
+}));
+
+export const snippetsRelations = relations(snippets, ({ one, many }) => ({
   author: one(users, {
     fields: [snippets.authorId],
     references: [users.id],
+  }),
+  collection: one(collections, {
+    fields: [snippets.collectionId],
+    references: [collections.id],
+  }),
+  files: many(snippetFiles),
+}));
+
+export const snippetFilesRelations = relations(snippetFiles, ({ one }) => ({
+  snippet: one(snippets, {
+    fields: [snippetFiles.snippetId],
+    references: [snippets.id],
   }),
 }));
 
