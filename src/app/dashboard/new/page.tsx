@@ -19,8 +19,7 @@ import { X, Plus, ChevronDown } from "lucide-react";
 interface DuplicateData {
   title: string;
   description: string;
-  code: string;
-  language: string;
+  files: { filename: string; code: string; language: string }[];
   tags: string[];
   visibility: "PRIVATE" | "SHARED" | "PUBLIC";
 }
@@ -64,8 +63,14 @@ export default function NewSnippetPage() {
 
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
-  const [code, setCode] = useState(initialData?.code ?? "");
-  const [language, setLanguage] = useState(initialData?.language ?? "typescript");
+  
+  const defaultFiles = initialData?.files?.length 
+    ? initialData.files 
+    : [{ filename: "index.ts", code: "", language: "typescript" }];
+    
+  const [files, setFiles] = useState<{ filename: string; code: string; language: string }[]>(defaultFiles);
+  const [activeTab, setActiveTab] = useState(0);
+
   const [languageSearch, setLanguageSearch] = useState("");
   const [languageOpen, setLanguageOpen] = useState(false);
   const [tags, setTags] = useState<string[]>(initialData?.tags ?? []);
@@ -103,7 +108,7 @@ export default function NewSnippetPage() {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, code, language, tags: tags.map((t) => t.toLowerCase()), visibility }),
+        body: JSON.stringify({ title, description, files, tags: tags.map((t) => t.toLowerCase()), visibility }),
       });
 
       const data = await res.json();
@@ -187,27 +192,77 @@ export default function NewSnippetPage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="code">Code</Label>
-                <CodeEditor
-                  id="code"
-                  value={code}
-                  onChange={setCode}
-                  placeholder="Paste your code here..."
-                  rows={12}
-                  className="font-mono text-sm"
-                  required
-                  maxLength={250000}
-                />
+              <div className="space-y-2 border border-border rounded-md overflow-hidden bg-card">
+                <div className="flex border-b border-border bg-muted/50 overflow-x-auto">
+                  {files.map((file, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setActiveTab(idx)}
+                      className={`px-4 py-2 text-sm font-medium border-r border-border transition-colors whitespace-nowrap flex items-center gap-2 ${
+                        activeTab === idx ? "bg-card text-foreground border-b-2 border-b-primary" : "text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <input 
+                        value={file.filename}
+                        onChange={(e) => {
+                          const newFiles = [...files];
+                          newFiles[idx].filename = e.target.value;
+                          setFiles(newFiles);
+                        }}
+                        className="bg-transparent border-none focus:outline-none w-24 text-sm"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      {files.length > 1 && (
+                        <X 
+                          size={14} 
+                          className="hover:text-destructive cursor-pointer" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const newFiles = files.filter((_, i) => i !== idx);
+                            setFiles(newFiles);
+                            if (activeTab >= newFiles.length) setActiveTab(newFiles.length - 1);
+                          }} 
+                        />
+                      )}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFiles([...files, { filename: `file${files.length + 1}.ts`, code: "", language: "typescript" }]);
+                      setActiveTab(files.length);
+                    }}
+                    className="px-3 py-2 text-muted-foreground hover:bg-muted transition-colors flex items-center justify-center"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+
+                <div className="p-2">
+                  <CodeEditor
+                    id="code"
+                    value={files[activeTab]?.code ?? ""}
+                    onChange={(newCode) => {
+                      const newFiles = [...files];
+                      newFiles[activeTab].code = newCode;
+                      setFiles(newFiles);
+                    }}
+                    placeholder="Paste your code here..."
+                    rows={12}
+                    className="font-mono text-sm border-0 focus-visible:ring-0 rounded-none shadow-none resize-y"
+                    required
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="language">Language</Label>
+                  <Label htmlFor="language">Language for active file</Label>
                   <div className="relative">
                     <Input
                       id="language"
-                      value={languageOpen ? languageSearch : language}
+                      value={languageOpen ? languageSearch : (files[activeTab]?.language ?? "")}
                       onChange={(e) => {
                         setLanguageSearch(e.target.value);
                         setLanguageOpen(true);
@@ -233,7 +288,9 @@ export default function NewSnippetPage() {
                             className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent focus:bg-accent focus:outline-none"
                             onMouseDown={(e) => {
                               e.preventDefault();
-                              setLanguage(lang);
+                              const newFiles = [...files];
+                              newFiles[activeTab].language = lang;
+                              setFiles(newFiles);
                               setLanguageSearch("");
                               setLanguageOpen(false);
                             }}

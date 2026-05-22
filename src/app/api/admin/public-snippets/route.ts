@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { snippets, users } from "@/db/schema";
+import { snippets, users, snippetFiles } from "@/db/schema";
 import { requireAdmin } from "@/features/admin/utils/admin-guard";
 import { verifyCsrf } from "@/features/core/utils/security";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, inArray } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +16,6 @@ export async function GET() {
     .select({
       id: snippets.id,
       title: snippets.title,
-      language: snippets.language,
       tags: snippets.tags,
       createdAt: snippets.createdAt,
       authorId: snippets.authorId,
@@ -28,7 +27,20 @@ export async function GET() {
     .orderBy(desc(snippets.createdAt))
     .all();
 
-  return NextResponse.json({ snippets: publicSnippets });
+  const snippetIds = publicSnippets.map(s => s.id);
+  const files = snippetIds.length > 0 
+    ? await db.select().from(snippetFiles).where(inArray(snippetFiles.snippetId, snippetIds)).all()
+    : [];
+
+  const publicSnippetsWithFiles = publicSnippets.map(s => {
+    const sFiles = files.filter(f => f.snippetId === s.id);
+    return {
+      ...s,
+      language: sFiles[0]?.language ?? "plaintext"
+    };
+  });
+
+  return NextResponse.json({ snippets: publicSnippetsWithFiles });
 }
 
 export async function DELETE(request: Request) {

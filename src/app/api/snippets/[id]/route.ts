@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { snippets, snippetFiles, siteSettings } from "@/db/schema";
 import { getSession } from "@/features/auth/utils/session";
 import { updateSnippetSchema } from "@/features/core/utils/validations";
-import { generateShareToken } from "@/features/auth/utils/auth";
+import { generateShareToken, generateId } from "@/features/auth/utils/auth";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
 import { verifyCsrf } from "@/features/core/utils/security";
@@ -49,14 +49,21 @@ export async function GET(
     }
   }
 
-  const file = await db.select().from(snippetFiles).where(eq(snippetFiles.snippetId, id)).get();
+  const files = await db.select().from(snippetFiles).where(eq(snippetFiles.snippetId, id)).all();
+  const mainFile = files.length > 0 ? files[0] : null;
 
   return NextResponse.json({
     id: snippet.id,
     title: snippet.title,
     description: snippet.description,
-    code: file?.code ?? "",
-    language: file?.language ?? "plaintext",
+    code: mainFile?.code ?? "",
+    language: mainFile?.language ?? "plaintext",
+    files: files.map(f => ({
+      id: f.id,
+      filename: f.filename,
+      code: f.code,
+      language: f.language
+    })),
     tags: snippet.tags,
     visibility: snippet.visibility,
     shareToken: snippet.visibility === "SHARED" ? snippet.shareToken : undefined,
@@ -95,7 +102,7 @@ export async function PUT(
     }
 
     const updates: Record<string, unknown> = { ...parsed.data, updatedAt: new Date() };
-    const { code, language, ...snippetUpdates } = updates;
+    const { code, language, files, ...snippetUpdates } = updates;
 
     if (snippetUpdates.visibility === "SHARED" && !snippet.shareToken) {
       snippetUpdates.shareToken = generateShareToken();
@@ -110,7 +117,31 @@ export async function PUT(
         await tx.update(snippets).set(snippetUpdates).where(eq(snippets.id, id));
       }
 
-      if (code !== undefined || language !== undefined) {
+      if (files && Array.isArray(files)) {
+        const settings = await tx.select().from(siteSettings).where(eq(siteSettings.id, 1)).get();
+        const maxChars = settings?.maxCharsPerSnippet ?? 250000;
+        
+        let totalChars = 0;
+        for (const f of files) {
+          totalChars += (f as { code: string }).code.length;
+        }
+
+        if (totalChars > maxChars) {
+          throw new Error(`Snippet code too long (Max: ${maxChars} chars)`);
+        }
+
+        await tx.delete(snippetFiles).where(eq(snippetFiles.snippetId, id));
+        for (const f of files) {
+          await tx.insert(snippetFiles).values({
+            id: generateId(),
+            snippetId: id,
+            filename: (f as { filename: string }).filename,
+            code: (f as { code: string }).code,
+            language: (f as { language: string }).language
+          });
+        }
+      } else if (code !== undefined || language !== undefined) {
+        // Fallback for single-file update
         const settings = await tx.select().from(siteSettings).where(eq(siteSettings.id, 1)).get();
         const maxChars = settings?.maxCharsPerSnippet ?? 250000;
         
@@ -118,11 +149,14 @@ export async function PUT(
           throw new Error(`Snippet code too long (Max: ${maxChars} chars)`);
         }
 
-        const fileUpdate: Record<string, unknown> = {};
-        if (code !== undefined) fileUpdate.code = code;
-        if (language !== undefined) fileUpdate.language = language;
-        
-        await tx.update(snippetFiles).set(fileUpdate).where(eq(snippetFiles.snippetId, id));
+        // We assume there's at least one file. We update the first one or 'index'
+        const existingFiles = await tx.select().from(snippetFiles).where(eq(snippetFiles.snippetId, id)).all();
+        if (existingFiles.length > 0) {
+          const fileUpdate: Record<string, unknown> = {};
+          if (code !== undefined) fileUpdate.code = code;
+          if (language !== undefined) fileUpdate.language = language;
+          await tx.update(snippetFiles).set(fileUpdate).where(eq(snippetFiles.id, existingFiles[0].id));
+        }
       }
     });
 

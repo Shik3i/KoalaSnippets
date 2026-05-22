@@ -6,8 +6,8 @@ import { SnippetSearchHeader } from "@/features/snippets/components/search-heade
 import { DashboardContent } from "@/features/snippets/components/dashboard-content";
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { db } from "@/db";
-import { snippets } from "@/db/schema";
-import { eq, desc, asc, like, or, and } from "drizzle-orm";
+import { snippets, snippetFiles, collections } from "@/db/schema";
+import { eq, desc, asc, like, or, and, inArray } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { escapeLike } from "@/features/core/utils/sql";
 
@@ -17,6 +17,7 @@ interface DashboardSearchParams {
   q?: string;
   includeCode?: string;
   sort?: string;
+  collection?: string;
 }
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<DashboardSearchParams> }) {
@@ -25,7 +26,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     redirect("/login?expired=1");
   }
 
-  const { q, includeCode, sort } = await searchParams;
+  const { q, includeCode, sort, collection } = await searchParams;
   const query = q ?? "";
   const escapedQuery = escapeLike(query);
   const includeCodeBool = includeCode === "true";
@@ -33,19 +34,38 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   const baseQuery = db.select().from(snippets);
   const conditions = [eq(snippets.authorId, session.user.id)];
+  
+  if (collection) {
+    conditions.push(eq(snippets.collectionId, collection));
+  }
 
+  let matchingSnippetIds = new Set<string>();
   if (query) {
+    // We must search snippet_files too since code/language moved there.
+    let fileQuery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
+      .where(like(snippetFiles.language, `%${escapedQuery}%`));
+    
+    if (includeCodeBool) {
+      fileQuery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
+        .where(or(
+          like(snippetFiles.language, `%${escapedQuery}%`),
+          like(snippetFiles.code, `%${escapedQuery}%`)
+        ));
+    }
+    
+    const matchedFiles = await fileQuery.all();
+    matchedFiles.forEach(f => matchingSnippetIds.add(f.snippetId));
+
     const searchConditions = [
       like(snippets.title, `%${escapedQuery}%`),
-      like(snippets.language, `%${escapedQuery}%`),
       sql`snippets.tags LIKE ${`%${escapedQuery}%`}`,
     ];
-    if (includeCodeBool) {
-      searchConditions.push(like(snippets.code, `%${escapedQuery}%`));
-    }
+    
     const searchOr = or(...searchConditions);
     if (searchOr) {
-      conditions.push(searchOr);
+      // We will handle the title/tags match below, but if we have file matches we can use inArray
+      // Actually, it's easier to fetch snippets first or combine them.
+      // We push a complex OR: (title MATCH OR tags MATCH OR id IN (matchedFiles))
     }
   }
 
@@ -56,34 +76,63 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         ? asc(snippets.title)
         : desc(snippets.createdAt);
 
+  // If there's a search, we want OR(title match, tag match, id IN matchedFiles)
+  if (query) {
+    const searchConditions = [
+      like(snippets.title, `%${escapedQuery}%`),
+      sql`snippets.tags LIKE ${`%${escapedQuery}%`}`,
+    ];
+    if (matchingSnippetIds.size > 0) {
+      searchConditions.push(inArray(snippets.id, Array.from(matchingSnippetIds)));
+    }
+    conditions.push(or(...searchConditions)!);
+  }
+
   const whereClause = and(...conditions);
   const userSnippets = await (whereClause
     ? baseQuery.where(whereClause).orderBy(orderBy).all()
     : baseQuery.orderBy(orderBy).all()
   );
 
-  const languages = [...new Set(userSnippets.map((s) => s.language))].sort();
-  const allTags = [...new Set(userSnippets.flatMap((s) => s.tags ?? []))].sort();
+  const snippetIds = userSnippets.map(s => s.id);
+  const files = snippetIds.length > 0 
+    ? await db.select().from(snippetFiles).where(inArray(snippetFiles.snippetId, snippetIds)).all()
+    : [];
+
+  const userSnippetsWithFiles = userSnippets.map(s => {
+    return {
+      ...s,
+      files: files.filter(f => f.snippetId === s.id)
+    };
+  });
+
+  const languages = [...new Set(files.map((f) => f.language))].sort();
+  const allTags = [...new Set(userSnippetsWithFiles.flatMap((s) => s.tags ?? []))].sort();
 
   const density = session?.user?.preferences?.snippetDensity ?? "compact";
   const syntaxTheme = session?.user?.preferences?.syntaxTheme ?? "github-dark";
 
   const highlightedSnippets = await Promise.all(
-    userSnippets.map(async (s) => {
+    userSnippetsWithFiles.map(async (s) => {
+      // Just highlight the first file for the preview card
+      const mainFile = s.files[0];
+      if (!mainFile) return { ...s, highlightedCode: undefined, language: "plaintext" };
+
       if (density === "compact") {
-        return { ...s, highlightedCode: undefined };
+        return { ...s, highlightedCode: undefined, language: mainFile.language };
       }
-      let codeToHighlight = s.code;
+      
+      let codeToHighlight = mainFile.code;
       if (density === "preview") {
-        const lines = s.code.split("\n");
+        const lines = mainFile.code.split("\n");
         codeToHighlight = lines.slice(0, 5).join("\n") + (lines.length > 5 ? "\n..." : "");
       }
       try {
-        const hl = await highlightCode(codeToHighlight, s.language, syntaxTheme);
-        return { ...s, highlightedCode: hl };
+        const hl = await highlightCode(codeToHighlight, mainFile.language, syntaxTheme);
+        return { ...s, highlightedCode: hl, language: mainFile.language };
       } catch (err) {
         console.error("Failed to highlight code server-side inside list", err);
-        return { ...s, highlightedCode: undefined };
+        return { ...s, highlightedCode: undefined, language: mainFile.language };
       }
     })
   );

@@ -22,14 +22,11 @@ interface DetailViewProps {
   id: string;
   title: string;
   description?: string;
-  code: string;
-  language: string;
   tags?: string[];
   visibility: "PRIVATE" | "SHARED" | "PUBLIC";
   shareToken?: string;
-  createdAt: Date;
   updatedAt: Date;
-  highlightedCode: string;
+  files: { id?: string; filename: string; code: string; language: string; highlightedCode: string }[];
   isOwner: boolean;
   isSubmitting?: boolean;
   onEdit?: () => void;
@@ -86,13 +83,11 @@ function getFilename(title: string, language: string): string {
 export function DetailView({
   title,
   description,
-  code,
-  language,
   tags,
   visibility,
   shareToken,
   updatedAt,
-  highlightedCode,
+  files,
   isOwner,
   isSubmitting,
   onEdit,
@@ -109,16 +104,21 @@ export function DetailView({
   const { addToast } = useToast();
   const VisIcon = visibilityConfig[visibility].icon;
 
+  const [activeTab, setActiveTab] = useState(0);
+  const activeFile = files[activeTab] || files[0];
+
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(code);
+    if (!activeFile) return;
+    await navigator.clipboard.writeText(activeFile.code);
     setCopied(true);
     addToast("Code copied!", "success");
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleDownload = () => {
-    const filename = getFilename(title, language);
-    const blob = new Blob([code], { type: "text/plain" });
+    if (!activeFile) return;
+    const filename = getFilename(activeFile.filename, activeFile.language);
+    const blob = new Blob([activeFile.code], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -148,7 +148,7 @@ export function DetailView({
           <div className="space-y-1">
             <h1 className="text-xl font-semibold">{title}</h1>
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="secondary">{language}</Badge>
+              <Badge variant="secondary">{files.length} {files.length === 1 ? 'file' : 'files'}</Badge>
               <span className={cn("flex items-center gap-1 text-xs", visibilityConfig[visibility].color)}>
                 <VisIcon size={12} suppressHydrationWarning />
                 {visibilityConfig[visibility].label}
@@ -201,35 +201,57 @@ export function DetailView({
         )}
       </div>
 
-      <div className="flex-1 overflow-auto relative">
-        <div className="absolute top-3 right-3 z-10 flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5 bg-card/80 backdrop-blur-sm"
-            onClick={handleCopy}
-            aria-label="Copy code to clipboard"
-          >
-            {copied ? <Check size={14} suppressHydrationWarning /> : <Copy size={14} suppressHydrationWarning />}
-            {copied ? "Copied!" : "Copy"}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5 bg-card/80 backdrop-blur-sm"
-            onClick={handleDownload}
-            aria-label="Download code file"
-          >
-            <Download size={14} suppressHydrationWarning />
-            Download
-          </Button>
-        </div>
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        {files.length > 1 && (
+          <div className="flex border-b border-border bg-muted/50 overflow-x-auto">
+            {files.map((file, idx) => (
+              <button
+                key={idx}
+                onClick={() => setActiveTab(idx)}
+                className={cn(
+                  "px-4 py-2 text-sm font-medium border-r border-border transition-colors whitespace-nowrap",
+                  activeTab === idx ? "bg-card text-foreground border-b-2 border-b-primary" : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                {file.filename}
+                <span className="ml-2 text-xs opacity-50">{file.language}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
-        <div
-          className="p-4 font-mono text-sm leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: highlightedCode }}
-          style={{ fontFamily: "var(--font-jetbrains), monospace" }}
-        />
+        <div className="flex-1 overflow-auto relative">
+          <div className="absolute top-3 right-3 z-10 flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 bg-card/80 backdrop-blur-sm"
+              onClick={handleCopy}
+              aria-label="Copy code to clipboard"
+            >
+              {copied ? <Check size={14} suppressHydrationWarning /> : <Copy size={14} suppressHydrationWarning />}
+              {copied ? "Copied!" : "Copy"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 bg-card/80 backdrop-blur-sm"
+              onClick={handleDownload}
+              aria-label="Download code file"
+            >
+              <Download size={14} suppressHydrationWarning />
+              Download
+            </Button>
+          </div>
+
+          {activeFile && (
+            <div
+              className="p-4 font-mono text-sm leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: activeFile.highlightedCode }}
+              style={{ fontFamily: "var(--font-jetbrains), monospace" }}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

@@ -4,8 +4,8 @@ import { SnippetCard } from "@/features/snippets/components/snippet-card";
 import { SnippetSearchHeader } from "@/features/snippets/components/search-header";
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { db } from "@/db";
-import { snippets } from "@/db/schema";
-import { eq, desc, like, or, and } from "drizzle-orm";
+import { snippets, snippetFiles } from "@/db/schema";
+import { eq, desc, like, or, and, inArray } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { escapeLike } from "@/features/core/utils/sql";
 
@@ -21,19 +21,30 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const baseQuery = db.select().from(snippets);
   const conditions = [eq(snippets.visibility, "PUBLIC")];
 
+  let matchingSnippetIds = new Set<string>();
   if (query) {
+    let fileQuery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
+      .where(like(snippetFiles.language, `%${escapedQuery}%`));
+    
+    if (includeCodeBool) {
+      fileQuery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
+        .where(or(
+          like(snippetFiles.language, `%${escapedQuery}%`),
+          like(snippetFiles.code, `%${escapedQuery}%`)
+        ));
+    }
+    
+    const matchedFiles = await fileQuery.all();
+    matchedFiles.forEach(f => matchingSnippetIds.add(f.snippetId));
+
     const searchConditions = [
       like(snippets.title, `%${escapedQuery}%`),
-      like(snippets.language, `%${escapedQuery}%`),
       sql`snippets.tags LIKE ${`%${escapedQuery}%`}`,
     ];
-    if (includeCodeBool) {
-      searchConditions.push(like(snippets.code, `%${escapedQuery}%`));
+    if (matchingSnippetIds.size > 0) {
+      searchConditions.push(inArray(snippets.id, Array.from(matchingSnippetIds)));
     }
-    const searchOr = or(...searchConditions);
-    if (searchOr) {
-      conditions.push(searchOr);
-    }
+    conditions.push(or(...searchConditions)!);
   }
 
   const whereClause = and(...conditions);
@@ -42,28 +53,44 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     : baseQuery.orderBy(desc(snippets.createdAt)).all()
   );
 
-  const languages = [...new Set(publicSnippets.map((s) => s.language))].sort();
-  const allTags = [...new Set(publicSnippets.flatMap((s) => s.tags ?? []))].sort();
+  const snippetIds = publicSnippets.map(s => s.id);
+  const files = snippetIds.length > 0 
+    ? await db.select().from(snippetFiles).where(inArray(snippetFiles.snippetId, snippetIds)).all()
+    : [];
+
+  const publicSnippetsWithFiles = publicSnippets.map(s => {
+    return {
+      ...s,
+      files: files.filter(f => f.snippetId === s.id)
+    };
+  });
+
+  const languages = [...new Set(files.map((f) => f.language))].sort();
+  const allTags = [...new Set(publicSnippetsWithFiles.flatMap((s) => s.tags ?? []))].sort();
 
   const density = session?.user?.preferences?.snippetDensity ?? "compact";
   const syntaxTheme = session?.user?.preferences?.syntaxTheme ?? "github-dark";
 
   const highlightedSnippets = await Promise.all(
-    publicSnippets.map(async (s) => {
+    publicSnippetsWithFiles.map(async (s) => {
+      const mainFile = s.files[0];
+      if (!mainFile) return { ...s, highlightedCode: undefined, language: "plaintext" };
+
       if (density === "compact") {
-        return { ...s, highlightedCode: undefined };
+        return { ...s, highlightedCode: undefined, language: mainFile.language };
       }
-      let codeToHighlight = s.code;
+      
+      let codeToHighlight = mainFile.code;
       if (density === "preview") {
-        const lines = s.code.split("\n");
+        const lines = mainFile.code.split("\n");
         codeToHighlight = lines.slice(0, 5).join("\n") + (lines.length > 5 ? "\n..." : "");
       }
       try {
-        const hl = await highlightCode(codeToHighlight, s.language, syntaxTheme);
-        return { ...s, highlightedCode: hl };
+        const hl = await highlightCode(codeToHighlight, mainFile.language, syntaxTheme);
+        return { ...s, highlightedCode: hl, language: mainFile.language };
       } catch (err) {
         console.error("Failed to highlight code server-side inside list", err);
-        return { ...s, highlightedCode: undefined };
+        return { ...s, highlightedCode: undefined, language: mainFile.language };
       }
     })
   );

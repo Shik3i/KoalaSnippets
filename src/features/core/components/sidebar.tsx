@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/features/core/utils/utils";
@@ -20,6 +20,9 @@ import {
   Shield,
   Palette,
   Search,
+  Folder,
+  PlusCircle,
+  Github,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -41,6 +44,17 @@ const navItems = [
 export function Sidebar({ tags = [], languages = [], isAuthenticated = false, isAdmin = false, onTagClick, onLanguageClick }: SidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collections, setCollections] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetch("/api/collections")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.collections) setCollections(data.collections);
+        });
+    }
+  }, [isAuthenticated]);
 
   return (
     <>
@@ -111,6 +125,57 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                 New Snippet
               </Link>
             </Button>
+          </div>
+        )}
+
+        {isAuthenticated && (
+          <div className="px-3 py-2 border-t border-border overflow-y-auto max-h-48">
+            <div className="flex items-center justify-between mb-2 px-1">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Collections
+              </h3>
+              <button 
+                onClick={async () => {
+                  const name = prompt("Enter collection name:");
+                  if (!name) return;
+                  const res = await fetch("/api/collections", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name })
+                  });
+                  if (res.ok) {
+                    const data = await res.json();
+                    setCollections(prev => [...prev, data.collection]);
+                  }
+                }}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <PlusCircle size={14} />
+              </button>
+            </div>
+            <div className="space-y-0.5">
+              {collections.length === 0 ? (
+                <div className="text-xs text-muted-foreground px-1 py-2">No collections yet</div>
+              ) : (
+                collections.map((col) => (
+                  <button
+                    key={col.id}
+                    onClick={() => {
+                      if (onTagClick) {
+                        onTagClick(`collection:${col.id}`);
+                      } else {
+                        window.location.href = `/dashboard?collection=${col.id}`;
+                      }
+                      setMobileOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
+                  >
+                    <Folder size={12} suppressHydrationWarning />
+                    <span className="truncate">{col.name}</span>
+                  </button>
+                ))
+              )}
+            </div>
           </div>
         )}
 

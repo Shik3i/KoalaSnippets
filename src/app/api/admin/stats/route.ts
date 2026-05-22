@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { db } from "@/db";
-import { siteStatistics, snippets } from "@/db/schema";
+import { siteStatistics, snippets, snippetFiles } from "@/db/schema";
 import { requireAdmin } from "@/features/admin/utils/admin-guard";
 import { eq, desc, sql } from "drizzle-orm";
 
@@ -23,11 +23,11 @@ export async function GET() {
 
   const languageStats = await db
     .select({
-      language: snippets.language,
+      language: snippetFiles.language,
       count: sql<number>`COUNT(*)`,
     })
-    .from(snippets)
-    .groupBy(snippets.language)
+    .from(snippetFiles)
+    .groupBy(snippetFiles.language)
     .orderBy(desc(sql`COUNT(*)`))
     .limit(10)
     .all();

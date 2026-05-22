@@ -23,11 +23,19 @@ export const passwordChangeSchema = z.object({
 export const snippetSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().max(2000).optional(),
-  code: z.string().trim().min(1),
+  code: z.string().trim().min(1).optional(),
   language: z.string().trim().min(1).max(50).refine(
     (lang) => SUPPORTED_LANGUAGES.includes(lang),
     { message: `Language must be one of: ${SUPPORTED_LANGUAGES.join(", ")}` }
-  ),
+  ).optional(),
+  files: z.array(z.object({
+    filename: z.string().trim().min(1).max(100),
+    code: z.string().trim().min(1),
+    language: z.string().trim().min(1).max(50).refine(
+      (lang) => SUPPORTED_LANGUAGES.includes(lang),
+      { message: `Language must be one of: ${SUPPORTED_LANGUAGES.join(", ")}` }
+    )
+  })).min(1).optional(),
   tags: z.array(z.string().trim().min(1).max(50)).max(10).optional(),
   visibility: z.enum(["PRIVATE", "SHARED", "PUBLIC"]).default("PRIVATE"),
 });

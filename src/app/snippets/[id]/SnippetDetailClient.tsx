@@ -10,14 +10,12 @@ interface SnippetDetailClientProps {
   id: string;
   title: string;
   description?: string;
-  code: string;
-  language: string;
+  files: { id?: string; filename: string; code: string; language: string; highlightedCode: string }[];
   tags?: string[];
   visibility: "PRIVATE" | "SHARED" | "PUBLIC";
   shareToken?: string;
   createdAt: Date;
   updatedAt: Date;
-  highlightedCode: string;
   isOwner: boolean;
 }
 
@@ -31,8 +29,7 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
       id: props.id,
       title: props.title,
       description: props.description ?? "",
-      code: props.code,
-      language: props.language,
+      files: props.files.map(f => ({ filename: f.filename, code: f.code, language: f.language })),
       tags: props.tags ?? [],
       visibility: props.visibility,
     };
@@ -44,8 +41,7 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
     const duplicateData = {
       title: props.title,
       description: props.description ?? "",
-      code: props.code,
-      language: props.language,
+      files: props.files.map(f => ({ filename: f.filename, code: f.code, language: f.language })),
       tags: props.tags ?? [],
       visibility: props.visibility,
     };

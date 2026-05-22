@@ -4,7 +4,7 @@ import { snippets, siteStatistics, siteSettings, snippetFiles } from "@/db/schem
 import { getSession } from "@/features/auth/utils/session";
 import { snippetSchema } from "@/features/core/utils/validations";
 import { generateId, generateShareToken } from "@/features/auth/utils/auth";
-import { eq, desc, like, or, and, sql, count } from "drizzle-orm";
+import { eq, desc, like, or, and, sql, count, inArray } from "drizzle-orm";
 import { getSafePage, verifyCsrf } from "@/features/core/utils/security";
 
 export const dynamic = "force-dynamic";
@@ -34,20 +34,33 @@ export async function GET(request: Request) {
     conditions.push(eq(snippets.authorId, session.user.id));
   }
 
+  let matchingSnippetIds = new Set<string>();
   if (query) {
     const escapedQuery = query.replace(/%/g, "\\%").replace(/_/g, "\\_");
+    
+    let fileQuery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
+      .where(like(snippetFiles.language, `%${escapedQuery}%`));
+      
+    // if (includeCode) {
+    //   fileQuery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
+    //     .where(or(
+    //       like(snippetFiles.language, `%${escapedQuery}%`),
+    //       like(snippetFiles.code, `%${escapedQuery}%`)
+    //     ));
+    // }
+    
+    const matchedFiles = await fileQuery.all();
+    matchedFiles.forEach(f => matchingSnippetIds.add(f.snippetId));
+
     const searchConditions = [
       like(snippets.title, `%${escapedQuery}%`),
-      like(snippets.language, `%${escapedQuery}%`),
       like(snippets.tags, `%${escapedQuery}%`),
     ];
+    if (matchingSnippetIds.size > 0) {
+      searchConditions.push(inArray(snippets.id, Array.from(matchingSnippetIds)));
+    }
 
-    // Code search disabled temporarily during multi-file transition
-    // if (includeCode) {
-    //   searchConditions.push(like(snippets.code, `%${escapedQuery}%`));
-    // }
-
-    conditions.push(or(...searchConditions));
+    conditions.push(or(...searchConditions)!);
   }
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -57,17 +70,25 @@ export async function GET(request: Request) {
     : baseQuery.orderBy(desc(snippets.createdAt)).limit(PAGE_SIZE).offset(offset)
   ).all();
 
+  const snippetIds = results.map(s => s.id);
+  const files = snippetIds.length > 0 
+    ? await db.select().from(snippetFiles).where(inArray(snippetFiles.snippetId, snippetIds)).all()
+    : [];
+
   return NextResponse.json({
-    snippets: results.map((s) => ({
-      id: s.id,
-      title: s.title,
-      description: s.description,
-      // language: s.language,
-      tags: s.tags,
-      visibility: s.visibility,
-      createdAt: s.createdAt,
-      updatedAt: s.updatedAt,
-    })),
+    snippets: results.map((s) => {
+      const sFiles = files.filter(f => f.snippetId === s.id);
+      return {
+        id: s.id,
+        title: s.title,
+        description: s.description,
+        language: sFiles[0]?.language ?? "plaintext",
+        tags: s.tags,
+        visibility: s.visibility,
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt,
+      };
+    }),
     page,
     hasMore: results.length === PAGE_SIZE,
   });
@@ -105,10 +126,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
     }
 
-    const { title, description, code, language, tags, visibility } = parsed.data;
+    const { title, description, code, language, tags, visibility, files } = parsed.data;
 
-    if (code.length > maxChars) {
-      return NextResponse.json({ error: `Snippet code too long (Max: ${maxChars} chars)` }, { status: 400 });
+    let totalChars = 0;
+    const filesToInsert = files ?? [{ filename: "index", code: code!, language: language! }];
+    
+    for (const f of filesToInsert) {
+      if (!f.code || !f.language) {
+        return NextResponse.json({ error: "Missing code or language in file" }, { status: 400 });
+      }
+      totalChars += f.code.length;
+    }
+
+    if (totalChars > maxChars) {
+      return NextResponse.json({ error: `Snippet total code too long (Max: ${maxChars} chars)` }, { status: 400 });
     }
 
     const normalizedTags = tags?.map((t) => t.toLowerCase()) ?? null;
@@ -128,13 +159,15 @@ export async function POST(request: Request) {
     await db.transaction(async (tx) => {
       await tx.insert(snippets).values(snippetData);
 
-      await tx.insert(snippetFiles).values({
-        id: generateId(),
-        snippetId: snippetData.id,
-        filename: "index",
-        code,
-        language
-      });
+      for (const f of filesToInsert) {
+        await tx.insert(snippetFiles).values({
+          id: generateId(),
+          snippetId: snippetData.id,
+          filename: f.filename,
+          code: f.code,
+          language: f.language
+        });
+      }
       
       await tx.update(siteStatistics)
         .set({ totalSnippetsCreated: sql`total_snippets_created + 1` })

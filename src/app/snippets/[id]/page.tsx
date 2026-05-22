@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { db } from "@/db";
-import { snippets } from "@/db/schema";
+import { snippets, snippetFiles } from "@/db/schema";
 import { getSession } from "@/features/auth/utils/session";
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { Sidebar } from "@/features/core/components/sidebar";
@@ -35,20 +35,27 @@ async function getSnippet(id: string, token?: string) {
   const session = await getSession();
   const isOwner = session && snippet.authorId === session.user.id;
 
+  const files = await db.select().from(snippetFiles).where(eq(snippetFiles.snippetId, snippet.id)).all();
+  
+  const snippetWithFiles = {
+    ...snippet,
+    files
+  };
+
   // The owner must ALWAYS be able to see their snippet, regardless of visibility or missing tokens in the URL.
   if (isOwner) {
-    return snippet;
+    return snippetWithFiles;
   }
 
   // PUBLIC snippets are accessible to anyone
   if (snippet.visibility === "PUBLIC") {
-    return snippet;
+    return snippetWithFiles;
   }
 
   // SHARED snippets are accessible if the correct token is provided
   if (snippet.visibility === "SHARED") {
     if (token && snippet.shareToken && constantTimeCompare(snippet.shareToken, token)) {
-      return snippet;
+      return snippetWithFiles;
     }
   }
 
@@ -66,9 +73,10 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     };
   }
 
+  const mainLanguage = snippet.files?.[0]?.language ?? "plaintext";
   const tagsStr = snippet.tags?.length ? ` · ${snippet.tags.join(", ")}` : "";
-  const title = `${snippet.title} · ${snippet.language}${tagsStr}`;
-  const description = snippet.description ?? `Code snippet in ${snippet.language} from KoalaSnippets`;
+  const title = `${snippet.title} · ${mainLanguage}${tagsStr}`;
+  const description = snippet.description ?? `Code snippet in ${mainLanguage} from KoalaSnippets`;
 
   return {
     title,
@@ -101,13 +109,26 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
   }
 
   const syntaxTheme = session?.user?.preferences?.syntaxTheme ?? "github-dark";
-  let highlightedCode: string;
-  try {
-    highlightedCode = await highlightCode(snippet.code, snippet.language, syntaxTheme);
-  } catch (err) {
-    console.error("[snippet] Failed to highlight code, falling back to plaintext:", err);
-    highlightedCode = `<pre><code>${escapeHtml(snippet.code)}</code></pre>`;
-  }
+  
+  const highlightedFiles = await Promise.all(
+    (snippet.files || []).map(async (file) => {
+      let highlightedCode: string;
+      try {
+        highlightedCode = await highlightCode(file.code, file.language, syntaxTheme);
+      } catch (err) {
+        console.error("[snippet] Failed to highlight code, falling back to plaintext:", err);
+        highlightedCode = `<pre><code>${escapeHtml(file.code)}</code></pre>`;
+      }
+      return {
+        id: file.id,
+        filename: file.filename,
+        code: file.code,
+        language: file.language,
+        highlightedCode,
+      };
+    })
+  );
+
   const isOwner = session?.user.id === snippet.authorId;
   const backUrl = snippet.visibility === "PUBLIC" ? "/public" : "/dashboard";
 
@@ -131,14 +152,12 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
             id={snippet.id}
             title={snippet.title}
             description={snippet.description ?? undefined}
-            code={snippet.code}
-            language={snippet.language}
+            files={highlightedFiles}
             tags={snippet.tags ?? undefined}
             visibility={snippet.visibility as "PRIVATE" | "SHARED" | "PUBLIC"}
             shareToken={snippet.shareToken ?? undefined}
             createdAt={snippet.createdAt}
             updatedAt={snippet.updatedAt}
-            highlightedCode={highlightedCode}
             isOwner={isOwner}
           />
         </div>
