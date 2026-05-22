@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore, useRef } from "react";
+import * as htmlToImage from "html-to-image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/features/core/utils/utils";
@@ -16,6 +17,7 @@ import {
   Check,
   Download,
   CopyPlus,
+  Camera,
 } from "lucide-react";
 
 interface DetailViewProps {
@@ -103,6 +105,7 @@ export function DetailView({
   const [copied, setCopied] = useState(false);
   const { addToast } = useToast();
   const VisIcon = visibilityConfig[visibility].icon;
+  const codeRef = useRef<HTMLDivElement>(null);
 
   const [activeTab, setActiveTab] = useState(0);
   const activeFile = files[activeTab] || files[0];
@@ -139,6 +142,28 @@ export function DetailView({
     }
     navigator.clipboard.writeText(url.toString());
     addToast("Share link copied!", "success");
+  };
+
+  const handleScreenshot = async () => {
+    if (!codeRef.current) return;
+    try {
+      addToast("Generating screenshot...", "info");
+      const dataUrl = await htmlToImage.toPng(codeRef.current, {
+        backgroundColor: "transparent",
+        pixelRatio: 2,
+        style: {
+          transform: "scale(1)",
+        },
+      });
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `${title.replace(/\s+/g, "_")}_screenshot.png`;
+      a.click();
+      addToast("Screenshot downloaded!", "success");
+    } catch (err) {
+      console.error("Screenshot error", err);
+      addToast("Failed to generate screenshot", "error");
+    }
   };
 
   return (
@@ -236,6 +261,16 @@ export function DetailView({
               variant="outline"
               size="sm"
               className="gap-1.5 bg-card/80 backdrop-blur-sm"
+              onClick={handleScreenshot}
+              aria-label="Export as Image"
+            >
+              <Camera size={14} suppressHydrationWarning />
+              Screenshot
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 bg-card/80 backdrop-blur-sm"
               onClick={handleDownload}
               aria-label="Download code file"
             >
@@ -245,11 +280,28 @@ export function DetailView({
           </div>
 
           {activeFile && (
-            <div
-              className="p-4 font-mono text-sm leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: activeFile.highlightedCode }}
-              style={{ fontFamily: "var(--font-jetbrains), monospace" }}
-            />
+            <div className="p-4 pt-12 pb-8 flex justify-center items-start min-h-full bg-muted/20">
+              <div 
+                ref={codeRef} 
+                className="w-full max-w-4xl rounded-xl border border-border bg-[#0d1117] shadow-2xl overflow-hidden"
+              >
+                <div className="flex items-center px-4 py-3 border-b border-white/10 bg-white/5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-[#ff5f56]" />
+                    <div className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
+                    <div className="w-3 h-3 rounded-full bg-[#27c93f]" />
+                  </div>
+                  <div className="flex-1 text-center text-xs text-white/50 font-mono pr-12">
+                    {activeFile.filename}
+                  </div>
+                </div>
+                <div
+                  className="p-6 font-mono text-sm leading-relaxed overflow-auto"
+                  dangerouslySetInnerHTML={{ __html: activeFile.highlightedCode }}
+                  style={{ fontFamily: "var(--font-jetbrains), monospace" }}
+                />
+              </div>
+            </div>
           )}
         </div>
       </div>

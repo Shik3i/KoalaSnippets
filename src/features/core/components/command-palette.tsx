@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Plus, Settings, Shield, Home, FileCode, Command, ArrowRight } from "lucide-react";
+import { Search, Plus, Settings, Shield, Home, FileCode, Command, ArrowRight, Moon, Sun } from "lucide-react";
 import { cn } from "@/features/core/utils/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -23,8 +23,9 @@ interface SnippetResult {
 
 const commands = [
   { label: "Create New Snippet", value: "/new", href: "/dashboard/new", description: "Create a new snippet", icon: Plus },
+  { label: "Toggle Dark Mode", value: "/theme", action: "toggleTheme", description: "Switch between light and dark mode", icon: Moon },
   { label: "Account Settings", value: "/settings", href: "/settings", description: "Manage your account settings", icon: Settings },
-  { label: "Admin Backups", value: "/backups", href: "/admin", description: "Admin tools and database backups", icon: Shield },
+  { label: "Admin Dashboard", value: "/admin", href: "/admin", description: "Admin tools and database backups", icon: Shield },
   { label: "Go to Home", value: "/home", href: "/", description: "Back to home page", icon: Home },
   { label: "My Snippets Dashboard", value: "/dashboard", href: "/dashboard", description: "View your personal snippets", icon: FileCode },
 ];
@@ -142,10 +143,27 @@ export function CommandPalette({ isAdmin = false }: CommandPaletteProps) {
 
     setIsOpen(false);
     
-    if ("href" in item) {
+    if ("action" in item && item.action === "toggleTheme") {
+      const html = document.documentElement;
+      const isDark = html.classList.contains("theme-dark");
+      const newTheme = isDark ? "theme-light" : "theme-dark";
+      
+      html.classList.remove("theme-dark", "theme-light");
+      html.classList.add(newTheme);
+      
+      fetch("/api/users/me/preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appTheme: newTheme }),
+      }).catch(console.error);
+      
+      return;
+    }
+
+    if ("href" in item && typeof item.href === "string") {
       // It is a command
       router.push(item.href);
-    } else {
+    } else if ("id" in item) {
       // It is a snippet
       router.push(`/snippets/${item.id}`);
     }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,7 +14,7 @@ import { useToast } from "@/components/ui/toast";
 import { useKeyboardShortcuts } from "@/features/snippets/utils/keyboard-shortcuts";
 import { SUPPORTED_LANGUAGES } from "@/features/snippets/utils/shiki";
 import { revalidateDashboard } from "@/features/core/actions/revalidate";
-import { X, Plus, ChevronDown } from "lucide-react";
+import { X, Plus, ChevronDown, Wand2 } from "lucide-react";
 
 interface DuplicateData {
   title: string;
@@ -52,14 +52,24 @@ function readEditData(): EditData | null {
   }
 }
 
-export default function NewSnippetPage() {
+export default function NewSnippetPage({
+  initialData: propInitialData,
+  isEdit = false,
+}: {
+  initialData?: DuplicateData;
+  isEdit?: boolean;
+}) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { addToast } = useToast();
+  const isImport = searchParams.get("import") === "1";
 
   const duplicateData = useMemo(() => readDuplicateData(), []);
   const editData = useMemo(() => readEditData(), []);
-  const initialData = editData || duplicateData;
-  const isEditing = !!editData;
+  
+  const [mounted, setMounted] = useState(false);
+  const initialData = propInitialData || editData || duplicateData;
+  const isEditing = isEdit || !!editData;
 
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
@@ -82,6 +92,29 @@ export default function NewSnippetPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    setMounted(true);
+    if (isImport) {
+      try {
+        const importData = sessionStorage.getItem("koalasnippets_import");
+        if (importData) {
+          const parsed = JSON.parse(importData);
+          if (parsed.title) setTitle(parsed.title);
+          if (parsed.files && parsed.files.length > 0) {
+            setFiles(parsed.files);
+          }
+          sessionStorage.removeItem("koalasnippets_import");
+          
+          const url = new URL(window.location.href);
+          url.searchParams.delete("import");
+          window.history.replaceState({}, '', url);
+        }
+      } catch (err) {
+        console.error("Failed to parse import data", err);
+      }
+    }
+  }, [isImport]);
+
+  useEffect(() => {
     fetch("/api/tags")
       .then((r) => r.json())
       .then((data) => setExistingTags(data.tags ?? []))
@@ -102,8 +135,8 @@ export default function NewSnippetPage() {
     setLoading(true);
 
     try {
-      const url = isEditing ? `/api/snippets/${editData.id}` : "/api/snippets";
-      const method = isEditing ? "PUT" : "POST";
+      const url = isEditing && editData ? `/api/snippets/${editData.id}` : "/api/snippets";
+      const method = isEditing && editData ? "PUT" : "POST";
 
       const res = await fetch(url, {
         method,
@@ -120,7 +153,7 @@ export default function NewSnippetPage() {
       addToast(isEditing ? "Snippet updated!" : "Snippet saved!", "success");
       await revalidateDashboard();
       
-      const snippetId = isEditing ? editData.id : data.id;
+      const snippetId = (isEditing && editData) ? editData.id : data.id;
       if (visibility === "SHARED" && data.shareToken) {
         router.push(`/snippets/${snippetId}?token=${data.shareToken}`);
       } else {
@@ -134,6 +167,26 @@ export default function NewSnippetPage() {
   };
 
   useKeyboardShortcuts({ onSave: () => { if (!loading) handleSubmit(); } });
+
+  const handleFormat = async () => {
+    const activeFile = files[activeTab];
+    if (!activeFile?.code) return;
+    try {
+      const res = await fetch("/api/format", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: activeFile.code, language: activeFile.language })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      const newFiles = [...files];
+      newFiles[activeTab].code = data.code;
+      setFiles(newFiles);
+      addToast("Code formatted!", "success");
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "Formatting failed", "error");
+    }
+  };
 
   const addTag = () => {
     const tag = tagInput.trim().toLowerCase();
@@ -234,8 +287,19 @@ export default function NewSnippetPage() {
                       setActiveTab(files.length);
                     }}
                     className="px-3 py-2 text-muted-foreground hover:bg-muted transition-colors flex items-center justify-center"
+                    aria-label="Add file"
                   >
                     <Plus size={16} />
+                  </button>
+                  <div className="flex-1" />
+                  <button
+                    type="button"
+                    onClick={handleFormat}
+                    className="px-3 py-2 text-muted-foreground hover:bg-muted transition-colors flex items-center justify-center gap-1.5 border-l border-border text-sm"
+                    title="Format Code"
+                  >
+                    <Wand2 size={14} />
+                    <span className="hidden sm:inline">Format</span>
                   </button>
                 </div>
 
