@@ -4,7 +4,7 @@
 
 **A blazing fast, zero-bloat, privacy-first snippet manager designed to cure Notepad++ tab hell.**
 
-[![Version](https://img.shields.io/badge/version-v1.0.23-blue?style=for-the-badge)](https://github.com/Shik3i/KoalaSnippets/releases)
+[![Version](https://img.shields.io/github/v/tag/Shik3i/KoalaSnippets?style=for-the-badge&label=Version&color=blue)](https://github.com/Shik3i/KoalaSnippets/releases)
 [![Docker Image](https://img.shields.io/badge/Docker-Latest-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://hub.docker.com/r/shik3i/koalasnippets)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/Shik3i/KoalaSnippets/docker-build.yml?style=for-the-badge&logo=github&label=Build)](https://github.com/Shik3i/KoalaSnippets/actions)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
