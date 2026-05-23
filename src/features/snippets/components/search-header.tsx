@@ -257,79 +257,80 @@ export function SnippetSearchHeader({
 
   return (
     <div className="sticky top-0 z-10 p-4 space-y-2">
-      <div className="relative flex items-center w-full">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} suppressHydrationWarning />
-        <Input
-          ref={inputRef}
-          placeholder={placeholder}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="pl-9 h-9 pr-28 sm:pr-56 w-full border-0 shadow-none focus-visible:ring-0 bg-muted/40 backdrop-blur-sm"
-          aria-label="Search snippets"
-        />
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 sm:gap-3">
-          {searching ? (
-            <div className="w-3.5 h-3.5 border border-muted-foreground border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <button
-              type="button"
-              onClick={() => {
-                window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
-              }}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 px-2 py-1 rounded-md transition-colors"
-              aria-label="Open Command Palette"
-            >
-              <Command size={14} suppressHydrationWarning />
-              <span className="hidden sm:inline font-medium">Command</span>
-            </button>
-          )}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 min-w-[160px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} suppressHydrationWarning />
+          <Input
+            ref={inputRef}
+            placeholder={placeholder}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="pl-9 h-9 pr-14 w-full border-0 shadow-none focus-visible:ring-0 bg-muted/40 backdrop-blur-sm"
+            aria-label="Search snippets"
+          />
+          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+            {searching ? (
+              <div className="w-3.5 h-3.5 border border-muted-foreground border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
+                }}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 px-1.5 py-0.5 rounded transition-colors"
+                aria-label="Open Command Palette"
+              >
+                <Command size={14} suppressHydrationWarning />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
 
-      <div className="flex items-center gap-2 text-[11px]">
-        <button
-          type="button"
-          onClick={() => setFiltersExpanded(!filtersExpanded)}
-          className={cn(
-            "flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors bg-muted/40 backdrop-blur-sm",
-            filtersExpanded
-              ? 'bg-accent/80 text-accent-foreground'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
-          )}
-          aria-expanded={filtersExpanded}
-          aria-label="Toggle filter panel"
-        >
-          <Filter size={12} />
-          <span className="font-medium">Filters</span>
-          {hasActiveFilters && (
-            <span className="min-w-[16px] h-4 rounded-full bg-primary text-[9px] text-primary-foreground flex items-center justify-center px-1">
-              {activeFilterCount}
+        <div className="flex items-center gap-2 text-[11px] flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => setFiltersExpanded(!filtersExpanded)}
+            className={cn(
+              "flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors bg-muted/40 backdrop-blur-sm",
+              filtersExpanded
+                ? 'bg-accent/80 text-accent-foreground'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+            )}
+            aria-expanded={filtersExpanded}
+            aria-label="Toggle filter panel"
+          >
+            <Filter size={12} />
+            <span className="font-medium hidden sm:inline">Filters</span>
+            {hasActiveFilters && (
+              <span className="min-w-[16px] h-4 rounded-full bg-primary text-[9px] text-primary-foreground flex items-center justify-center px-1">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+
+          {resultCount !== undefined && (
+            <span className="text-[11px] text-muted-foreground hidden sm:inline">
+              {resultCount} snippet{resultCount !== 1 ? "s" : ""}
             </span>
           )}
-        </button>
 
-        {resultCount !== undefined && (
-          <span className="text-[11px] text-muted-foreground">
-            {resultCount} snippet{resultCount !== 1 ? "s" : ""}
-          </span>
-        )}
+          <div className="flex items-center gap-2">
+            <SortSelect current={sort} />
+            <ViewToggle current={viewMode} />
+          </div>
 
-        <div className="flex items-center gap-2 ml-auto">
-          <SortSelect current={sort} />
-          <ViewToggle current={viewMode} />
+          <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors py-1">
+            <input
+              type="checkbox"
+              checked={includeCode}
+              onChange={(e) => setIncludeCode(e.target.checked)}
+              className="rounded border-border text-primary focus:ring-ring focus:ring-offset-background"
+              aria-label="Include code in search"
+            />
+            <Code size={14} className="text-muted-foreground" />
+            <span className="hidden sm:inline font-medium">Include code</span>
+          </label>
         </div>
-
-        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors py-1">
-          <input
-            type="checkbox"
-            checked={includeCode}
-            onChange={(e) => setIncludeCode(e.target.checked)}
-            className="rounded border-border text-primary focus:ring-ring focus:ring-offset-background"
-            aria-label="Include code in search"
-          />
-          <Code size={14} className="text-muted-foreground" />
-          <span className="hidden sm:inline font-medium">Include code</span>
-        </label>
       </div>
 
       {filtersExpanded && (

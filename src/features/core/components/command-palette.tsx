@@ -204,14 +204,14 @@ export function CommandPalette({ isAdmin = false }: CommandPaletteProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[15vh] bg-black/60 backdrop-blur-md transition-all"
+      className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[5vh] sm:pt-[10vh] md:pt-[15vh] bg-black/60 backdrop-blur-md transition-all"
       onClick={(e) => {
         if (e.target === e.currentTarget) setIsOpen(false);
       }}
     >
       <div
         ref={containerRef}
-        className="relative w-full max-w-2xl rounded-xl border border-white/10 bg-slate-950/80 shadow-2xl backdrop-blur-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="relative w-full max-w-lg sm:max-w-xl md:max-w-2xl rounded-xl border border-white/10 bg-slate-950/80 shadow-2xl backdrop-blur-xl overflow-hidden max-h-[85vh] flex flex-col animate-in fade-in zoom-in-95 duration-150"
       >
         {/* Search Input Box */}
         <div className="flex items-center px-4 border-b border-white/10">

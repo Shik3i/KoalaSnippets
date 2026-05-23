@@ -23,25 +23,25 @@ export function ViewToggle({ current }: ViewToggleProps) {
         variant="ghost"
         size="icon"
         className={cn(
-          "h-8 w-8 rounded-none",
+          "h-10 w-10 rounded-none",
           current === "grid" && "bg-accent text-accent-foreground"
         )}
         onClick={() => setView("grid")}
         aria-label="Grid view"
       >
-        <LayoutGrid size={14} suppressHydrationWarning />
+        <LayoutGrid size={16} suppressHydrationWarning />
       </Button>
       <Button
         variant="ghost"
         size="icon"
         className={cn(
-          "h-8 w-8 rounded-none",
+          "h-10 w-10 rounded-none",
           current === "table" && "bg-accent text-accent-foreground"
         )}
         onClick={() => setView("table")}
         aria-label="Table view"
       >
-        <List size={14} suppressHydrationWarning />
+        <List size={16} suppressHydrationWarning />
       </Button>
     </div>
   );

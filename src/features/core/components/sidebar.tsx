@@ -98,7 +98,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
   return (
     <>
       <button
-        className="fixed top-4 left-4 z-50 p-2 rounded-md bg-card border border-border lg:hidden"
+        className="fixed top-4 left-4 z-50 p-2 rounded-md bg-card border border-border md:hidden"
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-label="Toggle menu"
       >
@@ -106,7 +106,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
       </button>
 
       <button
-        className="fixed top-4 right-4 z-50 p-2 rounded-md bg-card border border-border lg:hidden flex items-center justify-center cursor-pointer"
+        className="fixed top-4 right-4 z-50 p-2 rounded-md bg-card border border-border md:hidden flex items-center justify-center cursor-pointer"
         onClick={() => {
           window.dispatchEvent(new CustomEvent("open-command-palette"));
         }}
@@ -117,14 +117,13 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 bg-card border-r border-border flex flex-col transform transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto relative shrink-0",
+          "fixed inset-y-0 left-0 z-40 bg-card border-r border-border flex flex-col transform transition-transform duration-200 md:translate-x-0 md:static md:z-auto md:shrink-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
-        style={{ width: mobileOpen ? 240 : `${width}px` }}
+        style={{ width: mobileOpen ? 280 : `${width}px` }}
       >
         {!mobileOpen && (
-          <div 
-            className="absolute right-[-2px] top-0 bottom-0 w-4 cursor-col-resize z-50 flex justify-center group"
+          <div className="absolute right-[-2px] top-0 bottom-0 w-4 cursor-col-resize z-50 hidden md:flex justify-center group"
             onMouseDown={(e) => {
               e.preventDefault();
               setIsResizing(true);
@@ -142,6 +141,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
           </Link>
         </div>
 
+        <div className="flex-1 overflow-y-auto">
         <nav className="p-3 space-y-1">
           {navItems.map((item) => {
             if (item.href === "/dashboard" && !isAuthenticated) {
@@ -362,6 +362,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
             </div>
           </div>
         )}
+        </div>
 
         <div className="mt-auto border-t border-border">
           <div className="p-3 space-y-1">
@@ -453,7 +454,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
 
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}

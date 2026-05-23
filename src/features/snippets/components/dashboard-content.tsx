@@ -151,7 +151,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4">
         {snippets.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <p className="text-lg mb-2">No snippets yet</p>
@@ -167,7 +167,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
                       <span className="sr-only">Select</span>
                     </th>
                   )}
-                  <th className="px-3 py-2 text-xs font-medium text-muted-foreground">Title</th>
+                  <th className="px-3 py-2 text-xs font-medium text-muted-foreground min-w-[120px]">Title</th>
                   <th className="px-3 py-2 text-xs font-medium text-muted-foreground">Language</th>
                   <th className="px-3 py-2 text-xs font-medium text-muted-foreground hidden md:table-cell">Tags</th>
                   <th className="px-3 py-2 text-xs font-medium text-muted-foreground">Visibility</th>
@@ -192,7 +192,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
             </table>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {snippets.map((s) => (
               <SnippetCard
                 key={s.id}

@@ -46,7 +46,7 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
   };
 
   return (
-    <div className="sticky bottom-0 z-50 bg-card border-t border-border px-4 py-3 flex items-center justify-between gap-4 shadow-lg -mx-4">
+    <div className="sticky bottom-0 z-50 bg-card border-t border-border px-3 sm:px-4 py-3 flex flex-wrap items-center justify-between gap-2 shadow-md">
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
@@ -72,7 +72,7 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
           disabled={loading}
         >
           <Lock size={14} suppressHydrationWarning />
-          Make Private
+          <span className="hidden sm:inline">Make Private</span>
         </Button>
         <Button
           variant="outline"
@@ -82,7 +82,7 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
           disabled={loading}
         >
           <Globe size={14} suppressHydrationWarning />
-          Make Public
+          <span className="hidden sm:inline">Make Public</span>
         </Button>
         <Button
           variant="destructive"
@@ -92,7 +92,7 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
           disabled={loading}
         >
           <Trash2 size={14} suppressHydrationWarning />
-          Delete
+          <span className="hidden sm:inline">Delete</span>
         </Button>
       </div>
 
