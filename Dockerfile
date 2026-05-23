@@ -7,7 +7,7 @@ RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm install
+RUN --mount=type=cache,target=/root/.npm npm install
 
 # Stage 2: Builder
 FROM node:22-alpine AS builder
@@ -21,7 +21,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV AUTH_PEPPER="build-time-dummy-pepper-ignore"
 ENV SESSION_SECRET="build-time-dummy-secret-ignore"
 
-RUN npm run build
+RUN --mount=type=cache,target=/app/.next/cache npm run build
 
 # Stage 3: Runner
 FROM node:22-alpine AS runner
