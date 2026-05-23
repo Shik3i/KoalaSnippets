@@ -19,6 +19,7 @@ interface DashboardSearchParams {
   collection?: string;
   tags?: string;
   language?: string;
+  filterMode?: string;
 }
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<DashboardSearchParams> }) {
@@ -27,7 +28,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     redirect("/login?expired=1");
   }
 
-  const { q, includeCode, sort, collection, tags, language } = await searchParams;
+  const { q, includeCode, sort, collection, tags, language, filterMode } = await searchParams;
   const sortMode = (["newest", "oldest", "alphabetical", "size-asc", "size-desc"].includes(sort ?? "") ? sort : "newest") as "newest" | "oldest" | "alphabetical" | "size-asc" | "size-desc";
 
   const baseQuery = db.select().from(snippets);
@@ -38,6 +39,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     tags,
     language,
     collection,
+    filterMode,
     authorId: session.user.id,
   });
 
@@ -118,7 +120,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <SnippetSearchHeader />
+        <SnippetSearchHeader availableTags={sidebarTags} availableLanguages={sidebarLanguages} />
         <DashboardContent
           snippets={highlightedSnippets.map((s) => ({
             ...s,

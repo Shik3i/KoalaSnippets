@@ -1,4 +1,4 @@
-import { eq, like, or, and, exists, SQL } from "drizzle-orm";
+import { eq, like, or, and, exists, inArray, SQL } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { snippets, snippetFiles } from "@/db/schema";
 import { db } from "@/db";
@@ -12,10 +12,12 @@ interface FilterParams {
   collection?: string;
   authorId?: string;
   visibility?: "PRIVATE" | "SHARED" | "PUBLIC";
+  filterMode?: string;
 }
 
 export async function buildSnippetConditions(params: FilterParams): Promise<SQL[]> {
   const conditions: SQL[] = [];
+  const filterMode = params.filterMode === "or" ? "or" : "and";
 
   if (params.authorId) {
     conditions.push(eq(snippets.authorId, params.authorId));
@@ -29,28 +31,59 @@ export async function buildSnippetConditions(params: FilterParams): Promise<SQL[
     conditions.push(eq(snippets.collectionId, params.collection));
   }
 
-  // 1. Language Filter (Optimized via EXISTS subquery)
+  const filterGroup: SQL[] = [];
+
+  // 1. Language Filter (supports comma-separated: "ts,python,rust")
   if (params.language) {
-    conditions.push(
-      exists(
-        db.select()
-          .from(snippetFiles)
-          .where(
-            and(
-              eq(snippetFiles.snippetId, snippets.id),
-              eq(snippetFiles.language, params.language)
+    const langs = params.language.split(",").map(l => l.trim().toLowerCase()).filter(Boolean);
+    if (langs.length === 1) {
+      filterGroup.push(
+        exists(
+          db.select()
+            .from(snippetFiles)
+            .where(
+              and(
+                eq(snippetFiles.snippetId, snippets.id),
+                eq(snippetFiles.language, langs[0])
+              )
             )
-          )
-      )
-    );
+        )
+      );
+    } else if (langs.length > 1) {
+      filterGroup.push(
+        exists(
+          db.select()
+            .from(snippetFiles)
+            .where(
+              and(
+                eq(snippetFiles.snippetId, snippets.id),
+                inArray(snippetFiles.language, langs)
+              )
+            )
+        )
+      );
+    }
   }
 
-  // 2. Tags Filter (AND logic for each comma-separated tag)
+  // 2. Tags Filter (comma-separated, AND or OR logic)
   if (params.tags) {
-    const filterTags = params.tags.split(",").map(t => t.trim()).filter(Boolean);
-    filterTags.forEach(tag => {
-      conditions.push(sql`snippets.tags LIKE ${`%${escapeLike(tag)}%`}`);
-    });
+    const filterTags = params.tags.split(",").map(t => t.trim().toLowerCase()).filter(Boolean);
+    if (filterMode === "or") {
+      const tagConditions = filterTags.map(tag =>
+        sql`LOWER(snippets.tags) LIKE ${`%${escapeLike(tag)}%`}`
+      );
+      const tagOr = or(...tagConditions);
+      if (tagOr) filterGroup.push(tagOr);
+    } else {
+      filterTags.forEach(tag => {
+        filterGroup.push(sql`LOWER(snippets.tags) LIKE ${`%${escapeLike(tag)}%`}`);
+      });
+    }
+  }
+
+  if (filterGroup.length > 0) {
+    const filterClause = filterMode === "or" ? or(...filterGroup) : and(...filterGroup);
+    if (filterClause) conditions.push(filterClause);
   }
 
   // 3. Text Search Query (Optimized via EXISTS subquery for files search)

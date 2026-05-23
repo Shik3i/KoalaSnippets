@@ -1,45 +1,80 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { Search, Code, Command } from "lucide-react";
+import { Search, Code, Command, Filter, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface SnippetSearchHeaderProps {
   placeholder?: string;
+  availableTags?: string[];
+  availableLanguages?: string[];
 }
 
-export function SnippetSearchHeader({ placeholder = "Search snippets..." }: SnippetSearchHeaderProps) {
+export function SnippetSearchHeader({ 
+  placeholder = "Search snippets...",
+  availableTags = [],
+  availableLanguages = [],
+}: SnippetSearchHeaderProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const [includeCode, setIncludeCode] = useState(searchParams.get("includeCode") === "true");
+  const [filterMode, setFilterMode] = useState(searchParams.get("filterMode") ?? "and");
   const [searching, setSearching] = useState(false);
+  const [showFilters, setShowFilters] = useState(
+    (searchParams.get("tags")?.length ?? 0) > 0 ||
+    (searchParams.get("language")?.length ?? 0) > 0
+  );
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const activeTags = searchParams.get("tags")?.split(",").filter(Boolean) || [];
-  const activeLanguage = searchParams.get("language");
+  const activeTags = useMemo(
+    () => searchParams.get("tags")?.split(",").filter(Boolean) || [],
+    [searchParams]
+  );
+  const activeLanguages = useMemo(
+    () => searchParams.get("language")?.split(",").filter(Boolean) || [],
+    [searchParams]
+  );
   const activeCollection = searchParams.get("collection");
 
-  const navigateSearch = useCallback((q: string, ic: boolean) => {
-    setSearching(true);
+  const updateParams = useCallback((updates: Record<string, string | null>) => {
     const params = new URLSearchParams(window.location.search);
-    if (q) {
-      params.set("q", q);
-    } else {
-      params.delete("q");
-    }
-    if (ic) {
-      params.set("includeCode", "true");
-    } else {
-      params.delete("includeCode");
+    for (const [key, value] of Object.entries(updates)) {
+      if (value === null) {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
     }
     const qs = params.toString();
     router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
-    setTimeout(() => setSearching(false), 300);
   }, [pathname, router]);
+
+  const toggleTag = useCallback((tag: string) => {
+    const next = activeTags.includes(tag)
+      ? activeTags.filter(t => t !== tag)
+      : [...activeTags, tag];
+    updateParams({ tags: next.length > 0 ? next.join(",") : null });
+  }, [activeTags, updateParams]);
+
+  const toggleLanguage = useCallback((lang: string) => {
+    const next = activeLanguages.includes(lang)
+      ? activeLanguages.filter(l => l !== lang)
+      : [...activeLanguages, lang];
+    updateParams({ language: next.length > 0 ? next.join(",") : null });
+  }, [activeLanguages, updateParams]);
+
+  const navigateSearch = useCallback((q: string, ic: boolean) => {
+    setSearching(true);
+    updateParams({
+      q: q || null,
+      includeCode: ic ? "true" : null,
+    });
+    setTimeout(() => setSearching(false), 300);
+  }, [updateParams]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -67,28 +102,7 @@ export function SnippetSearchHeader({ placeholder = "Search snippets..." }: Snip
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const handleClearTag = (tagToClear: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    const nextTags = activeTags.filter(t => t !== tagToClear);
-    if (nextTags.length > 0) {
-      params.set("tags", nextTags.join(","));
-    } else {
-      params.delete("tags");
-    }
-    router.replace(`${pathname}?${params.toString()}`);
-  };
-
-  const handleClearLanguage = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("language");
-    router.replace(`${pathname}?${params.toString()}`);
-  };
-
-  const handleClearCollection = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("collection");
-    router.replace(`${pathname}?${params.toString()}`);
-  };
+  const hasActiveFilters = activeTags.length > 0 || activeLanguages.length > 0 || activeCollection;
 
   return (
     <div className="sticky top-0 z-10 p-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border space-y-2">
@@ -118,53 +132,158 @@ export function SnippetSearchHeader({ placeholder = "Search snippets..." }: Snip
               <span className="hidden sm:inline font-medium">Command</span>
             </button>
           )}
-          
-          <div className="h-4 w-[1px] bg-border" />
-          
-          <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors py-1">
-            <input
-              type="checkbox"
-              checked={includeCode}
-              onChange={(e) => setIncludeCode(e.target.checked)}
-              className="rounded border-border text-primary focus:ring-ring focus:ring-offset-background"
-              aria-label="Include code in search"
-            />
-            <Code size={14} suppressHydrationWarning className="text-muted-foreground" />
-            <span className="hidden sm:inline font-medium">Include code</span>
-          </label>
         </div>
       </div>
 
-      {(activeTags.length > 0 || activeLanguage || activeCollection) && (
-        <div className="flex flex-wrap items-center gap-2 text-[11px] pt-1.5 border-t border-border/20">
-          <span className="text-muted-foreground font-medium">Active filters:</span>
-          {activeLanguage && (
-            <Badge variant="secondary" className="gap-1 rounded-md py-0 px-2 h-5 flex items-center">
-              Language: {activeLanguage}
-              <button type="button" onClick={handleClearLanguage} className="hover:text-destructive font-bold ml-1 text-xs" aria-label="Clear language filter">×</button>
-            </Badge>
+      <div className="flex items-center gap-2 text-[11px] pt-1.5 border-t border-border/20">
+        <button
+          type="button"
+          onClick={() => setShowFilters(!showFilters)}
+          className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors ${showFilters ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+          aria-label="Toggle filters"
+        >
+          <Filter size={12} suppressHydrationWarning />
+          <span className="font-medium">Filters</span>
+          {hasActiveFilters && (
+            <span className="w-4 h-4 rounded-full bg-primary text-[9px] text-primary-foreground flex items-center justify-center">
+              {activeTags.length + activeLanguages.length}
+            </span>
           )}
+        </button>
+
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors py-1 ml-auto">
+          <input
+            type="checkbox"
+            checked={includeCode}
+            onChange={(e) => setIncludeCode(e.target.checked)}
+            className="rounded border-border text-primary focus:ring-ring focus:ring-offset-background"
+            aria-label="Include code in search"
+          />
+          <Code size={14} suppressHydrationWarning className="text-muted-foreground" />
+          <span className="hidden sm:inline font-medium">Include code</span>
+        </label>
+      </div>
+
+      {showFilters && (
+        <div className="space-y-2 pt-1.5 border-t border-border/20">
+          {availableTags.length > 0 && (
+            <div>
+              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mb-1.5">Tags</span>
+              <div className="flex flex-wrap gap-1">
+                {availableTags.map(tag => {
+                  const isActive = activeTags.includes(tag);
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => toggleTag(tag)}
+                      className={`px-2 py-0.5 rounded text-[11px] transition-colors cursor-pointer ${
+                        isActive
+                          ? 'bg-primary/20 text-primary border border-primary/30'
+                          : 'bg-muted/50 text-muted-foreground border border-transparent hover:border-border hover:text-foreground'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {availableLanguages.length > 0 && (
+            <div>
+              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mb-1.5">Languages</span>
+              <div className="flex flex-wrap gap-1">
+                {availableLanguages.map(lang => {
+                  const isActive = activeLanguages.includes(lang);
+                  return (
+                    <button
+                      key={lang}
+                      type="button"
+                      onClick={() => toggleLanguage(lang)}
+                      className={`px-2 py-0.5 rounded text-[11px] font-mono transition-colors cursor-pointer ${
+                        isActive
+                          ? 'bg-primary/20 text-primary border border-primary/30'
+                          : 'bg-muted/50 text-muted-foreground border border-transparent hover:border-border hover:text-foreground'
+                      }`}
+                    >
+                      {lang}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 text-[11px] bg-muted/30 rounded-md p-0.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setFilterMode("and");
+                  updateParams({ filterMode: "and" });
+                }}
+                className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
+                  filterMode === "and"
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                AND
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFilterMode("or");
+                  updateParams({ filterMode: "or" });
+                }}
+                className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
+                  filterMode === "or"
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                OR
+              </button>
+            </div>
+            <span className="text-[10px] text-muted-foreground">
+              {filterMode === "or" ? "Match any filter" : "Match all filters"}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {hasActiveFilters && (
+        <div className="flex flex-wrap items-center gap-2 text-[11px] pt-1.5 border-t border-border/20">
+          <span className="text-muted-foreground font-medium">Active:</span>
+          {activeLanguages.map(lang => (
+            <Badge key={`lang-${lang}`} variant="secondary" className="gap-1 rounded-md py-0 px-2 h-5 flex items-center">
+              Lang: {lang}
+              <button type="button" onClick={() => toggleLanguage(lang)} className="hover:text-destructive font-bold ml-1 text-xs" aria-label={`Remove language ${lang}`}>
+                <X size={10} />
+              </button>
+            </Badge>
+          ))}
           {activeTags.map(tag => (
-            <Badge key={tag} variant="secondary" className="gap-1 rounded-md py-0 px-2 h-5 flex items-center">
+            <Badge key={`tag-${tag}`} variant="secondary" className="gap-1 rounded-md py-0 px-2 h-5 flex items-center">
               Tag: {tag}
-              <button type="button" onClick={() => handleClearTag(tag)} className="hover:text-destructive font-bold ml-1 text-xs" aria-label={`Clear tag ${tag} filter`}>×</button>
+              <button type="button" onClick={() => toggleTag(tag)} className="hover:text-destructive font-bold ml-1 text-xs" aria-label={`Remove tag ${tag}`}>
+                <X size={10} />
+              </button>
             </Badge>
           ))}
           {activeCollection && (
             <Badge variant="secondary" className="gap-1 rounded-md py-0 px-2 h-5 flex items-center">
-              Collection Active
-              <button type="button" onClick={handleClearCollection} className="hover:text-destructive font-bold ml-1 text-xs" aria-label="Clear collection filter">×</button>
+              Collection
+              <button type="button" onClick={() => updateParams({ collection: null })} className="hover:text-destructive font-bold ml-1 text-xs" aria-label="Clear collection filter">
+                <X size={10} />
+              </button>
             </Badge>
           )}
           <button
             type="button"
-            onClick={() => {
-              const params = new URLSearchParams(searchParams.toString());
-              params.delete("tags");
-              params.delete("language");
-              params.delete("collection");
-              router.replace(`${pathname}?${params.toString()}`);
-            }}
+            onClick={() => updateParams({ tags: null, language: null, collection: null })}
             className="text-primary hover:underline ml-2 text-[11px] font-medium"
           >
             Clear all

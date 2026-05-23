@@ -11,8 +11,8 @@ import { buildSnippetConditions } from "@/features/snippets/utils/filters";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage({ searchParams }: { searchParams: Promise<{ q?: string; includeCode?: string; sort?: string; tags?: string; language?: string }> }) {
-  const { q, includeCode, sort, tags, language } = await searchParams;
+export default async function HomePage({ searchParams }: { searchParams: Promise<{ q?: string; includeCode?: string; sort?: string; tags?: string; language?: string; filterMode?: string }> }) {
+  const { q, includeCode, sort, tags, language, filterMode } = await searchParams;
   const session = await getSession();
 
   const baseQuery = db.select({
@@ -31,6 +31,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     includeCode,
     tags,
     language,
+    filterMode,
     visibility: "PUBLIC",
   });
 
@@ -112,7 +113,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <SnippetSearchHeader />
+        <SnippetSearchHeader availableTags={sidebarTags} availableLanguages={sidebarLanguages} />
         <DashboardContent
           snippets={highlightedSnippets.map((s) => ({
             ...s,
