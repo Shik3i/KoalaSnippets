@@ -93,7 +93,9 @@ DETAIL VIEW (/snippets/[id]):
 +----------+--------------------------------------------------+
 | Sidebar  |  [Back to list]                                  |
 |          |  +--------------------------------------------+  |
-|          |  | Title | Language | Visibility | Actions    |  |
+|          |  | Title | Visibility | Expiry | Actions      |  |
+|          |  +--------------------------------------------+  |
+|          |  | File Tabs: [File 1.ts] [File 2.css]        |  |
 |          |  +--------------------------------------------+  |
 |          |  |                                            |  |
 |          |  |  Shiki-highlighted code block (full-width) |  |
@@ -161,41 +163,77 @@ In-memory `Map`-based rate limiter (`src/features/core/utils/rate-limit.ts`):
 ```sql
 -- Users table
 users (
-  id              TEXT PRIMARY KEY (UUID v4),
+  id              TEXT PRIMARY KEY,
   username        TEXT UNIQUE NOT NULL,
   password_hash   TEXT NOT NULL,          -- Argon2id hash
-  role            TEXT NOT NULL DEFAULT 'USER',  -- 'USER' or 'ADMIN'
-  preferences     TEXT NOT NULL,          -- JSON object: {"appTheme":"theme-dark","snippetDensity":"compact","syntaxTheme":"github-dark","bgPattern":"flat"}
-  created_at      INTEGER NOT NULL        -- Unix timestamp
+  role            TEXT NOT NULL DEFAULT 'USER',
+  preferences     TEXT NOT NULL,          -- JSON object
+  created_at      INTEGER NOT NULL
 )
 
--- Snippets table
+-- Snippets table (metadata)
 snippets (
-  id              TEXT PRIMARY KEY (UUID v4),
+  id              TEXT PRIMARY KEY,
   title           TEXT NOT NULL,
   description     TEXT,
-  code            TEXT NOT NULL,
-  language        TEXT NOT NULL,
-  tags            TEXT,                   -- JSON array: ["react", "hooks"]
+  tags            TEXT,                   -- JSON array
   author_id       TEXT NOT NULL REFERENCES users(id),
   visibility      TEXT NOT NULL DEFAULT 'PRIVATE',
   share_token     TEXT UNIQUE,
+  is_pinned       INTEGER NOT NULL DEFAULT 0,
+  expires_at      INTEGER,
+  collection_id   TEXT REFERENCES collections(id),
+  total_lines     INTEGER NOT NULL DEFAULT 0,
+  password_hash   TEXT,
   created_at      INTEGER NOT NULL,
   updated_at      INTEGER NOT NULL
 )
 
+-- Snippet Files table (multi-file support)
+snippet_files (
+  id              TEXT PRIMARY KEY,
+  snippet_id      TEXT NOT NULL REFERENCES snippets(id),
+  filename        TEXT NOT NULL,
+  code            TEXT NOT NULL,
+  language        TEXT NOT NULL
+)
+
+-- Collections table
+collections (
+  id              TEXT PRIMARY KEY,
+  name            TEXT NOT NULL,
+  user_id         TEXT NOT NULL REFERENCES users(id)
+)
+
+-- User Favorites table
+user_favorites (
+  id              TEXT PRIMARY KEY,
+  user_id         TEXT NOT NULL REFERENCES users(id),
+  snippet_id      TEXT NOT NULL REFERENCES snippets(id),
+  created_at      INTEGER NOT NULL
+)
+
 -- Sessions table
 sessions (
-  id              TEXT PRIMARY KEY (UUID v4),
+  id              TEXT PRIMARY KEY,
   user_id         TEXT NOT NULL REFERENCES users(id),
   token_hash      TEXT NOT NULL,
   expires_at      INTEGER NOT NULL,
   created_at      INTEGER NOT NULL
 )
 
--- Site statistics (singleton row, id = 1)
+-- Site Settings
+site_settings (
+  id                    INTEGER PRIMARY KEY,
+  registration_enabled  INTEGER NOT NULL DEFAULT 1,
+  global_announcement   TEXT,
+  max_snippets_per_user INTEGER NOT NULL DEFAULT 1000,
+  max_chars_per_snippet INTEGER NOT NULL DEFAULT 250000
+)
+
+-- Site Statistics
 site_statistics (
-  id                  INTEGER PRIMARY KEY,
+  id                      INTEGER PRIMARY KEY,
   total_users_created     INTEGER NOT NULL DEFAULT 0,
   total_snippets_created  INTEGER NOT NULL DEFAULT 0
 )

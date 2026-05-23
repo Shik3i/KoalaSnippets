@@ -146,6 +146,10 @@ In-memory `Map`-based rate limiter (`src/lib/rate-limit.ts`). Zero external depe
 | Delete | Author only | Author only | Author only |
 | Share | Author only | Author only | Author only |
 
+### Collections & Favorites
+
+- **Collections:** Only the author can view, create, and manage their collections. Snippets inside a collection retain their individual visibility settings.
+- **Favorites:** Personal to each user. Favoriting a snippet does not change its visibility or share status.
 ## HTTP Security Headers
 
 ### Next.js Config (`next.config.ts`)

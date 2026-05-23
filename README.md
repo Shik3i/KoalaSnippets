@@ -41,21 +41,47 @@ KoalaSnippets is a self-hosted web application for storing, organizing, and shar
 
 ## ✨ Core Features
 
-- 🔒 **Privacy by Default** — Zero CDNs, locally hosted fonts, self-hosted. Your data never leaves your server.
-- 🛡️ **Rock-Solid Security** — Argon2id + Salt + Pepper password hashing, in-memory rate limiting, strict CSP headers, timing-attack-resistant token comparison.
-- 👁️ **Visibility Controls** — Public Explorer for anyone, secure shared links with unguessable tokens, or keep snippets strictly private.
-- ⚡ **Blazing Fast Search** — Server-side parameterized queries with an "include code in search" toggle. No client-side filtering bottlenecks.
-- 🎨 **Appearance & Theme Customization** — Personalize your experience with 7 premium themes (Default Dark, Midnight Blue, Nordic Frost, Dracula, Cozy Terracotta, Hacker Green, Light Mode), 4 CSS-driven background patterns (Flat, Subtle Dots, Mesh Grid, Soft Glow), customizable list densities (Compact, 5-Line Preview, Full Code), and 6 lazy-loaded syntax highlighting themes with an interactive real-time visual mockup preview.
-- 🎨 **Beautiful 2-Pane UI** — Responsive card grid, dark mode by default, clean shadcn/ui components, JetBrains Mono for code.
-- 💻 **Developer Ready** — Shiki server-side syntax highlighting for 30+ languages, one-click copy-to-clipboard, tag-based organization.
-- ⌨️ **Premium Custom `CodeEditor`** — Zero-dependency native code editor supporting automatic Tab indentation spaces, matching brackets/quotes auto-closing, overtyping skip, and backspace pair matching deletions.
-- 🔍 **Glassmorphic `CommandPalette`** — Global `Ctrl+K` / `⌘K` frosted-glass overlay HUD to search snippets in real-time or execute slash commands (`/new`, `/settings`, `/backups`, `/home`, `/dashboard`).
-- 📥 **Download Code** — Download snippets as files with correct extensions.
-- 🚀 **High Performance & WAL Mode** — Hardened SQLite with Write-Ahead Logging (WAL), busy timeout configuration, and normal synchronous writes alongside lazy-loaded Shiki languages for ultra-fast response.
-- 🔄 **Automated Backups** — SQLite `VACUUM INTO` with GFS retention (7 daily, 4 weekly, 12 monthly).
-- 🛡️ **Admin Dashboard** — RBAC with admin seeding, user management, backup management, system metrics.
-- 📊 **Public Statistics** — Community metrics page with lifetime counters.
-- 🔔 **Toast Notifications** — Animated feedback for all user actions.
+> [!TIP]
+> KoalaSnippets is engineered to be the **ultimate cure for Notepad++ tab hell**. We stripped away the bloat and focused on a premium developer experience, rock-solid security, and blazing-fast performance.
+
+### 🛡️ Privacy & Hardened Security
+*Your code, your server, your rules. Zero external dependencies, zero tracking.*
+
+| Feature | Description |
+|---------|-------------|
+| **Crypto-Grade Hashing** | Passwords secured via Argon2id + Salt + application-level Pepper. |
+| **Timing Attack Resistance** | Shared tokens are compared using constant-time `crypto.timingSafeEqual`. |
+| **Enterprise Defenses** | Strict CSP headers, Next.js Middleware rate-limiting, and 100% locally bundled assets (Next/Font, Lucide-React). |
+| **Visibility Controls** | Public Explorer for anyone, secure shared links with unguessable tokens, or keep strictly private. |
+
+### 🎨 Premium Aesthetic & UX
+*A beautifully crafted two-pane interface that feels incredibly responsive and alive.*
+
+| Feature | Description |
+|---------|-------------|
+| **Glassmorphic Command Palette** | Hit `Ctrl+K` / `⌘K` for a global frosted-glass HUD to search snippets instantly or execute slash commands (`/new`, `/settings`, `/backups`). |
+| **Dynamic Theming Engine** | Personalize your workspace with 7 custom app themes (incl. Dracula, Nordic, Midnight), 4 CSS-driven background patterns, and customizable list densities. |
+| **Stats Dashboard** | A stunning public metrics page featuring glassmorphic cards tracking total snippets, lines of code, unique tags, and languages. |
+| **Beautiful 2-Pane UI** | Responsive card grid, dark mode by default, clean shadcn/ui components, JetBrains Mono for code. |
+
+### ⚡ Developer Workflow & Performance
+*Built for power users who demand speed and precision.*
+
+| Feature | Description |
+|---------|-------------|
+| **Multi-File Snippets & Collections** | Group related code pieces together seamlessly. Organize your workspace using tags, collections, and favorites. |
+| **Premium Custom CodeEditor** | A zero-dependency native editor featuring automatic Tab indentation, matching bracket auto-closing, overtype skipping, and pair matching deletions. |
+| **Lazy-Loaded Syntax Highlighting** | Server-side Shiki highlighting for 30+ languages, dynamically loaded on demand for instantaneous render times. |
+| **Blazing Fast Search** | Server-side parameterized FTS-style queries with an "include code in search" toggle. No client-side bottlenecks. |
+
+### 📥 Enterprise Reliability
+*Set it and forget it. KoalaSnippets manages itself.*
+
+| Feature | Description |
+|---------|-------------|
+| **Hardened WAL-Mode SQLite** | Configured for maximum concurrent read/write throughput with Write-Ahead Logging and tuned busy timeouts. |
+| **Automated GFS Backups** | Built-in `VACUUM INTO` backup scheduler running silently in the background, enforcing Grandfather-Father-Son retention (7 daily, 4 weekly, 12 monthly). |
+| **RBAC Admin Portal** | A dedicated control center for administrators to manage users, trigger backups manually, and monitor system health endpoints. |
 
 ## 🧱 Tech Stack
 
