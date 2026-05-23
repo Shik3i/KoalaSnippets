@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Database, Users, FileCode, BarChart3 } from "lucide-react";
 
@@ -23,8 +23,11 @@ function formatBytes(bytes: number): string {
 }
 
 export function AdminMetrics() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const [metrics, setMetrics] = useState<MetricsData | null>(null);
 
   useEffect(() => {
