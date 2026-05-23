@@ -121,11 +121,11 @@ export async function PUT(
       snippetUpdates.expiresAt = snippetUpdates.expiresAt ? new Date(snippetUpdates.expiresAt as string | number | Date) : null;
     }
 
-    await db.transaction(async (tx) => {
+    db.transaction((tx) => {
       let newTotalLines: number | undefined = undefined;
 
       if (files && Array.isArray(files)) {
-        const settings = await tx.select().from(siteSettings).where(eq(siteSettings.id, 1)).get();
+        const settings = tx.select().from(siteSettings).where(eq(siteSettings.id, 1)).get();
         const maxChars = settings?.maxCharsPerSnippet ?? 250000;
         
         let totalChars = 0;
@@ -140,19 +140,19 @@ export async function PUT(
         }
         newTotalLines = linesCount;
 
-        await tx.delete(snippetFiles).where(eq(snippetFiles.snippetId, id));
+        tx.delete(snippetFiles).where(eq(snippetFiles.snippetId, id)).run();
         for (const f of files) {
-          await tx.insert(snippetFiles).values({
+          tx.insert(snippetFiles).values({
             id: generateId(),
             snippetId: id,
             filename: (f as { filename: string }).filename,
             code: (f as { code: string }).code,
             language: (f as { language: string }).language
-          });
+          }).run();
         }
       } else if (code !== undefined || language !== undefined) {
         // Fallback for single-file update
-        const settings = await tx.select().from(siteSettings).where(eq(siteSettings.id, 1)).get();
+        const settings = tx.select().from(siteSettings).where(eq(siteSettings.id, 1)).get();
         const maxChars = settings?.maxCharsPerSnippet ?? 250000;
         
         if (typeof code === 'string' && code.length > maxChars) {
@@ -160,15 +160,15 @@ export async function PUT(
         }
 
         // We assume there's at least one file. We update the first one or 'index'
-        const existingFiles = await tx.select().from(snippetFiles).where(eq(snippetFiles.snippetId, id)).all();
+        const existingFiles = tx.select().from(snippetFiles).where(eq(snippetFiles.snippetId, id)).all();
         if (existingFiles.length > 0) {
           const fileUpdate: Record<string, unknown> = {};
           if (code !== undefined) fileUpdate.code = code;
           if (language !== undefined) fileUpdate.language = language;
-          await tx.update(snippetFiles).set(fileUpdate).where(eq(snippetFiles.id, existingFiles[0].id));
+          tx.update(snippetFiles).set(fileUpdate).where(eq(snippetFiles.id, existingFiles[0].id)).run();
 
           // Recompute total lines from all database files of this snippet
-          const allFiles = await tx.select().from(snippetFiles).where(eq(snippetFiles.snippetId, id)).all();
+          const allFiles = tx.select().from(snippetFiles).where(eq(snippetFiles.snippetId, id)).all();
           let linesCount = 0;
           for (const f of allFiles) {
             linesCount += f.code.split('\n').length;
@@ -182,7 +182,7 @@ export async function PUT(
       }
 
       if (Object.keys(snippetUpdates).length > 0) {
-        await tx.update(snippets).set(snippetUpdates).where(eq(snippets.id, id));
+        tx.update(snippets).set(snippetUpdates).where(eq(snippets.id, id)).run();
       }
     });
 

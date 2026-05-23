@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import prettier from "prettier";
-import parserBabel from "prettier/parser-babel";
-import parserHtml from "prettier/parser-html";
-import parserCss from "prettier/parser-postcss";
-import parserMarkdown from "prettier/parser-markdown";
+import * as parserBabel from "prettier/plugins/babel";
+import * as parserHtml from "prettier/plugins/html";
+import * as parserCss from "prettier/plugins/postcss";
+import * as parserMarkdown from "prettier/plugins/markdown";
+import * as parserEstree from "prettier/plugins/estree";
 import { getSession } from "@/features/auth/utils/session";
 
 export async function POST(request: Request) {
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
     }
 
     let parser = "babel"; // Default to babel (JS/TS)
-    const plugins = [parserBabel, parserHtml, parserCss, parserMarkdown];
+    const plugins = [parserBabel, parserHtml, parserCss, parserMarkdown, parserEstree];
 
     if (language === "html") parser = "html";
     else if (language === "css" || language === "scss") parser = "css";

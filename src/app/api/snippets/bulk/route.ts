@@ -44,8 +44,8 @@ export async function POST(request: Request) {
 
   try {
     const userId = session.user.id;
-    await db.transaction(async (tx) => {
-      const ownedSnippets = await tx
+    db.transaction((tx) => {
+      const ownedSnippets = tx
         .select({ id: snippets.id })
         .from(snippets)
         .where(and(inArray(snippets.id, ids), eq(snippets.authorId, userId)))
@@ -58,13 +58,13 @@ export async function POST(request: Request) {
       }
 
       if (action === "delete") {
-        await tx.delete(snippets).where(
+        tx.delete(snippets).where(
           and(inArray(snippets.id, actionableIds), eq(snippets.authorId, userId))
-        );
+        ).run();
       } else if (action === "set-visibility") {
-        await tx.update(snippets)
+        tx.update(snippets)
           .set({ visibility: visibility!, updatedAt: new Date() })
-          .where(and(inArray(snippets.id, actionableIds), eq(snippets.authorId, userId)));
+          .where(and(inArray(snippets.id, actionableIds), eq(snippets.authorId, userId))).run();
       }
     });
 

@@ -48,8 +48,8 @@ export async function POST(request: Request) {
 
     const passwordHash = await hashPassword(password);
 
-    await db.transaction(async (tx) => {
-      await tx.insert(users).values({
+    db.transaction((tx) => {
+      tx.insert(users).values({
         id: generateId(),
         username,
         passwordHash,
@@ -61,11 +61,11 @@ export async function POST(request: Request) {
           syntaxTheme: "github-dark",
           bgPattern: "flat",
         },
-      });
+      }).run();
 
-      await tx.update(siteStatistics)
+      tx.update(siteStatistics)
         .set({ totalUsersCreated: sql`total_users_created + 1` })
-        .where(eq(siteStatistics.id, 1));
+        .where(eq(siteStatistics.id, 1)).run();
     });
 
     const res = NextResponse.json({ success: true }, { status: 201 });

@@ -182,22 +182,22 @@ export async function POST(request: Request) {
       updatedAt: new Date(),
     };
 
-    await db.transaction(async (tx) => {
-      await tx.insert(snippets).values(snippetData);
+    db.transaction((tx) => {
+      tx.insert(snippets).values(snippetData).run();
 
       for (const f of filesToInsert) {
-        await tx.insert(snippetFiles).values({
+        tx.insert(snippetFiles).values({
           id: generateId(),
           snippetId: snippetData.id,
           filename: f.filename,
           code: f.code,
           language: f.language
-        });
+        }).run();
       }
       
-      await tx.update(siteStatistics)
+      tx.update(siteStatistics)
         .set({ totalSnippetsCreated: sql`total_snippets_created + 1` })
-        .where(eq(siteStatistics.id, 1));
+        .where(eq(siteStatistics.id, 1)).run();
     });
 
     return NextResponse.json({ 
