@@ -160,6 +160,32 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                 collections.map((col) => (
                   <button
                     key={col.id}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.currentTarget.classList.add('bg-accent/80', 'ring-1', 'ring-primary');
+                    }}
+                    onDragLeave={(e) => {
+                      e.currentTarget.classList.remove('bg-accent/80', 'ring-1', 'ring-primary');
+                    }}
+                    onDrop={async (e) => {
+                      e.preventDefault();
+                      e.currentTarget.classList.remove('bg-accent/80', 'ring-1', 'ring-primary');
+                      try {
+                        const raw = e.dataTransfer.getData("application/json");
+                        if (!raw) return;
+                        const data = JSON.parse(raw);
+                        if (data.type === "snippet" && data.id) {
+                          const res = await fetch(`/api/snippets/${data.id}`, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ collectionId: col.id })
+                          });
+                          if (res.ok) {
+                            window.location.reload();
+                          }
+                        }
+                      } catch (err) {}
+                    }}
                     onClick={() => {
                       if (onTagClick) {
                         onTagClick(`collection:${col.id}`);

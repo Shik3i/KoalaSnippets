@@ -42,8 +42,12 @@ export function SnippetTableRow({
 
   return (
     <tr
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData("application/json", JSON.stringify({ type: "snippet", id }));
+      }}
       className={cn(
-        "border-b border-border transition-colors",
+        "border-b border-border transition-colors cursor-grab active:cursor-grabbing",
         selected ? "bg-primary/5" : "hover:bg-muted/30"
       )}
     >

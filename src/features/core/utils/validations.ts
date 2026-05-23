@@ -38,6 +38,7 @@ export const snippetSchema = z.object({
   })).min(1).optional(),
   tags: z.array(z.string().trim().min(1).max(50)).max(10).optional(),
   visibility: z.enum(["PRIVATE", "SHARED", "PUBLIC"]).default("PRIVATE"),
+  collectionId: z.string().nullable().optional(),
 });
 
 export const updateSnippetSchema = snippetSchema.partial();

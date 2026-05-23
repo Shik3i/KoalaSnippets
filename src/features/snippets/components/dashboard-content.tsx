@@ -79,6 +79,10 @@ export function DashboardContent({ snippets, viewMode, sort, density }: Dashboar
       
       for (let i = 0; i < e.dataTransfer.files.length; i++) {
         const file = e.dataTransfer.files[i];
+        if (file.size > 1024 * 1024) {
+          addToast(`File ${file.name} exceeds 1MB limit. Skipping.`, "error");
+          continue;
+        }
         try {
           const text = await file.text();
           const ext = file.name.split('.').pop()?.toLowerCase() || "txt";

@@ -49,8 +49,12 @@ export function SnippetCard({
   return (
     <Link
       href={`/snippets/${id}`}
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData("application/json", JSON.stringify({ type: "snippet", id }));
+      }}
       className={cn(
-        "group block rounded-lg border border-border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-sm relative",
+        "group block rounded-lg border border-border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-sm relative cursor-grab active:cursor-grabbing",
         selected && "border-primary/50 ring-1 ring-primary/30 bg-primary/5"
       )}
       aria-label={`View snippet: ${title}`}
