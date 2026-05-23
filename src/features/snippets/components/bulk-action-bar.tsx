@@ -37,8 +37,12 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
       addToast("An error occurred", "error");
     } finally {
       setLoading(false);
-      setDeleteModalOpen(false);
     }
+  };
+
+  const handleDeleteConfirm = () => {
+    setDeleteModalOpen(false);
+    performBulk("delete");
   };
 
   return (
@@ -95,7 +99,7 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
       <ConfirmModal
         open={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        onConfirm={() => performBulk("delete")}
+        onConfirm={handleDeleteConfirm}
         title="Delete Snippets"
         description={`Delete ${selectedIds.length} snippet${selectedIds.length !== 1 ? "s" : ""}? This cannot be undone.`}
         confirmLabel="Delete"
