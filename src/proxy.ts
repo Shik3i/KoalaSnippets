@@ -1,3 +1,7 @@
+// NOTE: This file acts as the Next.js middleware.
+// It was renamed from middleware.ts to proxy.ts for specific environment/compatibility reasons.
+// All route protection and public path definitions are handled here.
+
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 

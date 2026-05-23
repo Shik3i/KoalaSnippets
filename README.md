@@ -219,8 +219,9 @@ KoalaSnippets/
 │   ├── components/
 │   │   └── ui/             # shadcn/ui base primitive layouts (buttons, inputs, cards, toasts)
 │   ├── db/                 # Drizzle schema, migrations, connection (WAL enabled)
-│   ├── instrumentation.ts      # Server lifecycle hooks (backup, seeding)
-│   ├── Dockerfile              # Multi-stage production build
+│   ├── proxy.ts            # Next.js Middleware (renamed from middleware.ts for compatibility)
+│   ├── instrumentation.ts  # Server lifecycle hooks (backup, seeding)
+│   ├── Dockerfile          # Multi-stage production build
 │   ├── docker-compose.yml      # Docker orchestration
 │   ├── Caddyfile.example       # Reverse proxy with security headers
 │   └── PRIVACY.md              # Detailed privacy policy
