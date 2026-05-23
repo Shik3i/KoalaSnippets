@@ -1,9 +1,7 @@
-import { db } from "@/db";
-import { siteStatistics } from "@/db/schema";
 import { getSession } from "@/features/auth/utils/session";
 import { Sidebar } from "@/features/core/components/sidebar";
 import { PublicStatsCards } from "@/features/core/components/public-stats-cards";
-import { eq } from "drizzle-orm";
+import { getPublicStats } from "@/features/core/utils/stats";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -15,25 +13,15 @@ export const metadata: Metadata = {
 
 export default async function StatsPage() {
   const session = await getSession();
-  const stats = await db.select().from(siteStatistics).where(eq(siteStatistics.id, 1)).get();
+  const stats = await getPublicStats();
 
   return (
     <div className="flex h-screen">
       <Sidebar isAuthenticated={!!session} isAdmin={session?.user.role === "ADMIN"} />
 
-      <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold">Community Statistics</h1>
-            <p className="text-muted-foreground">
-              Lifetime metrics for the KoalaSnippets community
-            </p>
-          </div>
-
-          <PublicStatsCards
-            totalUsersCreated={stats?.totalUsersCreated ?? 0}
-            totalSnippetsCreated={stats?.totalSnippetsCreated ?? 0}
-          />
+      <div className="flex-1 overflow-auto p-6 md:p-8">
+        <div className="max-w-6xl mx-auto">
+          <PublicStatsCards stats={stats} />
         </div>
       </div>
     </div>

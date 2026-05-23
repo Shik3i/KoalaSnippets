@@ -122,22 +122,23 @@ export async function PUT(
     }
 
     await db.transaction(async (tx) => {
-      if (Object.keys(snippetUpdates).length > 0) {
-        await tx.update(snippets).set(snippetUpdates).where(eq(snippets.id, id));
-      }
+      let newTotalLines: number | undefined = undefined;
 
       if (files && Array.isArray(files)) {
         const settings = await tx.select().from(siteSettings).where(eq(siteSettings.id, 1)).get();
         const maxChars = settings?.maxCharsPerSnippet ?? 250000;
         
         let totalChars = 0;
+        let linesCount = 0;
         for (const f of files) {
           totalChars += (f as { code: string }).code.length;
+          linesCount += (f as { code: string }).code.split('\n').length;
         }
 
         if (totalChars > maxChars) {
           throw new Error(`Snippet code too long (Max: ${maxChars} chars)`);
         }
+        newTotalLines = linesCount;
 
         await tx.delete(snippetFiles).where(eq(snippetFiles.snippetId, id));
         for (const f of files) {
@@ -165,7 +166,23 @@ export async function PUT(
           if (code !== undefined) fileUpdate.code = code;
           if (language !== undefined) fileUpdate.language = language;
           await tx.update(snippetFiles).set(fileUpdate).where(eq(snippetFiles.id, existingFiles[0].id));
+
+          // Recompute total lines from all database files of this snippet
+          const allFiles = await tx.select().from(snippetFiles).where(eq(snippetFiles.snippetId, id)).all();
+          let linesCount = 0;
+          for (const f of allFiles) {
+            linesCount += f.code.split('\n').length;
+          }
+          newTotalLines = linesCount;
         }
+      }
+
+      if (newTotalLines !== undefined) {
+        snippetUpdates.totalLines = newTotalLines;
+      }
+
+      if (Object.keys(snippetUpdates).length > 0) {
+        await tx.update(snippets).set(snippetUpdates).where(eq(snippets.id, id));
       }
     });
 
