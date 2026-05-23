@@ -103,19 +103,66 @@ export function DetailView({
     () => false
   );
   const [copied, setCopied] = useState(false);
+  const [copyOpen, setCopyOpen] = useState(false);
+  const [zenMode, setZenMode] = useState(false);
   const { addToast } = useToast();
   const VisIcon = visibilityConfig[visibility].icon;
-  const codeRef = useRef<HTMLDivElement>(null);
+  const normalRef = useRef<HTMLDivElement>(null);
+  const zenRef = useRef<HTMLDivElement>(null);
 
   const [activeTab, setActiveTab] = useState(0);
   const activeFile = files[activeTab] || files[0];
 
-  const handleCopy = async () => {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && zenMode) {
+        setZenMode(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [zenMode]);
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash.startsWith("#L")) return;
+
+    const parts = hash.substring(2).split("-L");
+    let start = parseInt(parts[0], 10);
+    let end = parts.length > 1 ? parseInt(parts[1], 10) : start;
+
+    if (isNaN(start)) return;
+    if (isNaN(end)) end = start;
+
+    const currentRef = zenMode ? zenRef.current : normalRef.current;
+    if (!currentRef) return;
+
+    const lines = currentRef.querySelectorAll('.line');
+    lines.forEach((line, index) => {
+      const lineNum = index + 1;
+      if (lineNum >= start && lineNum <= end) {
+        line.classList.add('bg-primary/30', 'block', 'w-full');
+      } else {
+        line.classList.remove('bg-primary/30', 'block', 'w-full');
+      }
+    });
+
+    if (start > 0 && start <= lines.length) {
+      lines[start - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [activeFile, zenMode]);
+
+  const handleCopy = async (format: "raw" | "markdown" = "raw") => {
     if (!activeFile) return;
-    await navigator.clipboard.writeText(activeFile.code);
+    let textToCopy = activeFile.code;
+    if (format === "markdown") {
+      textToCopy = "```" + activeFile.language + "\n" + textToCopy + "\n```";
+    }
+    await navigator.clipboard.writeText(textToCopy);
     setCopied(true);
-    addToast("Code copied!", "success");
+    addToast(`Copied as ${format === "raw" ? "Raw code" : "Markdown"}!`, "success");
     setTimeout(() => setCopied(false), 2000);
+    setCopyOpen(false);
   };
 
   const handleDownload = () => {
@@ -145,10 +192,11 @@ export function DetailView({
   };
 
   const handleScreenshot = async () => {
-    if (!codeRef.current) return;
+    const currentRef = zenMode ? zenRef.current : normalRef.current;
+    if (!currentRef) return;
     try {
       addToast("Generating screenshot...", "info");
-      const dataUrl = await htmlToImage.toPng(codeRef.current, {
+      const dataUrl = await htmlToImage.toPng(currentRef, {
         backgroundColor: "transparent",
         pixelRatio: 2,
         style: {
@@ -246,17 +294,25 @@ export function DetailView({
         )}
 
         <div className="flex-1 overflow-auto relative">
-          <div className="absolute top-3 right-3 z-10 flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 bg-card/80 backdrop-blur-sm"
-              onClick={handleCopy}
-              aria-label="Copy code to clipboard"
-            >
-              {copied ? <Check size={14} suppressHydrationWarning /> : <Copy size={14} suppressHydrationWarning />}
-              {copied ? "Copied!" : "Copy"}
-            </Button>
+          <div className="absolute top-3 right-3 z-20 flex gap-2">
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 bg-card/80 backdrop-blur-sm"
+                onClick={() => setCopyOpen(!copyOpen)}
+                aria-label="Copy code options"
+              >
+                {copied ? <Check size={14} suppressHydrationWarning /> : <Copy size={14} suppressHydrationWarning />}
+                {copied ? "Copied!" : "Copy"}
+              </Button>
+              {copyOpen && (
+                <div className="absolute right-0 top-full mt-1 w-32 bg-popover border border-border rounded-md shadow-md z-50 flex flex-col overflow-hidden">
+                  <button onClick={() => handleCopy("raw")} className="text-left px-3 py-2 text-sm hover:bg-accent/50">Raw Code</button>
+                  <button onClick={() => handleCopy("markdown")} className="text-left px-3 py-2 text-sm hover:bg-accent/50">Markdown</button>
+                </div>
+              )}
+            </div>
             <Button
               variant="outline"
               size="sm"
@@ -277,13 +333,22 @@ export function DetailView({
               <Download size={14} suppressHydrationWarning />
               Download
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 bg-card/80 backdrop-blur-sm"
+              onClick={() => setZenMode(true)}
+              aria-label="Enter Zen Mode"
+            >
+              Zen Mode
+            </Button>
           </div>
 
           {activeFile && (
             <div className="p-4 pt-12 pb-8 flex justify-center items-start min-h-full bg-muted/20">
               <div 
-                ref={codeRef} 
-                className="w-full max-w-4xl rounded-xl border border-border bg-[#0d1117] shadow-2xl overflow-hidden"
+                ref={normalRef} 
+                className="w-full max-w-4xl rounded-xl border border-border bg-[#0d1117] shadow-2xl overflow-hidden relative"
               >
                 <div className="flex items-center px-4 py-3 border-b border-white/10 bg-white/5">
                   <div className="flex items-center gap-2">
@@ -296,7 +361,7 @@ export function DetailView({
                   </div>
                 </div>
                 <div
-                  className="p-6 font-mono text-sm leading-relaxed overflow-auto"
+                  className="p-6 font-mono text-sm leading-relaxed overflow-auto detail-view-code"
                   dangerouslySetInnerHTML={{ __html: activeFile.highlightedCode }}
                   style={{ fontFamily: "var(--font-jetbrains), monospace" }}
                 />
@@ -305,6 +370,28 @@ export function DetailView({
           )}
         </div>
       </div>
+      
+      {zenMode && activeFile && (
+        <div className="fixed inset-0 z-[100] bg-[#0d1117] flex flex-col p-4 overflow-hidden animate-in fade-in duration-200">
+          <div className="flex items-center justify-between mb-4 bg-white/5 p-3 rounded-lg border border-white/10 shrink-0">
+            <div className="text-white/80 font-mono text-sm">{activeFile.filename}</div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => handleCopy("raw")} className="bg-transparent border-white/20 text-white hover:bg-white/10 gap-1.5">
+                {copied ? <Check size={14} /> : <Copy size={14} />} Copy
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setZenMode(false)} className="bg-transparent border-white/20 text-white hover:bg-white/10">
+                Exit Zen Mode (Esc)
+              </Button>
+            </div>
+          </div>
+          <div 
+            ref={zenRef}
+            className="flex-1 overflow-auto bg-[#0d1117] rounded-xl border border-white/10 p-6 font-mono text-sm leading-relaxed text-white/90 detail-view-code"
+            dangerouslySetInnerHTML={{ __html: activeFile.highlightedCode }}
+            style={{ fontFamily: "var(--font-jetbrains), monospace" }}
+          />
+        </div>
+      )}
     </div>
   );
 }
