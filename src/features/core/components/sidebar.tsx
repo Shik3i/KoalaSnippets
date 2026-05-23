@@ -418,7 +418,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                 className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors pr-2"
               >
                 <Github size={12} suppressHydrationWarning />
-                v{process.env.NEXT_PUBLIC_APP_VERSION}
+                {process.env.NEXT_PUBLIC_APP_VERSION}
               </a>
             </div>
           </div>

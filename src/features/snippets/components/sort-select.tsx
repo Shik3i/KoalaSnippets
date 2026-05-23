@@ -36,7 +36,7 @@ export function SortSelect({ current }: SortSelectProps) {
       <select
         value={current}
         onChange={(e) => handleChange(e.target.value)}
-        className="h-8 rounded-md border border-border bg-transparent px-2 py-0 text-xs text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
+        className="h-8 rounded-md border border-border bg-muted/40 backdrop-blur-sm px-2 py-0 text-xs text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
         aria-label="Sort snippets"
       >
         {SORT_OPTIONS.map((opt) => (

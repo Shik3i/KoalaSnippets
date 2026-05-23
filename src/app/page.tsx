@@ -113,14 +113,13 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <SnippetSearchHeader availableTags={sidebarTags} availableLanguages={sidebarLanguages} />
+        <SnippetSearchHeader availableTags={sidebarTags} availableLanguages={sidebarLanguages} sort={sortMode} viewMode={viewMode} />
         <DashboardContent
           snippets={highlightedSnippets.map((s) => ({
             ...s,
             visibility: s.visibility as "PRIVATE" | "SHARED" | "PUBLIC",
           }))}
           viewMode={viewMode}
-          sort={sortMode}
           density={density}
           allowSelection={false}
         />

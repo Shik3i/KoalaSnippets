@@ -6,8 +6,6 @@ import { useToast } from "@/components/ui/toast";
 import { Upload } from "lucide-react";
 import { SnippetCard } from "./snippet-card";
 import { SnippetTableRow } from "./snippet-table-row";
-import { ViewToggle } from "./view-toggle";
-import { SortSelect } from "./sort-select";
 import { BulkActionBar } from "./bulk-action-bar";
 
 interface SnippetData {
@@ -26,12 +24,11 @@ interface SnippetData {
 interface DashboardContentProps {
   snippets: SnippetData[];
   viewMode: "grid" | "table";
-  sort: "newest" | "oldest" | "alphabetical" | "size-asc" | "size-desc";
   density: "compact" | "preview" | "full";
   allowSelection?: boolean;
 }
 
-export function DashboardContent({ snippets, viewMode, sort, density, allowSelection = true }: DashboardContentProps) {
+export function DashboardContent({ snippets, viewMode, density, allowSelection = true }: DashboardContentProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDragging, setIsDragging] = useState(false);
   const router = useRouter();
@@ -137,7 +134,7 @@ export function DashboardContent({ snippets, viewMode, sort, density, allowSelec
         </div>
       )}
       
-      <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/20">
+      <div className="flex items-center justify-between px-4 py-2">
         <div className="flex items-center gap-3">
           {allowSelection && (
             <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
@@ -151,10 +148,6 @@ export function DashboardContent({ snippets, viewMode, sort, density, allowSelec
               {selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select all"}
             </label>
           )}
-        </div>
-        <div className="flex items-center gap-3">
-          <SortSelect current={sort} />
-          <ViewToggle current={viewMode} />
         </div>
       </div>
 

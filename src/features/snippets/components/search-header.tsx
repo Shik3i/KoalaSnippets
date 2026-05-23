@@ -6,11 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Search, Code, Command, Filter, X, ChevronDown, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/features/core/utils/utils";
+import { SortSelect } from "./sort-select";
+import { ViewToggle } from "./view-toggle";
 
 interface SnippetSearchHeaderProps {
   placeholder?: string;
   availableTags?: string[];
   availableLanguages?: string[];
+  sort?: "newest" | "oldest" | "alphabetical" | "size-asc" | "size-desc";
+  viewMode?: "grid" | "table";
 }
 
 function FilterDropdown({
@@ -50,9 +54,9 @@ function FilterDropdown({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={cn(
-          "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs transition-colors",
-          selected.length > 0
+          className={cn(
+            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs transition-colors bg-muted/30 backdrop-blur-sm",
+            selected.length > 0
             ? "border-primary/30 bg-primary/5 text-foreground"
             : "border-border bg-muted/30 text-muted-foreground hover:border-muted-foreground/30"
         )}
@@ -114,6 +118,8 @@ export function SnippetSearchHeader({
   placeholder = "Search snippets...",
   availableTags = [],
   availableLanguages = [],
+  sort = "newest",
+  viewMode = "grid",
 }: SnippetSearchHeaderProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -201,7 +207,7 @@ export function SnippetSearchHeader({
   const activeFilterCount = activeTags.length + activeLanguages.length;
 
   return (
-    <div className="sticky top-0 z-10 p-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border space-y-2">
+    <div className="sticky top-0 z-10 p-4 space-y-2">
       <div className="relative flex items-center w-full">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} suppressHydrationWarning />
         <Input
@@ -209,7 +215,7 @@ export function SnippetSearchHeader({
           placeholder={placeholder}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="pl-9 h-9 pr-28 sm:pr-56 w-full border-0 shadow-none focus-visible:ring-0"
+          className="pl-9 h-9 pr-28 sm:pr-56 w-full border-0 shadow-none focus-visible:ring-0 bg-muted/40 backdrop-blur-sm"
           aria-label="Search snippets"
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 sm:gap-3">
@@ -231,15 +237,15 @@ export function SnippetSearchHeader({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 text-[11px] pt-1.5 border-t border-border/20">
+      <div className="flex items-center gap-2 text-[11px]">
         <button
           type="button"
           onClick={() => setFiltersExpanded(!filtersExpanded)}
           className={cn(
-            "flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors",
+            "flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors bg-muted/40 backdrop-blur-sm",
             filtersExpanded
-              ? 'bg-accent text-accent-foreground'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              ? 'bg-accent/80 text-accent-foreground'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
           )}
           aria-expanded={filtersExpanded}
           aria-label="Toggle filter panel"
@@ -253,7 +259,12 @@ export function SnippetSearchHeader({
           )}
         </button>
 
-        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors py-1 ml-auto">
+        <div className="flex items-center gap-2 ml-auto">
+          <SortSelect current={sort} />
+          <ViewToggle current={viewMode} />
+        </div>
+
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors py-1">
           <input
             type="checkbox"
             checked={includeCode}
@@ -267,7 +278,7 @@ export function SnippetSearchHeader({
       </div>
 
       {filtersExpanded && (
-        <div className="space-y-3 pt-2 pb-1 border-t border-border/20">
+        <div className="space-y-3 pt-2 pb-1">
           <div className="flex flex-wrap items-center gap-2">
             <FilterDropdown
               label="Tags"

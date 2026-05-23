@@ -120,7 +120,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <SnippetSearchHeader availableTags={sidebarTags} availableLanguages={sidebarLanguages} />
+        <SnippetSearchHeader availableTags={sidebarTags} availableLanguages={sidebarLanguages} sort={sortMode} viewMode={viewMode} />
         <DashboardContent
           snippets={highlightedSnippets.map((s) => ({
             ...s,
@@ -128,7 +128,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             authorUsername: session.user.username,
           }))}
           viewMode={viewMode}
-          sort={sortMode}
           density={density}
         />
       </div>
