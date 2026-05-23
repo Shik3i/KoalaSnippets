@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getSession } from "@/features/auth/utils/session";
 import { Sidebar } from "@/features/core/components/sidebar";
 import { AppearanceSettingsForm } from "@/features/core/components/appearance-settings-form";
@@ -7,21 +7,41 @@ export const dynamic = "force-dynamic";
 
 export default async function AppearanceSettingsPage() {
   const session = await getSession();
-  if (!session) {
-    redirect("/login?expired=1");
-  }
-
-  const prefs = session.user.preferences;
-  const initialPreferences = {
-    appTheme: prefs?.appTheme ?? "theme-dark",
-    snippetDensity: (prefs?.snippetDensity ?? "compact") as "compact" | "preview" | "full",
-    syntaxTheme: prefs?.syntaxTheme ?? "github-dark",
-    bgPattern: prefs?.bgPattern ?? "flat",
+  
+  let initialPreferences = {
+    appTheme: "theme-dark",
+    snippetDensity: "compact" as "compact" | "preview" | "full",
+    syntaxTheme: "github-dark",
+    bgPattern: "flat",
   };
+
+  if (session?.user?.preferences) {
+    const prefs = session.user.preferences;
+    initialPreferences = {
+      appTheme: prefs.appTheme ?? "theme-dark",
+      snippetDensity: (prefs.snippetDensity ?? "compact") as "compact" | "preview" | "full",
+      syntaxTheme: prefs.syntaxTheme ?? "github-dark",
+      bgPattern: prefs.bgPattern ?? "flat",
+    };
+  } else {
+    const cookieStore = await cookies();
+    const appearanceCookie = cookieStore.get("koala_appearance");
+    if (appearanceCookie?.value) {
+      try {
+        const prefs = JSON.parse(decodeURIComponent(appearanceCookie.value));
+        if (prefs.appTheme) initialPreferences.appTheme = prefs.appTheme;
+        if (prefs.snippetDensity) initialPreferences.snippetDensity = prefs.snippetDensity;
+        if (prefs.syntaxTheme) initialPreferences.syntaxTheme = prefs.syntaxTheme;
+        if (prefs.bgPattern) initialPreferences.bgPattern = prefs.bgPattern;
+      } catch (e) {
+        // ignore parse error
+      }
+    }
+  }
 
   return (
     <div className="flex h-screen">
-      <Sidebar isAuthenticated={true} isAdmin={session.user.role === "ADMIN"} />
+      <Sidebar isAuthenticated={!!session} isAdmin={session?.user?.role === "ADMIN"} />
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-4xl mx-auto space-y-6">
           <div>
@@ -29,7 +49,7 @@ export default async function AppearanceSettingsPage() {
             <p className="text-muted-foreground mt-1">Customize the visual presentation of KoalaSnippets</p>
           </div>
           
-          <AppearanceSettingsForm initialPreferences={initialPreferences} />
+          <AppearanceSettingsForm initialPreferences={initialPreferences} isAuthenticated={!!session} />
         </div>
       </div>
     </div>

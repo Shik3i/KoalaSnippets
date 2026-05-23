@@ -26,6 +26,7 @@ interface UserPreferences {
 
 interface AppearanceSettingsFormProps {
   initialPreferences: UserPreferences;
+  isAuthenticated?: boolean;
 }
 
 interface SyntaxThemeColors {
@@ -240,7 +241,7 @@ const BG_PATTERNS = [
   },
 ];
 
-export function AppearanceSettingsForm({ initialPreferences }: AppearanceSettingsFormProps) {
+export function AppearanceSettingsForm({ initialPreferences, isAuthenticated = false }: AppearanceSettingsFormProps) {
   const { addToast } = useToast();
   const router = useRouter();
 
@@ -277,19 +278,19 @@ export function AppearanceSettingsForm({ initialPreferences }: AppearanceSetting
     e.preventDefault();
     setIsSaving(true);
     try {
-      const response = await fetch("/api/settings/appearance", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          appTheme,
-          snippetDensity,
-          syntaxTheme,
-          bgPattern,
-        }),
-      });
+      const prefs = { appTheme, snippetDensity, syntaxTheme, bgPattern };
+      document.cookie = `koala_appearance=${encodeURIComponent(JSON.stringify(prefs))}; path=/; max-age=31536000`;
 
-      if (!response.ok) {
-        throw new Error("Failed to save settings");
+      if (isAuthenticated) {
+        const response = await fetch("/api/settings/appearance", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(prefs),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to save settings to profile");
+        }
       }
 
       isSavedRef.current = true;

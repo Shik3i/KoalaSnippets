@@ -6,6 +6,7 @@ import { getSession } from "@/features/auth/utils/session";
 import { db } from "@/db";
 import { siteSettings } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { cookies } from "next/headers";
 import "./globals.css";
 
 const inter = Inter({
@@ -32,8 +33,26 @@ export default async function RootLayout({
 }>) {
   const session = await getSession();
   const isAdmin = session?.user?.role === "ADMIN";
-  const theme = session?.user?.preferences?.appTheme ?? "theme-dark";
-  const bgPattern = session?.user?.preferences?.bgPattern ?? "flat";
+  
+  let theme = "theme-dark";
+  let bgPattern = "flat";
+
+  if (session?.user?.preferences) {
+    theme = session.user.preferences.appTheme ?? "theme-dark";
+    bgPattern = session.user.preferences.bgPattern ?? "flat";
+  } else {
+    const cookieStore = await cookies();
+    const appearanceCookie = cookieStore.get("koala_appearance");
+    if (appearanceCookie?.value) {
+      try {
+        const prefs = JSON.parse(decodeURIComponent(appearanceCookie.value));
+        if (prefs.appTheme) theme = prefs.appTheme;
+        if (prefs.bgPattern) bgPattern = prefs.bgPattern;
+      } catch (e) {
+        // ignore parse error
+      }
+    }
+  }
 
   const settings = await db.select().from(siteSettings).where(eq(siteSettings.id, 1)).get();
   const globalAnnouncement = settings?.globalAnnouncement;

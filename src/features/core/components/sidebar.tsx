@@ -243,6 +243,19 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                 Admin Dashboard
               </Link>
             )}
+            <Link
+              href="/settings/appearance"
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                pathname === "/settings/appearance"
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+              )}
+              onClick={() => setMobileOpen(false)}
+            >
+              <Palette size={16} suppressHydrationWarning />
+              Appearance Settings
+            </Link>
             {isAuthenticated ? (
               <>
                 <Link
@@ -258,19 +271,6 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                   <Settings size={16} suppressHydrationWarning />
                   Security Settings
                 </Link>
-                <Link
-                  href="/settings/appearance"
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                    pathname === "/settings/appearance"
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-                  )}
-                  onClick={() => setMobileOpen(false)}
-                >
-                  <Palette size={16} suppressHydrationWarning />
-                  Appearance Settings
-                </Link>
                 <button
                   onClick={async () => {
                     await fetch("/api/auth/logout", { method: "POST" });
@@ -283,7 +283,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                 </button>
               </>
             ) : (
-              <Button variant="outline" className="w-full gap-2" asChild>
+              <Button variant="outline" className="w-full gap-2 mt-2" asChild>
                 <Link href="/login" onClick={() => setMobileOpen(false)}>
                   Sign In
                 </Link>

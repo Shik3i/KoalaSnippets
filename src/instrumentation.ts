@@ -1,10 +1,11 @@
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
-import { db } from "@/db";
+
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     try {
       console.log("[db] Running automated database migrations...");
+      const { migrate } = await import("drizzle-orm/better-sqlite3/migrator");
+      const { db } = await import("@/db");
       migrate(db, { migrationsFolder: "./src/db/migrations" });
       console.log("[db] Database migrations applied successfully.");
     } catch (err) {
