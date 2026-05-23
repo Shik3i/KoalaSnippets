@@ -1,17 +1,18 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/features/admin/utils/admin-guard";
-import { runBackupWithRetention } from "@/features/admin/utils/backup";
 import fs from "fs";
 import path from "path";
+import { requireAdmin } from "@/features/admin/utils/admin-guard";
+import { verifyCsrf } from "@/features/core/utils/security";
+import { runBackupWithRetention, parseBackupDate } from "@/features/admin/utils/backup";
 
 export const dynamic = "force-dynamic";
 
 const BACKUP_DIR = process.env.BACKUP_DIR ?? path.join(process.cwd(), "backups");
 
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return "0 KB";
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+interface BackupEntry {
+  filename: string;
+  size: number;
+  createdAt: string;
 }
 
 export async function GET(request: Request) {
@@ -20,75 +21,82 @@ export async function GET(request: Request) {
   if ("forbidden" in guard) return guard.forbidden;
 
   const { searchParams } = new URL(request.url);
-  const download = searchParams.get("download");
+  const downloadFile = searchParams.get("download");
 
-  if (download) {
-    const sanitized = path.basename(download);
-    if (sanitized !== download || !sanitized.startsWith("backup-") || !sanitized.endsWith(".db")) {
+  if (downloadFile) {
+    const safeName = path.basename(downloadFile);
+    if (safeName !== downloadFile || !safeName.startsWith("backup-") || !safeName.endsWith(".db")) {
       return NextResponse.json({ error: "Invalid filename" }, { status: 400 });
     }
 
-    const filePath = path.join(BACKUP_DIR, sanitized);
-
+    const filePath = path.join(BACKUP_DIR, safeName);
     if (!fs.existsSync(filePath)) {
       return NextResponse.json({ error: "Backup not found" }, { status: 404 });
     }
 
-    const stat = fs.statSync(filePath);
-    const fileBuffer = fs.readFileSync(filePath);
+    const resolved = path.resolve(filePath);
+    const resolvedDir = path.resolve(BACKUP_DIR);
+    if (!resolved.startsWith(resolvedDir)) {
+      return NextResponse.json({ error: "Invalid path" }, { status: 400 });
+    }
 
-    return new NextResponse(fileBuffer, {
-      status: 200,
+    const buffer = fs.readFileSync(filePath);
+    return new NextResponse(buffer, {
       headers: {
         "Content-Type": "application/octet-stream",
-        "Content-Disposition": `attachment; filename="${sanitized}"`,
-        "Content-Length": String(stat.size),
+        "Content-Disposition": `attachment; filename="${safeName}"`,
+        "Content-Length": String(buffer.length),
       },
     });
   }
 
-  try {
-    if (!fs.existsSync(BACKUP_DIR)) {
-      return NextResponse.json({ backups: [] });
-    }
-
-    const files = fs
-      .readdirSync(BACKUP_DIR)
-      .filter((f) => f.startsWith("backup-") && f.endsWith(".db"))
-      .map((f) => {
-        const filePath = path.join(BACKUP_DIR, f);
-        const stat = fs.statSync(filePath);
-        return {
-          filename: f,
-          size: stat.size,
-          sizeFormatted: formatBytes(stat.size),
-          createdAt: stat.birthtime.toISOString(),
-        };
-      })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-    return NextResponse.json({ backups: files });
-  } catch (error) {
-    console.error("[Backups API Error]", error);
-    return NextResponse.json({ error: "Failed to list backups" }, { status: 500 });
+  if (!fs.existsSync(BACKUP_DIR)) {
+    return NextResponse.json({ backups: [] });
   }
+
+  const files = fs.readdirSync(BACKUP_DIR).filter((f) => f.startsWith("backup-") && f.endsWith(".db"));
+  const backups: BackupEntry[] = files
+    .map((filename) => {
+      const filePath = path.join(BACKUP_DIR, filename);
+      const stat = fs.statSync(filePath);
+      let createdAt = stat.birthtime.toISOString();
+      try {
+        const parsed = parseBackupDate(filename);
+        if (!isNaN(parsed.getTime())) {
+          createdAt = parsed.toISOString();
+        }
+      } catch {
+        // use file birthtime as fallback
+      }
+      return {
+        filename,
+        size: stat.size,
+        createdAt,
+      };
+    })
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  return NextResponse.json({ backups });
 }
 
-export async function POST() {
+export async function POST(request: Request) {
+  if (!verifyCsrf(request)) {
+    return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
+  }
+
   const guard = await requireAdmin();
   if ("unauthorized" in guard) return guard.unauthorized;
   if ("forbidden" in guard) return guard.forbidden;
 
   try {
-    const { backupPath, deleted } = runBackupWithRetention();
+    const result = runBackupWithRetention();
     return NextResponse.json({
       success: true,
-      backupPath,
-      deleted,
+      message: `Backup created: ${path.basename(result.backupPath)}`,
+      deleted: result.deleted,
     });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("[Backups API Error]", message);
-    return NextResponse.json({ error: "Failed to create backup", details: message }, { status: 500 });
+  } catch (error) {
+    console.error("[Admin Backups API Error]", error);
+    return NextResponse.json({ error: "Backup failed" }, { status: 500 });
   }
 }
