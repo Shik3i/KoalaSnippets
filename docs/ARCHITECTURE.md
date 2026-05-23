@@ -74,20 +74,21 @@ KoalaSnippets is a self-hosted snippet management application built with Next.js
 
 ```
 +----------+--------------------------------------------------+
-| Sidebar  |  Main Content Area (full remaining width)        |
-| (fixed)  |                                                  |
-|          |  LIST VIEW (Home, Dashboard, Public):            |
-| [Logo]   |  +--------------------------------------------+  |
-| Nav      |  | [Sticky Search Bar + Include Code Toggle]  |  |
-| Tags     |  +--------------------------------------------+  |
-| Actions  |                                                  |
-|          |  +-----------+ +-----------+ +-----------+      |
-| Sign In  |  |  Card 1   | |  Card 2   | |  Card 3   |      |
-| Settings |  +-----------+ +-----------+ +-----------+      |
-|          |  +-----------+ +-----------+ +-----------+      |
-| Legal    |  |  Card 4   | |  Card 5   | |  Card 6   |      |
-| Links    |  +-----------+ +-----------+ +-----------+      |
+| Sidebar  |  [🔍 Search...]   [Filters] [Sort ▾] [☷ ☰] [☑ Code]|
+| (fixed)  |  ↓ (collapsible filter panel)                     |
+|          |  [Tags ▾] [Languages ▾]  [AND|OR]                |
+|          |                                                    |
+| [Logo]   |  [☐ Select all]             12 snippets           |
+| Nav      |  +-----------+ +-----------+ +-----------+        |
+| Tags     |  |  Card 1   | |  Card 2   | |  Card 3   |        |
+| Actions  |  +-----------+ +-----------+ +-----------+        |
+|          |  +-----------+ +-----------+ +-----------+        |
+| Sign In  |  |  Card 4   | |  Card 5   | |  Card 6   |        |
+| Settings |  +-----------+ +-----------+ +-----------+        |
+| Legal    |                                                    |
+| Links    |  [Sticky bulk action bar when items selected]     |
 +----------+--------------------------------------------------+
+```
 
 DETAIL VIEW (/snippets/[id]):
 +----------+--------------------------------------------------+
@@ -125,13 +126,15 @@ src/
       components/          # LoginForm, RegisterForm, PasswordChangeForm
       utils/               # Session storage handles, Argon2 hashing & pepper seeding
     snippets/              # Snippet operations and UI
-      components/          # SnippetCard, SnippetSearchHeader, Custom CodeEditor
-      utils/               # Keyboard shortcuts & lazy-loaded Shiki syntax highlight
+      components/          # SnippetCard, SnippetSearchHeader, FilterDropdown, Custom CodeEditor,
+                            #   SortSelect, ViewToggle, SnippetTableRow, BulkActionBar
+      utils/               # Keyboard shortcuts, filters (OR/AND), lazy-loaded Shiki syntax highlight,
+                            #   shared constants (VISIBILITY_CONFIG)
     core/                  # Domain-independent structure and layouts
       components/          # Global Sidebar, DetailView, glassmorphic CommandPalette, AppearanceSettingsForm
       utils/               # Tailwind style merges, validations, seed metrics, rate limiters
   components/
-    ui/                    # shadcn/ui base primitive layouts (buttons, inputs, cards, toasts)
+    ui/                    # shadcn/ui base primitive layouts (buttons, inputs, cards, toasts, confirm-modal)
 ```
 
 ## Search Architecture
@@ -144,6 +147,21 @@ Search is performed server-side via Drizzle parameterized `LIKE` queries. The `S
 | Toggle On  | Also searches: `code` field |
 
 All queries use Drizzle's parameterized operators — no string concatenation with user input.
+
+### Filter Panel (Tags & Languages)
+
+A collapsible filter panel sits below the search bar (collapsed by default, shown when filters are active or expanded). It provides:
+
+- **Searchable combobox dropdowns** for tags and languages — type to filter, click to toggle, Arrow/Enter/Escape keyboard navigation
+- **Multi-select** — comma-separated URL params (`?tags=python,web&language=ts,rust`)
+- **OR/AND toggle** — `?filterMode=or` matches any filter, `?filterMode=and` (default) matches all
+- **Result count** — `"12 snippets"` displayed inline
+- **Escape** key clears the search query when the input is focused
+
+Backend support in `src/features/snippets/utils/filters.ts`:
+- Language filter uses `IN (...)` for comma-separated languages via Drizzle `inArray()`
+- Tag filter supports both AND (individual `LIKE` per tag) and OR (single `OR`-chained condition)
+- All tag/language values escaped with `escapeLike()` to prevent wildcard misinterpretation
 
 ### Global `CommandPalette` Search HUD (`Ctrl+K`)
 In addition to the sticky search header, users can trigger a premium floating command palette HUD (`Ctrl+K` or `⌘K`). It queries the `/api/snippets?q=...` API endpoint on-demand with debounced triggers, and enables keyboard navigation (`ArrowUp`/`ArrowDown`/`Enter`) alongside direct slash-commands (`/new`, `/settings`, `/backups`, `/home`, `/dashboard`). The API endpoint supports `?includeCode=true` for searching within code content.
@@ -351,8 +369,23 @@ Users can personalize their coding environment in real-time under `/settings/app
 |----------|--------|
 | `Cmd+K` / `Ctrl+K` | Launches and centers the search CommandPalette HUD |
 | `Cmd+S` / `Ctrl+S` | Triggers form submission while editing/creating a snippet |
+| `Escape` | Clears the search query (when search input is focused) |
+| `Escape` | Dismisses the newest toast notification |
+| `Escape` | Closes any open modal (delete confirmation) |
+| `Escape` | Closes an open filter dropdown (when focused) |
+| `/` | Focuses the search input (when not in a form field) |
+| `Arrow Up/Down` | Navigates filter dropdown options (when open) |
+| `Enter` | Toggles a filter dropdown option (when open) |
 
-Shortcuts are implemented via a global `keydown` listener (`src/features/snippets/utils/keyboard-shortcuts.ts`) and are active on all pages.
+Shortcuts are implemented via global `keydown` listeners and component-level keyboard handlers.
+
+### Confirm Modal
+
+Delete operations (single snippet deletion and bulk deletion) use a styled confirmation dialog (`src/components/ui/confirm-modal.tsx`) instead of the native `window.confirm()`. The modal:
+- Traps focus and auto-focuses the confirm button
+- Supports `Escape` to cancel and `Enter` to confirm
+- Shows a destructive-style button for delete actions
+- Disables buttons while the operation is in progress
 
 ### Download Code
 
@@ -371,8 +404,11 @@ The `/snippets/[id]` page implements Next.js dynamic `generateMetadata`. When a 
 
 - All interactive elements are reachable via `Tab` navigation.
 - Icon-only buttons include descriptive `aria-label` attributes.
+- Filter dropdowns support full keyboard navigation: `Arrow Up/Down`, `Enter` to toggle, `Escape` to close.
+- Confirm modals trap focus and support `Escape`/`Enter`.
 - The 2-pane interface supports full keyboard navigation.
 - Error messages use `role="alert"` for screen reader announcements.
+- Toast notifications use `role="alert"` for errors, `role="status"` for info/success.
 
 ### Toast Notifications
 
@@ -382,4 +418,9 @@ A lightweight toast system (`src/components/ui/toast.tsx`) provides animated fee
 - "Password changed!" on successful password update
 - "Downloaded <filename>" on code download
 
-Toasts auto-dismiss after 3 seconds and are positioned in the bottom-right corner. The toast container uses `aria-live="polite"` for screen reader compatibility.
+Toasts feature:
+- Slide-in entry and slide-out exit animations (200ms transition)
+- A dismiss button (×) and `Escape` key support
+- Auto-dismiss after 3 seconds
+- Maximum 5 visible toasts (oldest dismissed if exceeded)
+- Positioned in the bottom-right corner with `aria-live="polite"`

@@ -60,6 +60,7 @@ KoalaSnippets is a self-hosted web application for storing, organizing, and shar
 | Feature | Description |
 |---------|-------------|
 | **Glassmorphic Command Palette** | Hit `Ctrl+K` / `⌘K` for a global frosted-glass HUD to search snippets instantly or execute slash commands (`/new`, `/settings`, `/backups`). |
+| **Keyboard-Driven Workflow** | Full keyboard support: `Escape` to clear search or dismiss toasts, Arrow keys in filter dropdowns, `/` to focus search, Enter/Escape on confirmation modals. |
 | **Dynamic Theming Engine** | Personalize your workspace with 7 custom app themes (incl. Dracula, Nordic, Midnight), 4 CSS-driven background patterns, and customizable list densities. |
 | **Stats Dashboard** | A stunning public metrics page featuring glassmorphic cards tracking total snippets, lines of code, unique tags, and languages. |
 | **Beautiful 2-Pane UI** | Responsive card grid, dark mode by default, clean shadcn/ui components, JetBrains Mono for code. |
@@ -72,7 +73,7 @@ KoalaSnippets is a self-hosted web application for storing, organizing, and shar
 | **Multi-File Snippets & Collections** | Group related code pieces together seamlessly. Organize your workspace using tags, collections, and favorites. |
 | **Premium Custom CodeEditor** | A zero-dependency native editor featuring automatic Tab indentation, matching bracket auto-closing, overtype skipping, and pair matching deletions. |
 | **Lazy-Loaded Syntax Highlighting** | Server-side Shiki highlighting for 30+ languages, dynamically loaded on demand for instantaneous render times. |
-| **Blazing Fast Search** | Server-side parameterized FTS-style queries with an "include code in search" toggle. No client-side bottlenecks. |
+| **Blazing Fast Search & Filters** | Server-side parameterized FTS-style queries with "include code in search" toggle. Collapsible filter panel with searchable combobox dropdowns for tags and languages, OR/AND logic toggle, and keyboard navigation. |
 
 ### 📥 Enterprise Reliability
 *Set it and forget it. KoalaSnippets manages itself.*
@@ -243,10 +244,11 @@ KoalaSnippets/
 │   ├── features/           # Domain-driven features folders (Restructured)
 │   │   ├── admin/          # Backup UI lists, metrics, scheduling logic & admin guards
 │   │   ├── auth/           # Login/register forms, session handlers & crypt auth utils
-│   │   ├── snippets/       # Snippet cards, search header, custom CodeEditor & lazy Shiki highlighting
-│   │   └── core/           # Common layouts (sidebar, detail-view), global rate limiters, CommandPalette & styles
+│   │   ├── snippets/       # Snippet cards, search header with filter dropdowns, custom CodeEditor, sort/view toggles, bulk actions & lazy Shiki highlighting
+│   │   │   └── utils/       #   Keyboard shortcuts, filter logic (OR/AND), shared constants (VISIBILITY_CONFIG)
+│   │   └── core/           # Common layouts (sidebar with inline collection form, detail-view), confirm modals, global rate limiters, CommandPalette & styles
 │   ├── components/
-│   │   └── ui/             # shadcn/ui base primitive layouts (buttons, inputs, cards, toasts)
+│   │   └── ui/             # shadcn/ui base primitives (buttons, inputs, cards, toasts with exit animations, confirm-modal)
 │   ├── db/                 # Drizzle schema, migrations, connection (WAL enabled)
 │   ├── proxy.ts            # Next.js Middleware (renamed from middleware.ts for compatibility)
 │   ├── instrumentation.ts  # Server lifecycle hooks (backup, seeding)
