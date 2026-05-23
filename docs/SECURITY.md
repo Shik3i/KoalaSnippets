@@ -178,7 +178,7 @@ See `Caddyfile.example` for production reverse proxy configuration with addition
 ## Session Security
 
 - Session tokens: 32 bytes from `crypto.randomBytes()`.
-- Stored as SHA-256 hash (plaintext token never stored).
+- Stored as HMAC-SHA256 hash using `SESSION_SECRET` (plaintext token never stored).
 - Cookie flags: `HttpOnly`, `Secure`, `SameSite=Lax`.
 - Session rotation on password change (all sessions terminated).
 - Grace period for sliding expiration (only writes DB if within 24h of expiry).
@@ -203,7 +203,8 @@ See `Caddyfile.example` for production reverse proxy configuration with addition
 | `AUTH_PEPPER` | Yes | Application-level pepper for password hashing |
 | `SESSION_SECRET` | Yes | Secret for session token signing/encryption |
 | `DATABASE_URL` | Yes | Path to SQLite database file |
-| `ALLOW_REGISTRATION` | Yes | `true` or `false` - controls registration endpoint |
+| `ALLOW_REGISTRATION` | Yes | `true` or `false` - controls the `/register` page route. The API endpoint is gated by `site_settings.registrationEnabled` in the database. |
+| `API_KEY` | No | Shared secret for server-to-server / CLI API access. When set and matched via `x-api-key` header, bypasses CSRF checks on mutating endpoints. |
 | `ADMIN_USERNAME` | No | Username for admin account seeded on first boot |
 | `ADMIN_PASSWORD` | No | Password for admin account seeded on first boot |
 | `BACKUP_DIR` | No | Directory for automated database backups (default: `./backups`) |

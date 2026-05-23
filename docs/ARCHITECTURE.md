@@ -146,7 +146,7 @@ Search is performed server-side via Drizzle parameterized `LIKE` queries. The `S
 All queries use Drizzle's parameterized operators — no string concatenation with user input.
 
 ### Global `CommandPalette` Search HUD (`Ctrl+K`)
-In addition to the sticky search header, users can trigger a premium floating command palette HUD (`Ctrl+K` or `⌘K`). It queries the `/api/snippets?q=...` API endpoint on-demand with debounced triggers, and enables keyboard navigation (`ArrowUp`/`ArrowDown`/`Enter`) alongside direct slash-commands (`/new`, `/settings`, `/backups`, `/home`, `/dashboard`).
+In addition to the sticky search header, users can trigger a premium floating command palette HUD (`Ctrl+K` or `⌘K`). It queries the `/api/snippets?q=...` API endpoint on-demand with debounced triggers, and enables keyboard navigation (`ArrowUp`/`ArrowDown`/`Enter`) alongside direct slash-commands (`/new`, `/settings`, `/backups`, `/home`, `/dashboard`). The API endpoint supports `?includeCode=true` for searching within code content.
 
 ### Rate Limiting
 

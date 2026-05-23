@@ -4,10 +4,15 @@ export function getSafePage(pageStr: string | null): number {
   if (isNaN(parsed) || parsed < 1) {
     return 1;
   }
-  return parsed;
+  return Math.min(parsed, 1000);
 }
 
 export function verifyCsrf(request: Request): boolean {
+  const apiKey = request.headers.get("x-api-key");
+  if (apiKey && process.env.API_KEY && apiKey === process.env.API_KEY) {
+    return true;
+  }
+
   // Simple CSRF check against Origin/Referer headers
   const origin = request.headers.get("origin");
   const referer = request.headers.get("referer");

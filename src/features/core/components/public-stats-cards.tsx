@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -24,11 +24,16 @@ interface PublicStatsCardsProps {
   stats: PublicStats;
 }
 
+function useMounted() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+}
+
 export function PublicStatsCards({ stats }: PublicStatsCardsProps) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useMounted();
 
   const totalVisibility = (stats.visibility.public + stats.visibility.shared + stats.visibility.private) || 1;
   const publicPercent = (stats.visibility.public / totalVisibility) * 100;

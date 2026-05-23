@@ -49,7 +49,7 @@ export async function buildSnippetConditions(params: FilterParams): Promise<SQL[
   if (params.tags) {
     const filterTags = params.tags.split(",").map(t => t.trim()).filter(Boolean);
     filterTags.forEach(tag => {
-      conditions.push(sql`snippets.tags LIKE ${`%"${tag}"%`}`);
+      conditions.push(sql`snippets.tags LIKE ${`%${escapeLike(tag)}%`}`);
     });
   }
 

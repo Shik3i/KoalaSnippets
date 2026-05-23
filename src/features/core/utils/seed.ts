@@ -1,6 +1,6 @@
 import { hashPassword, generateId } from "@/features/auth/utils/auth";
 import { db } from "@/db";
-import { users, siteStatistics } from "@/db/schema";
+import { users, siteStatistics, siteSettings } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function seedAdminUser() {
@@ -34,6 +34,23 @@ export async function seedAdminUser() {
   });
 
   console.log(`[seed] Admin user "${adminUsername}" created`);
+}
+
+export async function seedSiteSettings() {
+  const existing = await db.select().from(siteSettings).where(eq(siteSettings.id, 1)).get();
+  if (existing) {
+    return;
+  }
+
+  await db.insert(siteSettings).values({
+    id: 1,
+    registrationEnabled: true,
+    globalAnnouncement: null,
+    maxSnippetsPerUser: 1000,
+    maxCharsPerSnippet: 250000,
+  });
+
+  console.log("[seed] Site settings initialized");
 }
 
 export async function seedStatistics() {

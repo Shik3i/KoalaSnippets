@@ -1,6 +1,6 @@
 {
   "name": "koalasnippets",
-  "version": "1.0.36",
+  "version": "1.0.45",
   "private": true,
   "scripts": {
     "dev": "next dev",

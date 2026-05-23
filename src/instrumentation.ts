@@ -20,7 +20,8 @@ export async function register() {
     }
 
     try {
-      const { seedAdminUser, seedStatistics } = await import("@/features/core/utils/seed");
+      const { seedAdminUser, seedStatistics, seedSiteSettings } = await import("@/features/core/utils/seed");
+      await seedSiteSettings();
       await seedAdminUser();
       await seedStatistics();
     } catch (err) {

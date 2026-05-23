@@ -32,8 +32,16 @@ export function generateSessionToken(): string {
   return crypto.randomBytes(32).toString("hex");
 }
 
+function getSessionSecret(): Buffer {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) {
+    throw new Error("SESSION_SECRET environment variable is required");
+  }
+  return Buffer.from(secret, "hex");
+}
+
 export function hashSessionToken(token: string): string {
-  return crypto.createHash("sha256").update(token).digest("hex");
+  return crypto.createHmac("sha256", getSessionSecret()).update(token).digest("hex");
 }
 
 export function generateShareToken(): string {

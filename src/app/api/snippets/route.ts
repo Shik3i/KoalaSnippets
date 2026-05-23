@@ -41,24 +41,25 @@ export async function GET(request: Request) {
   if (tagsParam) {
     const tagsList = tagsParam.split(",").map(t => t.trim().toLowerCase()).filter(t => t.length > 0);
     for (const tag of tagsList) {
-      conditions.push(like(snippets.tags, `%"${tag}"%`));
+      conditions.push(like(snippets.tags, `%${escapeLike(tag)}%`));
     }
   }
+
+  const includeCode = searchParams.get("includeCode") === "true";
 
   const matchingSnippetIds = new Set<string>();
   if (query) {
     const escapedQuery = escapeLike(query);
     
     const fileQuery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
-      .where(like(snippetFiles.language, `%${escapedQuery}%`));
-      
-    // if (includeCode) {
-    //   fileQuery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
-    //     .where(or(
-    //       like(snippetFiles.language, `%${escapedQuery}%`),
-    //       like(snippetFiles.code, `%${escapedQuery}%`)
-    //     ));
-    // }
+      .where(
+        includeCode
+          ? or(
+              like(snippetFiles.language, `%${escapedQuery}%`),
+              like(snippetFiles.code, `%${escapedQuery}%`)
+            )
+          : like(snippetFiles.language, `%${escapedQuery}%`)
+      );
     
     const matchedFiles = await fileQuery.all();
     matchedFiles.forEach(f => matchingSnippetIds.add(f.snippetId));
@@ -207,10 +208,12 @@ export async function POST(request: Request) {
     }, { status: 201 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    const stack = error instanceof Error ? error.stack : undefined;
-    console.error("[Snippets API Error]", message, stack);
+    console.error("[Snippets API Error]", message, error instanceof Error ? error.stack : undefined);
+    const isDev = process.env.NODE_ENV === "development";
     return NextResponse.json(
-      { error: "Internal Server Error", details: message },
+      isDev
+        ? { error: "Internal Server Error", details: message }
+        : { error: "Internal Server Error" },
       { status: 500 }
     );
   }

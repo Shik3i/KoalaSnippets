@@ -141,6 +141,9 @@ DATABASE_URL=file:./data/koalasnippets.db
 
 # Optional: Backup directory (default: ./backups)
 BACKUP_DIR=./backups
+
+# Optional: Shared secret for programmatic API access (bypasses CSRF checks)
+# API_KEY=your-api-key-here
 ```
 
 > [!WARNING]
