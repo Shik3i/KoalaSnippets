@@ -107,7 +107,7 @@ export default async function PublicPage({ searchParams }: { searchParams: Promi
       <Sidebar tags={sidebarTags} languages={sidebarLanguages} isAuthenticated={!!session} isAdmin={session?.user.role === "ADMIN"} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <SnippetSearchHeader availableTags={sidebarTags} availableLanguages={sidebarLanguages} sort={sortMode} viewMode={viewMode} />
+        <SnippetSearchHeader availableTags={sidebarTags} availableLanguages={sidebarLanguages} sort={sortMode} viewMode={viewMode} resultCount={highlightedSnippets.length} />
         <DashboardContent
           snippets={highlightedSnippets.map((s) => ({
             ...s,

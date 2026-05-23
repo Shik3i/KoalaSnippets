@@ -120,7 +120,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <SnippetSearchHeader availableTags={sidebarTags} availableLanguages={sidebarLanguages} sort={sortMode} viewMode={viewMode} />
+        <SnippetSearchHeader availableTags={sidebarTags} availableLanguages={sidebarLanguages} sort={sortMode} viewMode={viewMode} resultCount={highlightedSnippets.length} />
         <DashboardContent
           snippets={highlightedSnippets.map((s) => ({
             ...s,

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { DetailView } from "@/features/core/components/detail-view";
 import { useToast } from "@/components/ui/toast";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { revalidateDashboard, revalidateSnippet } from "@/features/core/actions/revalidate";
 
 interface SnippetDetailClientProps {
@@ -23,6 +24,7 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
   const router = useRouter();
   const { addToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const handleEdit = () => {
     const editData = {
@@ -49,9 +51,11 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
     router.push("/dashboard/new");
   };
 
-  const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this snippet? This action cannot be undone.")) return;
+  const handleDelete = () => {
+    setDeleteModalOpen(true);
+  };
 
+  const confirmDelete = async () => {
     setIsSubmitting(true);
     try {
       const res = await fetch(`/api/snippets/${props.id}`, { method: "DELETE" });
@@ -64,6 +68,7 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
       }
     } finally {
       setIsSubmitting(false);
+      setDeleteModalOpen(false);
     }
   };
 
@@ -93,13 +98,25 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
   };
 
   return (
-    <DetailView
-      {...props}
-      isSubmitting={isSubmitting}
-      onEdit={handleEdit}
-      onDelete={handleDelete}
-      onDuplicate={handleDuplicate}
-      onToggleVisibility={handleToggleVisibility}
-    />
+    <>
+      <DetailView
+        {...props}
+        isSubmitting={isSubmitting}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onDuplicate={handleDuplicate}
+        onToggleVisibility={handleToggleVisibility}
+      />
+      <ConfirmModal
+        open={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Snippet"
+        description="Are you sure you want to delete this snippet? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="destructive"
+        loading={isSubmitting}
+      />
+    </>
   );
 }

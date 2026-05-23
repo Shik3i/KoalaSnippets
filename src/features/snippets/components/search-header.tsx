@@ -15,6 +15,7 @@ interface SnippetSearchHeaderProps {
   availableLanguages?: string[];
   sort?: "newest" | "oldest" | "alphabetical" | "size-asc" | "size-desc";
   viewMode?: "grid" | "table";
+  resultCount?: number;
 }
 
 function FilterDropdown({
@@ -30,7 +31,9 @@ function FilterDropdown({
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [activeIndex, setActiveIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -49,17 +52,55 @@ function FilterDropdown({
     o.toLowerCase().includes(search.toLowerCase())
   );
 
+  const safeIndex = Math.min(activeIndex, Math.max(0, filtered.length - 1));
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      setOpen(false);
+      setSearch("");
+      return;
+    }
+    if (!open) {
+      if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+        e.preventDefault();
+        setOpen(true);
+      }
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((prev) => Math.min(prev + 1, filtered.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((prev) => Math.max(prev - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (filtered[safeIndex]) {
+        onToggle(filtered[safeIndex]);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (open && listRef.current) {
+      const el = listRef.current.children[safeIndex] as HTMLElement | undefined;
+      el?.scrollIntoView({ block: "nearest" });
+    }
+  }, [safeIndex, open]);
+
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative" onKeyDown={handleKeyDown}>
       <button
         type="button"
-        onClick={() => setOpen(!open)}
-          className={cn(
-            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs transition-colors bg-muted/30 backdrop-blur-sm",
-            selected.length > 0
+        onClick={() => { setOpen(!open); setActiveIndex(0); }}
+        className={cn(
+          "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs transition-colors bg-muted/30 backdrop-blur-sm",
+          selected.length > 0
             ? "border-primary/30 bg-primary/5 text-foreground"
             : "border-border bg-muted/30 text-muted-foreground hover:border-muted-foreground/30"
         )}
+        aria-haspopup="listbox"
+        aria-expanded={open}
       >
         <span className="font-medium">{label}</span>
         {selected.length > 0 && (
@@ -73,24 +114,27 @@ function FilterDropdown({
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setActiveIndex(0); }}
             placeholder={`Search ${label.toLowerCase()}...`}
             className="w-full h-7 px-2 text-[11px] bg-muted/50 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
             autoFocus
           />
-          <div className="max-h-40 overflow-y-auto space-y-0.5">
+          <div ref={listRef} className="max-h-40 overflow-y-auto space-y-0.5" role="listbox">
             {filtered.length === 0 ? (
               <div className="text-[11px] text-muted-foreground px-2 py-2 text-center">No matches</div>
             ) : (
-              filtered.map(option => {
+              filtered.map((option, i) => {
                 const isSelected = selected.includes(option);
                 return (
                   <button
                     key={option}
                     type="button"
+                    role="option"
+                    aria-selected={isSelected}
                     onClick={() => onToggle(option)}
                     className={cn(
                       "w-full flex items-center gap-2 px-2 py-1.5 rounded text-[11px] text-left transition-colors",
+                      i === safeIndex && "bg-muted",
                       isSelected
                         ? "bg-primary/10 text-primary"
                         : "hover:bg-muted/50 text-foreground"
@@ -120,6 +164,7 @@ export function SnippetSearchHeader({
   availableLanguages = [],
   sort = "newest",
   viewMode = "grid",
+  resultCount,
 }: SnippetSearchHeaderProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -193,6 +238,10 @@ export function SnippetSearchHeader({
         inputRef.current?.focus();
         inputRef.current?.select();
       }
+      if (e.key === "Escape" && document.activeElement === inputRef.current) {
+        setQuery("");
+        navigateSearch("", includeCode);
+      }
       if (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
         e.preventDefault();
         inputRef.current?.focus();
@@ -201,7 +250,7 @@ export function SnippetSearchHeader({
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [includeCode, navigateSearch]);
 
   const hasActiveFilters = activeTags.length > 0 || activeLanguages.length > 0 || activeCollection;
   const activeFilterCount = activeTags.length + activeLanguages.length;
@@ -258,6 +307,12 @@ export function SnippetSearchHeader({
             </span>
           )}
         </button>
+
+        {resultCount !== undefined && (
+          <span className="text-[11px] text-muted-foreground">
+            {resultCount} snippet{resultCount !== 1 ? "s" : ""}
+          </span>
+        )}
 
         <div className="flex items-center gap-2 ml-auto">
           <SortSelect current={sort} />

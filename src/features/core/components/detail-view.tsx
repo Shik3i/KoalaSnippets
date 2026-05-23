@@ -6,14 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/features/core/utils/utils";
 import { useToast } from "@/components/ui/toast";
+import { VISIBILITY_CONFIG } from "@/features/snippets/utils/constants";
 import {
   Pencil,
   Trash2,
   Copy,
   Share2,
-  Lock,
-  Globe,
-  Link2,
   Check,
   Download,
   CopyPlus,
@@ -36,12 +34,6 @@ interface DetailViewProps {
   onDuplicate?: () => void;
   onToggleVisibility?: () => void;
 }
-
-const visibilityConfig = {
-  PRIVATE: { icon: Lock, label: "Private", color: "text-muted-foreground" },
-  SHARED: { icon: Link2, label: "Shared", color: "text-info" },
-  PUBLIC: { icon: Globe, label: "Public", color: "text-success" },
-};
 
 const LANGUAGE_EXTENSIONS: Record<string, string> = {
   typescript: "ts",
@@ -106,7 +98,7 @@ export function DetailView({
   const [copyOpen, setCopyOpen] = useState(false);
   const [zenMode, setZenMode] = useState(false);
   const { addToast } = useToast();
-  const VisIcon = visibilityConfig[visibility].icon;
+  const VisIcon = VISIBILITY_CONFIG[visibility].icon;
   const normalRef = useRef<HTMLDivElement>(null);
   const zenRef = useRef<HTMLDivElement>(null);
 
@@ -222,9 +214,9 @@ export function DetailView({
             <h1 className="text-xl font-semibold">{title}</h1>
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="secondary">{files.length} {files.length === 1 ? 'file' : 'files'}</Badge>
-              <span className={cn("flex items-center gap-1 text-xs", visibilityConfig[visibility].color)}>
+              <span className={cn("flex items-center gap-1 text-xs", VISIBILITY_CONFIG[visibility].color)}>
                 <VisIcon size={12} suppressHydrationWarning />
-                {visibilityConfig[visibility].label}
+                {VISIBILITY_CONFIG[visibility].label}
               </span>
               <span className="text-xs text-muted-foreground">
                 Updated {mounted ? new Date(updatedAt).toLocaleDateString() : new Date(updatedAt).toISOString().split('T')[0]}

@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/features/core/utils/utils";
-import { Lock, Globe, Link2 } from "lucide-react";
+import { VISIBILITY_CONFIG } from "@/features/snippets/utils/constants";
 
 interface SnippetCardProps {
   id: string;
@@ -20,12 +20,6 @@ interface SnippetCardProps {
   onToggleSelect?: (id: string) => void;
   authorUsername?: string;
 }
-
-const visibilityConfig = {
-  PRIVATE: { icon: Lock, label: "Private", color: "text-muted-foreground" },
-  SHARED: { icon: Link2, label: "Shared", color: "text-info" },
-  PUBLIC: { icon: Globe, label: "Public", color: "text-success" },
-};
 
 export function SnippetCard({
   id,
@@ -46,7 +40,7 @@ export function SnippetCard({
     () => true,
     () => false
   );
-  const VisIcon = visibilityConfig[visibility].icon;
+  const VisIcon = VISIBILITY_CONFIG[visibility].icon;
 
   const dateStr = mounted
     ? new Date(createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'numeric', year: 'numeric' })
@@ -88,7 +82,7 @@ export function SnippetCard({
         <h3 className="font-medium text-sm truncate group-hover:text-primary transition-colors">
           {title}
         </h3>
-        <VisIcon size={12} className={cn("shrink-0 mt-1", visibilityConfig[visibility].color)} suppressHydrationWarning />
+        <VisIcon size={12} className={cn("shrink-0 mt-1", VISIBILITY_CONFIG[visibility].color)} suppressHydrationWarning />
       </div>
 
       <div className="flex items-center gap-2 flex-wrap mb-2">

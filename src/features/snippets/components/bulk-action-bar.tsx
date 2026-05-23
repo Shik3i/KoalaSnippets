@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { useToast } from "@/components/ui/toast";
 import { revalidateDashboard } from "@/features/core/actions/revalidate";
 import { Trash2, Lock, Globe, X } from "lucide-react";
@@ -13,6 +14,7 @@ interface BulkActionBarProps {
 
 export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
   const [loading, setLoading] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const { addToast } = useToast();
 
   const performBulk = async (action: string, visibility?: "PRIVATE" | "PUBLIC") => {
@@ -35,11 +37,12 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
       addToast("An error occurred", "error");
     } finally {
       setLoading(false);
+      setDeleteModalOpen(false);
     }
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border px-4 py-3 flex items-center justify-between gap-4 shadow-lg">
+    <div className="sticky bottom-0 z-50 bg-card border-t border-border px-4 py-3 flex items-center justify-between gap-4 shadow-lg -mx-4">
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
@@ -81,17 +84,24 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
           variant="destructive"
           size="sm"
           className="gap-1.5"
-          onClick={() => {
-            if (confirm(`Delete ${selectedIds.length} snippet${selectedIds.length !== 1 ? "s" : ""}? This cannot be undone.`)) {
-              performBulk("delete");
-            }
-          }}
+          onClick={() => setDeleteModalOpen(true)}
           disabled={loading}
         >
           <Trash2 size={14} suppressHydrationWarning />
           Delete
         </Button>
       </div>
+
+      <ConfirmModal
+        open={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={() => performBulk("delete")}
+        title="Delete Snippets"
+        description={`Delete ${selectedIds.length} snippet${selectedIds.length !== 1 ? "s" : ""}? This cannot be undone.`}
+        confirmLabel="Delete"
+        variant="destructive"
+        loading={loading}
+      />
     </div>
   );
 }

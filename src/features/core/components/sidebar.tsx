@@ -45,6 +45,8 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collections, setCollections] = useState<{ id: string; name: string }[]>([]);
+  const [newCollectionName, setNewCollectionName] = useState("");
+  const [addingCollection, setAddingCollection] = useState(false);
   const [width, setWidth] = useState(240);
   const [isResizing, setIsResizing] = useState(false);
 
@@ -184,24 +186,48 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                 Collections
               </h3>
               <button 
-                onClick={async () => {
-                  const name = prompt("Enter collection name:");
-                  if (!name) return;
-                  const res = await fetch("/api/collections", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name })
-                  });
-                  if (res.ok) {
-                    const data = await res.json();
-                    setCollections(prev => [...prev, data.collection]);
-                  }
-                }}
+                onClick={() => { setAddingCollection(true); setNewCollectionName(""); }}
                 className="text-muted-foreground hover:text-foreground"
+                aria-label="Add collection"
               >
                 <PlusCircle size={14} />
               </button>
             </div>
+            {addingCollection && (
+              <div className="flex items-center gap-1 px-1 mb-2">
+                <input
+                  type="text"
+                  value={newCollectionName}
+                  onChange={(e) => setNewCollectionName(e.target.value)}
+                  onKeyDown={async (e) => {
+                    if (e.key === "Escape") { setAddingCollection(false); return; }
+                    if (e.key !== "Enter" || !newCollectionName.trim()) return;
+                    const res = await fetch("/api/collections", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ name: newCollectionName.trim() })
+                    });
+                    if (res.ok) {
+                      const data = await res.json();
+                      setCollections(prev => [...prev, data.collection]);
+                    }
+                    setAddingCollection(false);
+                    setNewCollectionName("");
+                  }}
+                  placeholder="Collection name"
+                  className="flex-1 h-7 px-2 text-[11px] bg-muted/50 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => setAddingCollection(false)}
+                  className="text-muted-foreground hover:text-foreground p-1"
+                  aria-label="Cancel"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            )}
             <div className="space-y-0.5">
               {collections.length === 0 ? (
                 <div className="text-xs text-muted-foreground px-1 py-2">No collections yet</div>
