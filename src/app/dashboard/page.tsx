@@ -113,7 +113,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const languages = [...new Set(files.map((f) => f.language))].sort();
   const allTags = [...new Set(userSnippetsWithFiles.flatMap((s) => s.tags ?? []))].sort();
 
-  const density = session?.user?.preferences?.snippetDensity ?? "compact";
+  const density = session?.user?.preferences?.snippetDensity ?? "preview";
   const syntaxTheme = session?.user?.preferences?.syntaxTheme ?? "github-dark";
 
   const highlightedSnippets = await Promise.all(
@@ -159,6 +159,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           snippets={highlightedSnippets.map((s) => ({
             ...s,
             visibility: s.visibility as "PRIVATE" | "SHARED" | "PUBLIC",
+            authorUsername: session.user.username,
           }))}
           viewMode={viewMode}
           sort={sortMode}

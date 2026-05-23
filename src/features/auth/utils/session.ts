@@ -42,10 +42,10 @@ export async function getSession() {
   // Gracefully normalize user preferences to ensure robust fallbacks for existing profiles
   if (session.user && session.user.preferences) {
     session.user.preferences = {
-      appTheme: session.user.preferences.appTheme ?? "theme-dark",
-      snippetDensity: session.user.preferences.snippetDensity ?? "compact",
+      appTheme: session.user.preferences.appTheme ?? "theme-midnight",
+      snippetDensity: session.user.preferences.snippetDensity ?? "preview",
       syntaxTheme: session.user.preferences.syntaxTheme ?? "github-dark",
-      bgPattern: session.user.preferences.bgPattern ?? "flat",
+      bgPattern: session.user.preferences.bgPattern ?? "matrix",
     };
   }
 

@@ -20,6 +20,7 @@ interface SnippetData {
   createdAt: Date;
   updatedAt: Date;
   highlightedCode?: string;
+  authorUsername?: string;
 }
 
 interface DashboardContentProps {
@@ -208,6 +209,7 @@ export function DashboardContent({ snippets, viewMode, sort, density }: Dashboar
                 highlightedCode={s.highlightedCode}
                 selected={selectedIds.has(s.id)}
                 onToggleSelect={toggleSelect}
+                authorUsername={s.authorUsername}
               />
             ))}
           </div>

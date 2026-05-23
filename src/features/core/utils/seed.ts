@@ -26,10 +26,10 @@ export async function seedAdminUser() {
     role: "ADMIN",
     createdAt: new Date(),
     preferences: {
-      appTheme: "theme-dark",
-      snippetDensity: "compact",
+      appTheme: "theme-midnight",
+      snippetDensity: "preview",
       syntaxTheme: "github-dark",
-      bgPattern: "flat",
+      bgPattern: "matrix",
     },
   });
 

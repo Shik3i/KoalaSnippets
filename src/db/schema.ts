@@ -15,10 +15,10 @@ export const users = sqliteTable("users", {
   role: text("role", { enum: ["USER", "ADMIN"] }).notNull().default("USER"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   preferences: text("preferences", { mode: "json" }).$type<UserPreferences>().notNull().default({
-    appTheme: "theme-dark",
-    snippetDensity: "compact",
+    appTheme: "theme-midnight",
+    snippetDensity: "preview",
     syntaxTheme: "github-dark",
-    bgPattern: "flat",
+    bgPattern: "matrix",
   }),
 });
 

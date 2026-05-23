@@ -52,17 +52,17 @@ export async function PUT(request: Request) {
 
     // Merge with existing preferences or fallback to defaults
     const currentPrefs = session.user.preferences || {
-      appTheme: "theme-dark",
-      snippetDensity: "compact",
+      appTheme: "theme-midnight",
+      snippetDensity: "preview",
       syntaxTheme: "github-dark",
-      bgPattern: "flat",
+      bgPattern: "matrix",
     };
 
     const updatedPrefs = {
-      appTheme: appTheme ?? currentPrefs.appTheme ?? "theme-dark",
-      snippetDensity: snippetDensity ?? currentPrefs.snippetDensity ?? "compact",
+      appTheme: appTheme ?? currentPrefs.appTheme ?? "theme-midnight",
+      snippetDensity: snippetDensity ?? currentPrefs.snippetDensity ?? "preview",
       syntaxTheme: syntaxTheme ?? currentPrefs.syntaxTheme ?? "github-dark",
-      bgPattern: bgPattern ?? currentPrefs.bgPattern ?? "flat",
+      bgPattern: bgPattern ?? currentPrefs.bgPattern ?? "matrix",
     };
 
     // Update in database

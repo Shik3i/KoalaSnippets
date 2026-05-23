@@ -4,7 +4,7 @@ import { SnippetCard } from "@/features/snippets/components/snippet-card";
 import { SnippetSearchHeader } from "@/features/snippets/components/search-header";
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { db } from "@/db";
-import { snippets, snippetFiles } from "@/db/schema";
+import { snippets, snippetFiles, users } from "@/db/schema";
 import { eq, desc, like, or, and, inArray } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { escapeLike } from "@/features/core/utils/sql";
@@ -18,7 +18,15 @@ export default async function PublicPage({ searchParams }: { searchParams: Promi
   const escapedQuery = escapeLike(query);
   const includeCodeBool = includeCode === "true";
 
-  const baseQuery = db.select().from(snippets);
+  const baseQuery = db.select({
+    id: snippets.id,
+    title: snippets.title,
+    description: snippets.description,
+    tags: snippets.tags,
+    visibility: snippets.visibility,
+    createdAt: snippets.createdAt,
+    authorUsername: users.username
+  }).from(snippets).innerJoin(users, eq(snippets.authorId, users.id));
   const conditions = [eq(snippets.visibility, "PUBLIC")];
 
   const matchingSnippetIds = new Set<string>();
@@ -68,7 +76,7 @@ export default async function PublicPage({ searchParams }: { searchParams: Promi
   const languages = [...new Set(files.map((f) => f.language))].sort();
   const allTags = [...new Set(publicSnippetsWithFiles.flatMap((s) => s.tags ?? []))].sort();
 
-  const density = session?.user?.preferences?.snippetDensity ?? "compact";
+  const density = session?.user?.preferences?.snippetDensity ?? "preview";
   const syntaxTheme = session?.user?.preferences?.syntaxTheme ?? "github-dark";
 
   const highlightedSnippets = await Promise.all(
@@ -122,6 +130,7 @@ export default async function PublicPage({ searchParams }: { searchParams: Promi
                   createdAt={s.createdAt}
                   snippetDensity={density}
                   highlightedCode={s.highlightedCode}
+                  authorUsername={s.authorUsername}
                 />
               ))}
             </div>

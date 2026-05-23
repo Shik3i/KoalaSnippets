@@ -34,12 +34,12 @@ export default async function RootLayout({
   const session = await getSession();
   const isAdmin = session?.user?.role === "ADMIN";
   
-  let theme = "theme-dark";
-  let bgPattern = "flat";
+  let theme = "theme-midnight";
+  let bgPattern = "matrix";
 
   if (session?.user?.preferences) {
-    theme = session.user.preferences.appTheme ?? "theme-dark";
-    bgPattern = session.user.preferences.bgPattern ?? "flat";
+    theme = session.user.preferences.appTheme ?? "theme-midnight";
+    bgPattern = session.user.preferences.bgPattern ?? "matrix";
   } else {
     const cookieStore = await cookies();
     const appearanceCookie = cookieStore.get("koala_appearance");

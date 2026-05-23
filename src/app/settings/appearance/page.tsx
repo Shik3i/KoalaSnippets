@@ -9,19 +9,19 @@ export default async function AppearanceSettingsPage() {
   const session = await getSession();
   
   let initialPreferences = {
-    appTheme: "theme-dark",
-    snippetDensity: "compact" as "compact" | "preview" | "full",
+    appTheme: "theme-midnight",
+    snippetDensity: "preview" as "compact" | "preview" | "full",
     syntaxTheme: "github-dark",
-    bgPattern: "flat",
+    bgPattern: "matrix",
   };
 
   if (session?.user?.preferences) {
     const prefs = session.user.preferences;
     initialPreferences = {
-      appTheme: prefs.appTheme ?? "theme-dark",
-      snippetDensity: (prefs.snippetDensity ?? "compact") as "compact" | "preview" | "full",
+      appTheme: prefs.appTheme ?? "theme-midnight",
+      snippetDensity: (prefs.snippetDensity ?? "preview") as "compact" | "preview" | "full",
       syntaxTheme: prefs.syntaxTheme ?? "github-dark",
-      bgPattern: prefs.bgPattern ?? "flat",
+      bgPattern: prefs.bgPattern ?? "matrix",
     };
   } else {
     const cookieStore = await cookies();

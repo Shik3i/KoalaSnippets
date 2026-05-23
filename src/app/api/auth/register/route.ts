@@ -56,10 +56,10 @@ export async function POST(request: Request) {
         role: "USER",
         createdAt: new Date(),
         preferences: {
-          appTheme: "theme-dark",
-          snippetDensity: "compact",
+          appTheme: "theme-midnight",
+          snippetDensity: "preview",
           syntaxTheme: "github-dark",
-          bgPattern: "flat",
+          bgPattern: "matrix",
         },
       }).run();
 

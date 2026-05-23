@@ -18,6 +18,7 @@ interface SnippetCardProps {
   highlightedCode?: string;
   selected?: boolean;
   onToggleSelect?: (id: string) => void;
+  authorUsername?: string;
 }
 
 const visibilityConfig = {
@@ -34,10 +35,11 @@ export function SnippetCard({
   tags,
   visibility,
   createdAt,
-  snippetDensity = "compact",
+  snippetDensity = "preview",
   highlightedCode,
   selected = false,
   onToggleSelect,
+  authorUsername,
 }: SnippetCardProps) {
   const mounted = useSyncExternalStore(
     () => () => {},
@@ -45,6 +47,17 @@ export function SnippetCard({
     () => false
   );
   const VisIcon = visibilityConfig[visibility].icon;
+
+  const dateStr = mounted
+    ? new Date(createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'numeric', year: 'numeric' })
+    : new Date(createdAt).toISOString().split('T')[0];
+  const timeStr = mounted
+    ? new Date(createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+    : '';
+
+  const dateDisplay = mounted
+    ? `Vom ${dateStr}${timeStr ? `, ${timeStr}` : ''}`
+    : `Vom ${dateStr}`;
 
   return (
     <Link
@@ -78,12 +91,12 @@ export function SnippetCard({
         <VisIcon size={12} className={cn("shrink-0 mt-1", visibilityConfig[visibility].color)} suppressHydrationWarning />
       </div>
 
-      <div className="flex items-center gap-2 mb-2">
-        <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+      <div className="flex items-center gap-2 flex-wrap mb-2">
+        <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
           {language}
         </Badge>
-        <span className="text-xs text-muted-foreground">
-          {mounted ? new Date(createdAt).toLocaleDateString() : new Date(createdAt).toISOString().split('T')[0]}
+        <span className="text-xs text-muted-foreground truncate">
+          {dateDisplay}{authorUsername ? ` • Erstellt von ${authorUsername}` : ""}
         </span>
       </div>
 
@@ -96,7 +109,18 @@ export function SnippetCard({
       {tags && tags.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {tags.slice(0, 3).map((tag) => (
-            <Badge key={tag} variant="outline" className="text-[10px] h-4 px-1">
+            <Badge
+              key={tag}
+              variant="outline"
+              className="text-[10px] h-4 px-1 cursor-pointer hover:bg-primary/20 hover:text-primary transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                const params = new URLSearchParams(window.location.search);
+                params.set("q", tag);
+                window.location.href = `${window.location.pathname}?${params.toString()}`;
+              }}
+            >
               {tag}
             </Badge>
           ))}
