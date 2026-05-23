@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { verifyPassword } from "@/features/auth/utils/auth";
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { escapeHtml } from "@/features/core/utils/security";
+import { checkRateLimit } from "@/features/core/utils/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,18 @@ export async function POST(
 
     if (!password) {
       return NextResponse.json({ error: "Password is required" }, { status: 400 });
+    }
+
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const ips = forwardedFor ? forwardedFor.split(",") : [];
+    const ip = ips.length > 0 ? ips[ips.length - 1].trim() : "unknown";
+    const limit = checkRateLimit(`unlock:${id}:${ip}`, 5, 15 * 60 * 1000);
+
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: "Too many attempts. Try again later." },
+        { status: 429, headers: { "Retry-After": String(Math.ceil((limit.resetAt - Date.now()) / 1000)) } }
+      );
     }
 
     const snippet = await db.select().from(snippets).where(eq(snippets.id, id)).get();
