@@ -116,9 +116,13 @@ export function SnippetCard({
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                const params = new URLSearchParams(window.location.search);
+                const params = new URLSearchParams();
                 params.set("q", tag);
-                window.location.href = `${window.location.pathname}?${params.toString()}`;
+                let targetPath = window.location.pathname;
+                if (targetPath.startsWith("/snippets")) {
+                  targetPath = visibility === "PUBLIC" ? "/public" : "/dashboard";
+                }
+                window.location.href = `${targetPath}?${params.toString()}`;
               }}
             >
               {tag}
