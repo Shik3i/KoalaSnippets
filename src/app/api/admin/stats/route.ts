@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { db } from "@/db";
-import { siteStatistics, snippets, snippetFiles } from "@/db/schema";
+import { siteStatistics, snippetFiles } from "@/db/schema";
 import { requireAdmin } from "@/features/admin/utils/admin-guard";
 import { eq, desc, sql } from "drizzle-orm";
 

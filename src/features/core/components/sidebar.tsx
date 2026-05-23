@@ -233,7 +233,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                             window.location.reload();
                           }
                         }
-                      } catch (_) {}
+                      } catch { }
                     }}
                     onClick={() => {
                       if (onTagClick) {

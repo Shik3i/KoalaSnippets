@@ -48,7 +48,7 @@ export default async function RootLayout({
         const prefs = JSON.parse(decodeURIComponent(appearanceCookie.value));
         if (prefs.appTheme) theme = prefs.appTheme;
         if (prefs.bgPattern) bgPattern = prefs.bgPattern;
-      } catch (e) {
+      } catch {
         // ignore parse error
       }
     }

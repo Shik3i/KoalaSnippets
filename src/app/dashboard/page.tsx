@@ -6,7 +6,7 @@ import { SnippetSearchHeader } from "@/features/snippets/components/search-heade
 import { DashboardContent } from "@/features/snippets/components/dashboard-content";
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { db } from "@/db";
-import { snippets, snippetFiles, collections } from "@/db/schema";
+import { snippets, snippetFiles } from "@/db/schema";
 import { eq, desc, asc, like, or, and, inArray } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { escapeLike } from "@/features/core/utils/sql";

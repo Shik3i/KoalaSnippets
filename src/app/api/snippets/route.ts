@@ -15,8 +15,7 @@ export async function GET(request: Request) {
   const session = await getSession();
   const { searchParams } = new URL(request.url);
   const visibility = searchParams.get("visibility");
-  const query = searchParams.get("q");
-  const includeCode = searchParams.get("includeCode") === "true";
+  const query = searchParams.get("q") ?? "";
   const page = getSafePage(searchParams.get("page"));
   const sort = searchParams.get("sort") || "createdAt";
   const order = searchParams.get("order") || "desc";

@@ -33,7 +33,7 @@ export default async function AppearanceSettingsPage() {
         if (prefs.snippetDensity) initialPreferences.snippetDensity = prefs.snippetDensity;
         if (prefs.syntaxTheme) initialPreferences.syntaxTheme = prefs.syntaxTheme;
         if (prefs.bgPattern) initialPreferences.bgPattern = prefs.bgPattern;
-      } catch (e) {
+      } catch {
         // ignore parse error
       }
     }

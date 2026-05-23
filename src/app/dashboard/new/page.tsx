@@ -67,7 +67,7 @@ export default function NewSnippetPage({
   const duplicateData = useMemo(() => readDuplicateData(), []);
   const editData = useMemo(() => readEditData(), []);
   
-  const [mounted, setMounted] = useState(false);
+
   const initialData = propInitialData || editData || duplicateData;
   const isEditing = isEdit || !!editData;
 
@@ -94,7 +94,7 @@ export default function NewSnippetPage({
   const [error, setError] = useState("");
 
   useEffect(() => {
-    setTimeout(() => setMounted(true), 0);
+
     if (isImport) {
       try {
         const importData = sessionStorage.getItem("koalasnippets_import");
