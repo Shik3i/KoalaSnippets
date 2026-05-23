@@ -1,19 +1,20 @@
 import { getSession } from "@/features/auth/utils/session";
 import { Sidebar } from "@/features/core/components/sidebar";
-import { SnippetCard } from "@/features/snippets/components/snippet-card";
 import { SnippetSearchHeader } from "@/features/snippets/components/search-header";
+import { DashboardContent } from "@/features/snippets/components/dashboard-content";
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { db } from "@/db";
 import { snippets, snippetFiles, users } from "@/db/schema";
-import { eq, desc, like, or, and, inArray } from "drizzle-orm";
+import { eq, desc, asc, like, or, and, inArray } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { escapeLike } from "@/features/core/utils/sql";
+import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
-export default async function PublicPage({ searchParams }: { searchParams: Promise<{ q?: string; includeCode?: string }> }) {
+export default async function PublicPage({ searchParams }: { searchParams: Promise<{ q?: string; includeCode?: string; sort?: string }> }) {
   const session = await getSession();
-  const { q, includeCode } = await searchParams;
+  const { q, includeCode, sort } = await searchParams;
   const query = q ?? "";
   const escapedQuery = escapeLike(query);
   const includeCodeBool = includeCode === "true";
@@ -25,6 +26,7 @@ export default async function PublicPage({ searchParams }: { searchParams: Promi
     tags: snippets.tags,
     visibility: snippets.visibility,
     createdAt: snippets.createdAt,
+    updatedAt: snippets.updatedAt,
     authorUsername: users.username
   }).from(snippets).innerJoin(users, eq(snippets.authorId, users.id));
   const conditions = [eq(snippets.visibility, "PUBLIC")];
@@ -55,10 +57,23 @@ export default async function PublicPage({ searchParams }: { searchParams: Promi
     conditions.push(or(...searchConditions)!);
   }
 
+  const sortMode = (["newest", "oldest", "alphabetical", "size-asc", "size-desc"].includes(sort ?? "") ? sort : "newest") as "newest" | "oldest" | "alphabetical" | "size-asc" | "size-desc";
+
+  const orderBy =
+    sortMode === "oldest"
+      ? asc(snippets.createdAt)
+      : sortMode === "alphabetical"
+        ? asc(snippets.title)
+        : sortMode === "size-asc"
+          ? asc(snippets.totalLines)
+          : sortMode === "size-desc"
+            ? desc(snippets.totalLines)
+            : desc(snippets.createdAt);
+
   const whereClause = and(...conditions);
   const publicSnippets = await (whereClause
-    ? baseQuery.where(whereClause).orderBy(desc(snippets.createdAt)).all()
-    : baseQuery.orderBy(desc(snippets.createdAt)).all()
+    ? baseQuery.where(whereClause).orderBy(orderBy).all()
+    : baseQuery.orderBy(orderBy).all()
   );
 
   const snippetIds = publicSnippets.map(s => s.id);
@@ -102,6 +117,8 @@ export default async function PublicPage({ searchParams }: { searchParams: Promi
       }
     })
   );
+  const cookieStore = await cookies();
+  const viewMode = (cookieStore.get("snippet_view")?.value === "table" ? "table" : "grid") as "grid" | "table";
 
   return (
     <div className="flex h-screen">
@@ -109,33 +126,16 @@ export default async function PublicPage({ searchParams }: { searchParams: Promi
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <SnippetSearchHeader />
-
-        <div className="flex-1 overflow-y-auto p-4">
-          {highlightedSnippets.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-              <p className="text-lg mb-2">No public snippets</p>
-              <p className="text-sm">Public snippets will appear here</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {highlightedSnippets.map((s) => (
-                <SnippetCard
-                  key={s.id}
-                  id={s.id}
-                  title={s.title}
-                  description={s.description ?? undefined}
-                  language={s.language}
-                  tags={s.tags ?? undefined}
-                  visibility="PUBLIC"
-                  createdAt={s.createdAt}
-                  snippetDensity={density}
-                  highlightedCode={s.highlightedCode}
-                  authorUsername={s.authorUsername}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        <DashboardContent
+          snippets={highlightedSnippets.map((s) => ({
+            ...s,
+            visibility: s.visibility as "PRIVATE" | "SHARED" | "PUBLIC",
+          }))}
+          viewMode={viewMode}
+          sort={sortMode}
+          density={density}
+          allowSelection={false}
+        />
       </div>
     </div>
   );

@@ -20,18 +20,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing code or language" }, { status: 400 });
     }
 
-    let parser = "babel"; // Default to babel (JS/TS)
+    const lang = language.toLowerCase();
+    let parser = "";
     const plugins = [parserBabel, parserHtml, parserCss, parserMarkdown, parserEstree];
 
-    if (language === "html") parser = "html";
-    else if (language === "css" || language === "scss") parser = "css";
-    else if (language === "json") parser = "json";
-    else if (language === "markdown") parser = "markdown";
-    else if (language === "typescript" || language === "javascript") parser = "babel-ts";
-
-    // Skip if it's a language prettier doesn't support easily without extra plugins (e.g. go, rust, python)
-    if (!["babel", "babel-ts", "html", "css", "json", "markdown"].includes(parser)) {
-      return NextResponse.json({ error: "Language not supported for formatting" }, { status: 400 });
+    if (["javascript", "typescript", "js", "ts", "jsx", "tsx"].includes(lang)) {
+      parser = "babel-ts";
+    } else if (lang === "html") {
+      parser = "html";
+    } else if (lang === "css" || lang === "scss") {
+      parser = "css";
+    } else if (lang === "json") {
+      parser = "json";
+    } else if (lang === "markdown" || lang === "md") {
+      parser = "markdown";
+    } else {
+      return NextResponse.json({ error: `Formatting is not supported for ${language}` }, { status: 400 });
     }
 
     const formatted = await prettier.format(code, {

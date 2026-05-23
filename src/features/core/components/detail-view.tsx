@@ -197,7 +197,7 @@ export function DetailView({
     try {
       addToast("Generating screenshot...", "info");
       const dataUrl = await htmlToImage.toPng(currentRef, {
-        backgroundColor: "transparent",
+        backgroundColor: zenMode ? "#0d1117" : undefined,
         pixelRatio: 2,
         style: {
           transform: "scale(1)",
@@ -346,10 +346,13 @@ export function DetailView({
 
           {activeFile && (
             <div className="p-4 pt-12 pb-8 flex justify-center items-start min-h-full bg-muted/20">
-              <div 
-                ref={normalRef} 
-                className="w-full max-w-4xl rounded-xl border border-border bg-[#0d1117] shadow-2xl overflow-hidden relative"
+              <div
+                ref={normalRef}
+                className="w-full max-w-4xl p-6 sm:p-10 rounded-2xl bg-gradient-to-tr from-slate-950 via-[#131b2e] to-slate-950 flex items-center justify-center border border-white/5"
               >
+                <div 
+                  className="w-full rounded-xl border border-border bg-[#0d1117] shadow-2xl overflow-hidden relative"
+                >
                 <div className="flex items-center px-4 py-3 border-b border-white/10 bg-white/5">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-[#ff5f56]" />
@@ -367,6 +370,7 @@ export function DetailView({
                 />
               </div>
             </div>
+          </div>
           )}
         </div>
       </div>

@@ -28,9 +28,10 @@ interface DashboardContentProps {
   viewMode: "grid" | "table";
   sort: "newest" | "oldest" | "alphabetical" | "size-asc" | "size-desc";
   density: "compact" | "preview" | "full";
+  allowSelection?: boolean;
 }
 
-export function DashboardContent({ snippets, viewMode, sort, density }: DashboardContentProps) {
+export function DashboardContent({ snippets, viewMode, sort, density, allowSelection = true }: DashboardContentProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDragging, setIsDragging] = useState(false);
   const router = useRouter();
@@ -138,16 +139,18 @@ export function DashboardContent({ snippets, viewMode, sort, density }: Dashboar
       
       <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/20">
         <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={allSelected}
-              onChange={() => (allSelected ? clearSelection() : selectAll())}
-              className="rounded border-border text-primary focus:ring-ring cursor-pointer"
-              aria-label="Select all snippets"
-            />
-            {selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select all"}
-          </label>
+          {allowSelection && (
+            <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={() => (allSelected ? clearSelection() : selectAll())}
+                className="rounded border-border text-primary focus:ring-ring cursor-pointer"
+                aria-label="Select all snippets"
+              />
+              {selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select all"}
+            </label>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <SortSelect current={sort} />
@@ -166,9 +169,11 @@ export function DashboardContent({ snippets, viewMode, sort, density }: Dashboar
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border text-left">
-                  <th className="w-10 px-2 py-2 text-xs font-medium text-muted-foreground">
-                    <span className="sr-only">Select</span>
-                  </th>
+                  {allowSelection && (
+                    <th className="w-10 px-2 py-2 text-xs font-medium text-muted-foreground">
+                      <span className="sr-only">Select</span>
+                    </th>
+                  )}
                   <th className="px-3 py-2 text-xs font-medium text-muted-foreground">Title</th>
                   <th className="px-3 py-2 text-xs font-medium text-muted-foreground">Language</th>
                   <th className="px-3 py-2 text-xs font-medium text-muted-foreground hidden md:table-cell">Tags</th>
@@ -187,7 +192,7 @@ export function DashboardContent({ snippets, viewMode, sort, density }: Dashboar
                     visibility={s.visibility}
                     createdAt={s.createdAt}
                     selected={selectedIds.has(s.id)}
-                    onToggleSelect={toggleSelect}
+                    onToggleSelect={allowSelection ? toggleSelect : undefined}
                   />
                 ))}
               </tbody>
@@ -208,7 +213,7 @@ export function DashboardContent({ snippets, viewMode, sort, density }: Dashboar
                 snippetDensity={density}
                 highlightedCode={s.highlightedCode}
                 selected={selectedIds.has(s.id)}
-                onToggleSelect={toggleSelect}
+                onToggleSelect={allowSelection ? toggleSelect : undefined}
                 authorUsername={s.authorUsername}
               />
             ))}
@@ -216,7 +221,7 @@ export function DashboardContent({ snippets, viewMode, sort, density }: Dashboar
         )}
       </div>
 
-      {selectedIds.size > 0 && (
+      {allowSelection && selectedIds.size > 0 && (
         <BulkActionBar selectedIds={Array.from(selectedIds)} onClear={clearSelection} />
       )}
     </div>

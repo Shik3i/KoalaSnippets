@@ -76,7 +76,7 @@ export default function NewSnippetPage({
   
   const defaultFiles = initialData?.files?.length 
     ? initialData.files 
-    : [{ filename: "index.ts", code: "", language: "typescript" }];
+    : [{ filename: "File1.ts", code: "", language: "typescript" }];
     
   const [files, setFiles] = useState<{ filename: string; code: string; language: string }[]>(defaultFiles);
   const [activeTab, setActiveTab] = useState(0);
@@ -289,7 +289,7 @@ export default function NewSnippetPage({
                   <button
                     type="button"
                     onClick={() => {
-                      setFiles([...files, { filename: `file${files.length + 1}.ts`, code: "", language: "typescript" }]);
+                      setFiles([...files, { filename: `File${files.length + 1}.ts`, code: "", language: "typescript" }]);
                       setActiveTab(files.length);
                     }}
                     className="px-3 py-2 text-muted-foreground hover:bg-muted transition-colors flex items-center justify-center"
