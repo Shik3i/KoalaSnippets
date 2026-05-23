@@ -117,7 +117,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 bg-card border-r border-border flex flex-col transform transition-transform duration-200 md:translate-x-0 md:static md:z-auto md:shrink-0",
+          "fixed inset-y-0 left-0 z-40 bg-card border-r border-border flex flex-col transform transition-transform duration-200 md:translate-x-0 md:relative md:z-auto md:shrink-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
         style={{ width: mobileOpen ? 280 : `${width}px` }}

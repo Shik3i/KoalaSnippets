@@ -70,6 +70,7 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
           className="gap-1.5"
           onClick={() => performBulk("set-visibility", "PRIVATE")}
           disabled={loading}
+          aria-label="Make selected snippets private"
         >
           <Lock size={14} suppressHydrationWarning />
           <span className="hidden sm:inline">Make Private</span>
@@ -80,6 +81,7 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
           className="gap-1.5"
           onClick={() => performBulk("set-visibility", "PUBLIC")}
           disabled={loading}
+          aria-label="Make selected snippets public"
         >
           <Globe size={14} suppressHydrationWarning />
           <span className="hidden sm:inline">Make Public</span>
@@ -90,6 +92,7 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
           className="gap-1.5"
           onClick={() => setDeleteModalOpen(true)}
           disabled={loading}
+          aria-label="Delete selected snippets"
         >
           <Trash2 size={14} suppressHydrationWarning />
           <span className="hidden sm:inline">Delete</span>
