@@ -33,6 +33,8 @@ export const snippets = sqliteTable("snippets", {
   isPinned: integer("is_pinned", { mode: "boolean" }).notNull().default(false),
   expiresAt: integer("expires_at", { mode: "timestamp" }),
   collectionId: text("collection_id").references(() => collections.id, { onDelete: "set null" }),
+  totalLines: integer("total_lines").notNull().default(0),
+  passwordHash: text("password_hash"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
@@ -59,6 +61,13 @@ export const collections = sqliteTable("collections", {
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
 });
 
+export const userFavorites = sqliteTable("user_favorites", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  snippetId: text("snippet_id").notNull().references(() => snippets.id, { onDelete: "cascade" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
 export const snippetFiles = sqliteTable("snippet_files", {
   id: text("id").primaryKey(),
   snippetId: text("snippet_id").notNull().references(() => snippets.id, { onDelete: "cascade" }),
@@ -77,6 +86,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   snippets: many(snippets),
   sessions: many(sessions),
   collections: many(collections),
+  favorites: many(userFavorites),
 }));
 
 export const collectionsRelations = relations(collections, ({ one, many }) => ({
@@ -97,6 +107,7 @@ export const snippetsRelations = relations(snippets, ({ one, many }) => ({
     references: [collections.id],
   }),
   files: many(snippetFiles),
+  favoritedBy: many(userFavorites),
 }));
 
 export const snippetFilesRelations = relations(snippetFiles, ({ one }) => ({
@@ -110,5 +121,16 @@ export const sessionsRelations = relations(sessions, ({ one }) => ({
   user: one(users, {
     fields: [sessions.userId],
     references: [users.id],
+  }),
+}));
+
+export const userFavoritesRelations = relations(userFavorites, ({ one }) => ({
+  user: one(users, {
+    fields: [userFavorites.userId],
+    references: [users.id],
+  }),
+  snippet: one(snippets, {
+    fields: [userFavorites.snippetId],
+    references: [snippets.id],
   }),
 }));

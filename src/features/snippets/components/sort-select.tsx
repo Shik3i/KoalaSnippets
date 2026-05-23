@@ -4,13 +4,14 @@ import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { ArrowUpDown } from "lucide-react";
 
 interface SortSelectProps {
-  current: "newest" | "oldest" | "alphabetical";
+  current: "newest" | "oldest" | "alphabetical" | "size-asc" | "size-desc";
 }
 
-const SORT_OPTIONS = [
   { value: "newest", label: "Newest" },
   { value: "oldest", label: "Oldest" },
   { value: "alphabetical", label: "Alphabetical" },
+  { value: "size-desc", label: "Size (Largest)" },
+  { value: "size-asc", label: "Size (Smallest)" },
 ] as const;
 
 export function SortSelect({ current }: SortSelectProps) {

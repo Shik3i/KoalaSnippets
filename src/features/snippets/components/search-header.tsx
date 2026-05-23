@@ -44,6 +44,11 @@ export function SnippetSearchHeader({ placeholder = "Search snippets..." }: Snip
         inputRef.current?.focus();
         inputRef.current?.select();
       }
+      if (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+        e.preventDefault();
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);

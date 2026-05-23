@@ -30,7 +30,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const query = q ?? "";
   const escapedQuery = escapeLike(query);
   const includeCodeBool = includeCode === "true";
-  const sortMode = (["newest", "oldest", "alphabetical"].includes(sort ?? "") ? sort : "newest") as "newest" | "oldest" | "alphabetical";
+  const sortMode = (["newest", "oldest", "alphabetical", "size-asc", "size-desc"].includes(sort ?? "") ? sort : "newest") as "newest" | "oldest" | "alphabetical" | "size-asc" | "size-desc";
 
   const baseQuery = db.select().from(snippets);
   const conditions = [eq(snippets.authorId, session.user.id)];
@@ -74,7 +74,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       ? asc(snippets.createdAt)
       : sortMode === "alphabetical"
         ? asc(snippets.title)
-        : desc(snippets.createdAt);
+        : sortMode === "size-asc"
+          ? asc(snippets.totalLines)
+          : sortMode === "size-desc"
+            ? desc(snippets.totalLines)
+            : desc(snippets.createdAt);
 
   // If there's a search, we want OR(title match, tag match, id IN matchedFiles)
   if (query) {

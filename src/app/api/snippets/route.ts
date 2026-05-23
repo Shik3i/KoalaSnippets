@@ -18,6 +18,9 @@ export async function GET(request: Request) {
   const query = searchParams.get("q");
   const includeCode = searchParams.get("includeCode") === "true";
   const page = getSafePage(searchParams.get("page"));
+  const sort = searchParams.get("sort") || "createdAt";
+  const order = searchParams.get("order") || "desc";
+  const tagsParam = searchParams.get("tags");
   const offset = (page - 1) * PAGE_SIZE;
 
   if (!session && visibility !== "PUBLIC") {
@@ -32,6 +35,13 @@ export async function GET(request: Request) {
     conditions.push(eq(snippets.visibility, "PUBLIC"));
   } else if (session) {
     conditions.push(eq(snippets.authorId, session.user.id));
+  }
+
+  if (tagsParam) {
+    const tagsList = tagsParam.split(",").map(t => t.trim().toLowerCase()).filter(t => t.length > 0);
+    for (const tag of tagsList) {
+      conditions.push(like(snippets.tags, `%"${tag}"%`));
+    }
   }
 
   let matchingSnippetIds = new Set<string>();
@@ -65,9 +75,18 @@ export async function GET(request: Request) {
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
+  let orderByCondition = desc(snippets.createdAt);
+  if (sort === "title") {
+    orderByCondition = order === "asc" ? sql`${snippets.title} collate nocase asc` : sql`${snippets.title} collate nocase desc`;
+  } else if (sort === "totalLines") {
+    orderByCondition = order === "asc" ? sql`${snippets.totalLines} asc` : sql`${snippets.totalLines} desc`;
+  } else {
+    orderByCondition = order === "asc" ? sql`${snippets.createdAt} asc` : sql`${snippets.createdAt} desc`;
+  }
+
   const results = await (whereClause
-    ? baseQuery.where(whereClause).orderBy(desc(snippets.createdAt)).limit(PAGE_SIZE).offset(offset)
-    : baseQuery.orderBy(desc(snippets.createdAt)).limit(PAGE_SIZE).offset(offset)
+    ? baseQuery.where(whereClause).orderBy(orderByCondition).limit(PAGE_SIZE).offset(offset)
+    : baseQuery.orderBy(orderByCondition).limit(PAGE_SIZE).offset(offset)
   ).all();
 
   const snippetIds = results.map(s => s.id);
@@ -85,6 +104,7 @@ export async function GET(request: Request) {
         language: sFiles[0]?.language ?? "plaintext",
         tags: s.tags,
         visibility: s.visibility,
+        totalLines: s.totalLines,
         createdAt: s.createdAt,
         updatedAt: s.updatedAt,
       };
@@ -129,6 +149,7 @@ export async function POST(request: Request) {
     const { title, description, code, language, tags, visibility, files } = parsed.data;
 
     let totalChars = 0;
+    let totalLines = 0;
     const filesToInsert = files ?? [{ filename: "index", code: code!, language: language! }];
     
     for (const f of filesToInsert) {
@@ -136,6 +157,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Missing code or language in file" }, { status: 400 });
       }
       totalChars += f.code.length;
+      totalLines += f.code.split('\n').length;
     }
 
     if (totalChars > maxChars) {
@@ -152,6 +174,7 @@ export async function POST(request: Request) {
       authorId: session.user.id,
       visibility,
       shareToken: visibility === "SHARED" ? generateShareToken() : null,
+      totalLines,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

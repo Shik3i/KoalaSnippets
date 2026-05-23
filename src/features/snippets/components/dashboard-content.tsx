@@ -25,7 +25,7 @@ interface SnippetData {
 interface DashboardContentProps {
   snippets: SnippetData[];
   viewMode: "grid" | "table";
-  sort: "newest" | "oldest" | "alphabetical";
+  sort: "newest" | "oldest" | "alphabetical" | "size-asc" | "size-desc";
   density: "compact" | "preview" | "full";
 }
 

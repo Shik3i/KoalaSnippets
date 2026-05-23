@@ -185,19 +185,32 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
               Languages
             </h3>
             <div className="space-y-0.5">
-              {languages.map((lang) => (
-                <button
-                  key={lang}
-                  onClick={() => {
-                    onLanguageClick?.(lang);
-                    setMobileOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
-                >
-                  <ChevronRight size={12} suppressHydrationWarning />
-                  {lang}
-                </button>
-              ))}
+              {languages.map((lang) => {
+                const isActive = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get("language") === lang;
+                return (
+                  <button
+                    key={lang}
+                    onClick={() => {
+                      if (onLanguageClick) {
+                        onLanguageClick(lang);
+                      } else {
+                        const params = new URLSearchParams(window.location.search);
+                        if (isActive) params.delete("language");
+                        else params.set("language", lang);
+                        window.location.href = `/dashboard?${params.toString()}`;
+                      }
+                      setMobileOpen(false);
+                    }}
+                    className={cn(
+                      "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors",
+                      isActive ? "bg-primary/20 text-primary font-medium" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                    )}
+                  >
+                    <ChevronRight size={12} suppressHydrationWarning />
+                    {lang}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -208,20 +221,41 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
               Tags
             </h3>
             <div className="flex flex-wrap gap-1.5 px-1">
-              {tags.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => {
-                    onTagClick?.(tag);
-                    setMobileOpen(false);
-                  }}
-                  className="hover:opacity-80 transition-opacity"
-                >
-                  <Badge variant="outline" className="cursor-pointer text-xs" aria-label={`Filter by tag: ${tag}`}>
-                    {tag}
-                  </Badge>
-                </button>
-              ))}
+              {tags.map((tag) => {
+                const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+                const activeTags = searchParams.get("tags")?.split(",") || [];
+                const isActive = activeTags.includes(tag);
+                return (
+                  <button
+                    key={tag}
+                    onClick={() => {
+                      if (onTagClick) {
+                        onTagClick(tag);
+                      } else {
+                        const params = new URLSearchParams(window.location.search);
+                        let currentTags = params.get("tags")?.split(",") || [];
+                        if (isActive) {
+                          currentTags = currentTags.filter(t => t !== tag);
+                        } else {
+                          currentTags.push(tag);
+                        }
+                        if (currentTags.length > 0) {
+                          params.set("tags", currentTags.join(","));
+                        } else {
+                          params.delete("tags");
+                        }
+                        window.location.href = `/dashboard?${params.toString()}`;
+                      }
+                      setMobileOpen(false);
+                    }}
+                    className="hover:opacity-80 transition-opacity"
+                  >
+                    <Badge variant={isActive ? "default" : "outline"} className="cursor-pointer text-xs" aria-label={`Filter by tag: ${tag}`}>
+                      {tag}
+                    </Badge>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
