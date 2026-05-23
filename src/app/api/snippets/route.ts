@@ -3,8 +3,8 @@ import { db } from "@/db";
 import { snippets, siteStatistics, siteSettings, snippetFiles } from "@/db/schema";
 import { getSession } from "@/features/auth/utils/session";
 import { snippetSchema } from "@/features/core/utils/validations";
-import { generateId, generateShareToken } from "@/features/auth/utils/auth";
-import { eq, desc, like, or, and, sql, count, inArray } from "drizzle-orm";
+import { generateId, generateShareToken, hashPassword } from "@/features/auth/utils/auth";
+import { eq, desc, like, or, and, sql, count, inArray, isNull, gt } from "drizzle-orm";
 import { getSafePage, verifyCsrf } from "@/features/core/utils/security";
 
 export const dynamic = "force-dynamic";
@@ -33,6 +33,7 @@ export async function GET(request: Request) {
 
   if (visibility === "PUBLIC") {
     conditions.push(eq(snippets.visibility, "PUBLIC"));
+    conditions.push(or(isNull(snippets.expiresAt), gt(snippets.expiresAt, new Date()))!);
   } else if (session) {
     conditions.push(eq(snippets.authorId, session.user.id));
   }
@@ -146,7 +147,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
     }
 
-    const { title, description, code, language, tags, visibility, files } = parsed.data;
+    const { title, description, code, language, tags, visibility, files, password, expiresAt } = parsed.data;
 
     let totalChars = 0;
     let totalLines = 0;
@@ -175,6 +176,8 @@ export async function POST(request: Request) {
       visibility,
       shareToken: visibility === "SHARED" ? generateShareToken() : null,
       totalLines,
+      passwordHash: password ? await hashPassword(password) : null,
+      expiresAt: expiresAt ? new Date(expiresAt) : null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

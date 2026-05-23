@@ -88,6 +88,8 @@ export default function NewSnippetPage({
   const [tagOpen, setTagOpen] = useState(false);
   const [existingTags, setExistingTags] = useState<string[]>([]);
   const [visibility, setVisibility] = useState<"PRIVATE" | "SHARED" | "PUBLIC">(initialData?.visibility ?? "PRIVATE");
+  const [password, setPassword] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -138,10 +140,14 @@ export default function NewSnippetPage({
       const url = isEditing && editData ? `/api/snippets/${editData.id}` : "/api/snippets";
       const method = isEditing && editData ? "PUT" : "POST";
 
+      const payload: any = { title, description, files, tags: tags.map((t) => t.toLowerCase()), visibility };
+      if (password) payload.password = password;
+      if (expiresAt) payload.expiresAt = new Date(expiresAt).toISOString();
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, files, tags: tags.map((t) => t.toLowerCase()), visibility }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -380,6 +386,29 @@ export default function NewSnippetPage({
                     <option value="SHARED">Shared (link only)</option>
                     <option value="PUBLIC">Public</option>
                   </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password Protection (optional)</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Leave blank for no password"
+                    autoComplete="new-password"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="expiresAt">Expiration Date (optional)</Label>
+                  <Input
+                    id="expiresAt"
+                    type="datetime-local"
+                    value={expiresAt}
+                    onChange={(e) => setExpiresAt(e.target.value)}
+                  />
                 </div>
               </div>
 

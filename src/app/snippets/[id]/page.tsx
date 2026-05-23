@@ -7,6 +7,7 @@ import { getSession } from "@/features/auth/utils/session";
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { Sidebar } from "@/features/core/components/sidebar";
 import { SnippetDetailClient } from "./SnippetDetailClient";
+import { PasswordPrompt } from "@/features/snippets/components/password-prompt";
 import { eq } from "drizzle-orm";
 import { escapeHtml } from "@/features/core/utils/security";
 import crypto from "crypto";
@@ -47,16 +48,22 @@ async function getSnippet(id: string, token?: string) {
     return snippetWithFiles;
   }
 
-  // PUBLIC snippets are accessible to anyone
-  if (snippet.visibility === "PUBLIC") {
-    return snippetWithFiles;
-  }
-
   // SHARED snippets are accessible if the correct token is provided
   if (snippet.visibility === "SHARED") {
     if (token && snippet.shareToken && constantTimeCompare(snippet.shareToken, token)) {
+      if (snippet.passwordHash && !isOwner) {
+        return { ...snippet, files: [], isPasswordProtected: true };
+      }
       return snippetWithFiles;
     }
+  }
+
+  // PUBLIC snippets are accessible to anyone
+  if (snippet.visibility === "PUBLIC") {
+    if (snippet.passwordHash && !isOwner) {
+      return { ...snippet, files: [], isPasswordProtected: true };
+    }
+    return snippetWithFiles;
   }
 
   return null;
@@ -147,19 +154,35 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
           </Link>
         </div>
 
-        <div className="flex-1 overflow-hidden">
-          <SnippetDetailClient
-            id={snippet.id}
-            title={snippet.title}
-            description={snippet.description ?? undefined}
-            files={highlightedFiles}
-            tags={snippet.tags ?? undefined}
-            visibility={snippet.visibility as "PRIVATE" | "SHARED" | "PUBLIC"}
-            shareToken={snippet.shareToken ?? undefined}
-            createdAt={snippet.createdAt}
-            updatedAt={snippet.updatedAt}
-            isOwner={isOwner}
-          />
+        <div className="flex-1 overflow-hidden flex flex-col">
+          {(snippet as any).isPasswordProtected ? (
+            <PasswordPrompt 
+              snippet={{
+                id: snippet.id,
+                title: snippet.title,
+                description: snippet.description ?? undefined,
+                tags: snippet.tags ?? undefined,
+                visibility: snippet.visibility,
+                shareToken: snippet.shareToken ?? undefined,
+                createdAt: snippet.createdAt,
+                updatedAt: snippet.updatedAt,
+              }}
+              syntaxTheme={syntaxTheme} 
+            />
+          ) : (
+            <SnippetDetailClient
+              id={snippet.id}
+              title={snippet.title}
+              description={snippet.description ?? undefined}
+              files={highlightedFiles}
+              tags={snippet.tags ?? undefined}
+              visibility={snippet.visibility as "PRIVATE" | "SHARED" | "PUBLIC"}
+              shareToken={snippet.shareToken ?? undefined}
+              createdAt={snippet.createdAt}
+              updatedAt={snippet.updatedAt}
+              isOwner={isOwner}
+            />
+          )}
         </div>
       </div>
     </div>

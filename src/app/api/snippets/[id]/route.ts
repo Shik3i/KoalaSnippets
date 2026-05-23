@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { snippets, snippetFiles, siteSettings } from "@/db/schema";
 import { getSession } from "@/features/auth/utils/session";
 import { updateSnippetSchema } from "@/features/core/utils/validations";
-import { generateShareToken, generateId } from "@/features/auth/utils/auth";
+import { generateShareToken, generateId, hashPassword } from "@/features/auth/utils/auth";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
 import { verifyCsrf } from "@/features/core/utils/security";
@@ -110,6 +110,15 @@ export async function PUT(
 
     if ('visibility' in snippetUpdates && snippetUpdates.visibility !== "SHARED") {
       snippetUpdates.shareToken = null;
+    }
+
+    if (snippetUpdates.password) {
+      snippetUpdates.passwordHash = await hashPassword(snippetUpdates.password as string);
+    }
+    delete snippetUpdates.password;
+
+    if (snippetUpdates.expiresAt !== undefined) {
+      snippetUpdates.expiresAt = snippetUpdates.expiresAt ? new Date(snippetUpdates.expiresAt as string | number | Date) : null;
     }
 
     await db.transaction(async (tx) => {
