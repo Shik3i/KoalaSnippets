@@ -65,8 +65,12 @@ export default async function PublicPage({ searchParams }: { searchParams: Promi
     };
   });
 
-  const languages = [...new Set(files.map((f) => f.language))].sort();
-  const allTags = [...new Set(publicSnippetsWithFiles.flatMap((s) => s.tags ?? []))].sort();
+  const allPublicSnippets = await db.select({ tags: snippets.tags }).from(snippets).where(eq(snippets.visibility, "PUBLIC")).all();
+  const allPublicFiles = await db.select({ language: snippetFiles.language }).from(snippetFiles).where(
+    inArray(snippetFiles.snippetId, db.select({ id: snippets.id }).from(snippets).where(eq(snippets.visibility, "PUBLIC")))
+  ).all();
+  const sidebarTags = [...new Set(allPublicSnippets.flatMap((s) => s.tags ?? []))].sort();
+  const sidebarLanguages = [...new Set(allPublicFiles.map((f) => f.language))].sort();
 
   const density = session?.user?.preferences?.snippetDensity ?? "preview";
   const syntaxTheme = session?.user?.preferences?.syntaxTheme ?? "github-dark";
@@ -99,7 +103,7 @@ export default async function PublicPage({ searchParams }: { searchParams: Promi
 
   return (
     <div className="flex h-screen">
-      <Sidebar tags={allTags} languages={languages} isAuthenticated={!!session} isAdmin={session?.user.role === "ADMIN"} />
+      <Sidebar tags={sidebarTags} languages={sidebarLanguages} isAuthenticated={!!session} isAdmin={session?.user.role === "ADMIN"} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <SnippetSearchHeader />

@@ -99,7 +99,7 @@ export function SnippetSearchHeader({ placeholder = "Search snippets..." }: Snip
           placeholder={placeholder}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="pl-9 h-9 pr-28 sm:pr-56 w-full"
+          className="pl-9 h-9 pr-28 sm:pr-56 w-full border-0 shadow-none focus-visible:ring-0"
           aria-label="Search snippets"
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 sm:gap-3">

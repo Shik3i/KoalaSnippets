@@ -70,8 +70,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     };
   });
 
-  const languages = [...new Set(files.map((f) => f.language))].sort();
-  const allTags = [...new Set(userSnippetsWithFiles.flatMap((s) => s.tags ?? []))].sort();
+  const allUserSnippets = await db.select({ tags: snippets.tags }).from(snippets).where(eq(snippets.authorId, session.user.id)).all();
+  const allUserFiles = await db.select({ language: snippetFiles.language }).from(snippetFiles).where(
+    inArray(snippetFiles.snippetId, db.select({ id: snippets.id }).from(snippets).where(eq(snippets.authorId, session.user.id)))
+  ).all();
+  const sidebarTags = [...new Set(allUserSnippets.flatMap((s) => s.tags ?? []))].sort();
+  const sidebarLanguages = [...new Set(allUserFiles.map((f) => f.language))].sort();
 
   const density = session?.user?.preferences?.snippetDensity ?? "preview";
   const syntaxTheme = session?.user?.preferences?.syntaxTheme ?? "github-dark";
@@ -107,8 +111,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   return (
     <div className="flex h-screen">
       <Sidebar
-        tags={allTags}
-        languages={languages}
+        tags={sidebarTags}
+        languages={sidebarLanguages}
         isAuthenticated={true}
         isAdmin={session.user.role === "ADMIN"}
       />
