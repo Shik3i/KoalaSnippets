@@ -45,6 +45,43 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collections, setCollections] = useState<{ id: string; name: string }[]>([]);
+  const [width, setWidth] = useState(240);
+  const [isResizing, setIsResizing] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("koalasnippets_sidebar_width");
+    if (saved) {
+      setWidth(parseInt(saved, 10));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isResizing) {
+      if (width !== 240) {
+        localStorage.setItem("koalasnippets_sidebar_width", width.toString());
+      }
+      return;
+    }
+
+    const handleMouseMove = (e: MouseEvent) => {
+      let newWidth = e.clientX;
+      if (newWidth < 200) newWidth = 200;
+      if (newWidth > 400) newWidth = 400;
+      setWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isResizing, width]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -78,10 +115,22 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-60 bg-card border-r border-border flex flex-col transform transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto",
+          "fixed inset-y-0 left-0 z-40 bg-card border-r border-border flex flex-col transform transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto relative shrink-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
+        style={{ width: mobileOpen ? 240 : `${width}px` }}
       >
+        {!mobileOpen && (
+          <div 
+            className="absolute right-[-2px] top-0 bottom-0 w-4 cursor-col-resize z-50 flex justify-center group"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setIsResizing(true);
+            }}
+          >
+            <div className="w-[2px] h-full bg-transparent group-hover:bg-primary/50 transition-colors" />
+          </div>
+        )}
         <div className="p-4 border-b border-border">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
