@@ -72,3 +72,9 @@ src/
 - Conventional commits: `feat:`, `fix:`, `docs:`, `refactor:`, `chore:`
 - No secrets in commits. Ever.
 - `.env` files are gitignored. `.env.example` is provided.
+
+### Release & Tag Policy (CRITICAL)
+- **NEVER bump `package.json` version or push a `git tag` without the user explicitly requesting it.**
+- Documentation-only changes (`.md` files) do not require a new version or tag — just commit and push.
+- A tag triggers a full GitHub Actions Docker build. Wasting CI/CD resources on cosmetic changes is unacceptable.
+- Before any tag, confirm with the user: "Ready for a new release tag?"
