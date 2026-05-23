@@ -5,19 +5,15 @@ import { DashboardContent } from "@/features/snippets/components/dashboard-conte
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { db } from "@/db";
 import { snippets, snippetFiles, users } from "@/db/schema";
-import { eq, desc, asc, like, or, and, inArray } from "drizzle-orm";
-import { sql } from "drizzle-orm";
-import { escapeLike } from "@/features/core/utils/sql";
+import { eq, desc, asc, and, inArray } from "drizzle-orm";
 import { cookies } from "next/headers";
+import { buildSnippetConditions } from "@/features/snippets/utils/filters";
 
 export const dynamic = "force-dynamic";
 
-export default async function PublicPage({ searchParams }: { searchParams: Promise<{ q?: string; includeCode?: string; sort?: string }> }) {
+export default async function PublicPage({ searchParams }: { searchParams: Promise<{ q?: string; includeCode?: string; sort?: string; tags?: string; language?: string }> }) {
   const session = await getSession();
-  const { q, includeCode, sort } = await searchParams;
-  const query = q ?? "";
-  const escapedQuery = escapeLike(query);
-  const includeCodeBool = includeCode === "true";
+  const { q, includeCode, sort, tags, language } = await searchParams;
 
   const baseQuery = db.select({
     id: snippets.id,
@@ -29,33 +25,14 @@ export default async function PublicPage({ searchParams }: { searchParams: Promi
     updatedAt: snippets.updatedAt,
     authorUsername: users.username
   }).from(snippets).innerJoin(users, eq(snippets.authorId, users.id));
-  const conditions = [eq(snippets.visibility, "PUBLIC")];
-
-  const matchingSnippetIds = new Set<string>();
-  if (query) {
-    let fileQuery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
-      .where(like(snippetFiles.language, `%${escapedQuery}%`));
-    
-    if (includeCodeBool) {
-      fileQuery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
-        .where(or(
-          like(snippetFiles.language, `%${escapedQuery}%`),
-          like(snippetFiles.code, `%${escapedQuery}%`)
-        ));
-    }
-    
-    const matchedFiles = await fileQuery.all();
-    matchedFiles.forEach(f => matchingSnippetIds.add(f.snippetId));
-
-    const searchConditions = [
-      like(snippets.title, `%${escapedQuery}%`),
-      sql`snippets.tags LIKE ${`%${escapedQuery}%`}`,
-    ];
-    if (matchingSnippetIds.size > 0) {
-      searchConditions.push(inArray(snippets.id, Array.from(matchingSnippetIds)));
-    }
-    conditions.push(or(...searchConditions)!);
-  }
+  
+  const conditions = await buildSnippetConditions({
+    q,
+    includeCode,
+    tags,
+    language,
+    visibility: "PUBLIC",
+  });
 
   const sortMode = (["newest", "oldest", "alphabetical", "size-asc", "size-desc"].includes(sort ?? "") ? sort : "newest") as "newest" | "oldest" | "alphabetical" | "size-asc" | "size-desc";
 

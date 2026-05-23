@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Search, Code, Command } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface SnippetSearchHeaderProps {
   placeholder?: string;
@@ -18,11 +19,23 @@ export function SnippetSearchHeader({ placeholder = "Search snippets..." }: Snip
   const [searching, setSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const activeTags = searchParams.get("tags")?.split(",").filter(Boolean) || [];
+  const activeLanguage = searchParams.get("language");
+  const activeCollection = searchParams.get("collection");
+
   const navigateSearch = useCallback((q: string, ic: boolean) => {
     setSearching(true);
-    const params = new URLSearchParams();
-    if (q) params.set("q", q);
-    if (ic) params.set("includeCode", "true");
+    const params = new URLSearchParams(window.location.search);
+    if (q) {
+      params.set("q", q);
+    } else {
+      params.delete("q");
+    }
+    if (ic) {
+      params.set("includeCode", "true");
+    } else {
+      params.delete("includeCode");
+    }
     const qs = params.toString();
     router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
     setTimeout(() => setSearching(false), 300);
@@ -54,8 +67,31 @@ export function SnippetSearchHeader({ placeholder = "Search snippets..." }: Snip
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const handleClearTag = (tagToClear: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    const nextTags = activeTags.filter(t => t !== tagToClear);
+    if (nextTags.length > 0) {
+      params.set("tags", nextTags.join(","));
+    } else {
+      params.delete("tags");
+    }
+    router.replace(`${pathname}?${params.toString()}`);
+  };
+
+  const handleClearLanguage = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("language");
+    router.replace(`${pathname}?${params.toString()}`);
+  };
+
+  const handleClearCollection = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("collection");
+    router.replace(`${pathname}?${params.toString()}`);
+  };
+
   return (
-    <div className="sticky top-0 z-10 p-4">
+    <div className="sticky top-0 z-10 p-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border space-y-2">
       <div className="relative flex items-center w-full">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} suppressHydrationWarning />
         <Input
@@ -98,6 +134,43 @@ export function SnippetSearchHeader({ placeholder = "Search snippets..." }: Snip
           </label>
         </div>
       </div>
+
+      {(activeTags.length > 0 || activeLanguage || activeCollection) && (
+        <div className="flex flex-wrap items-center gap-2 text-[11px] pt-1.5 border-t border-border/20">
+          <span className="text-muted-foreground font-medium">Active filters:</span>
+          {activeLanguage && (
+            <Badge variant="secondary" className="gap-1 rounded-md py-0 px-2 h-5 flex items-center">
+              Language: {activeLanguage}
+              <button type="button" onClick={handleClearLanguage} className="hover:text-destructive font-bold ml-1 text-xs" aria-label="Clear language filter">×</button>
+            </Badge>
+          )}
+          {activeTags.map(tag => (
+            <Badge key={tag} variant="secondary" className="gap-1 rounded-md py-0 px-2 h-5 flex items-center">
+              Tag: {tag}
+              <button type="button" onClick={() => handleClearTag(tag)} className="hover:text-destructive font-bold ml-1 text-xs" aria-label={`Clear tag ${tag} filter`}>×</button>
+            </Badge>
+          ))}
+          {activeCollection && (
+            <Badge variant="secondary" className="gap-1 rounded-md py-0 px-2 h-5 flex items-center">
+              Collection Active
+              <button type="button" onClick={handleClearCollection} className="hover:text-destructive font-bold ml-1 text-xs" aria-label="Clear collection filter">×</button>
+            </Badge>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              const params = new URLSearchParams(searchParams.toString());
+              params.delete("tags");
+              params.delete("language");
+              params.delete("collection");
+              router.replace(`${pathname}?${params.toString()}`);
+            }}
+            className="text-primary hover:underline ml-2 text-[11px] font-medium"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -116,8 +116,8 @@ export function SnippetCard({
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                const params = new URLSearchParams();
-                params.set("q", tag);
+                const params = new URLSearchParams(window.location.search);
+                params.set("tags", tag);
                 let targetPath = window.location.pathname;
                 if (targetPath.startsWith("/snippets")) {
                   targetPath = visibility === "PUBLIC" ? "/public" : "/dashboard";

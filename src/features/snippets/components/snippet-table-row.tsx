@@ -79,7 +79,22 @@ export function SnippetTableRow({
       <td className="px-3 py-2.5 hidden md:table-cell">
         <div className="flex flex-wrap gap-1">
           {tags?.slice(0, 3).map((tag) => (
-            <Badge key={tag} variant="outline" className="text-[10px] h-4 px-1">
+            <Badge
+              key={tag}
+              variant="outline"
+              className="text-[10px] h-4 px-1 cursor-pointer hover:bg-primary/20 hover:text-primary transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                const params = new URLSearchParams(window.location.search);
+                params.set("tags", tag);
+                let targetPath = window.location.pathname;
+                if (targetPath.startsWith("/snippets")) {
+                  targetPath = visibility === "PUBLIC" ? "/public" : "/dashboard";
+                }
+                window.location.href = `${targetPath}?${params.toString()}`;
+              }}
+            >
               {tag}
             </Badge>
           ))}

@@ -7,9 +7,8 @@ import { DashboardContent } from "@/features/snippets/components/dashboard-conte
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { db } from "@/db";
 import { snippets, snippetFiles } from "@/db/schema";
-import { eq, desc, asc, like, or, and, inArray } from "drizzle-orm";
-import { sql } from "drizzle-orm";
-import { escapeLike } from "@/features/core/utils/sql";
+import { eq, desc, asc, and, inArray } from "drizzle-orm";
+import { buildSnippetConditions } from "@/features/snippets/utils/filters";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +17,8 @@ interface DashboardSearchParams {
   includeCode?: string;
   sort?: string;
   collection?: string;
+  tags?: string;
+  language?: string;
 }
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<DashboardSearchParams> }) {
@@ -26,48 +27,19 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     redirect("/login?expired=1");
   }
 
-  const { q, includeCode, sort, collection } = await searchParams;
-  const query = q ?? "";
-  const escapedQuery = escapeLike(query);
-  const includeCodeBool = includeCode === "true";
+  const { q, includeCode, sort, collection, tags, language } = await searchParams;
   const sortMode = (["newest", "oldest", "alphabetical", "size-asc", "size-desc"].includes(sort ?? "") ? sort : "newest") as "newest" | "oldest" | "alphabetical" | "size-asc" | "size-desc";
 
   const baseQuery = db.select().from(snippets);
-  const conditions = [eq(snippets.authorId, session.user.id)];
   
-  if (collection) {
-    conditions.push(eq(snippets.collectionId, collection));
-  }
-
-  const matchingSnippetIds = new Set<string>();
-  if (query) {
-    // We must search snippet_files too since code/language moved there.
-    let fileQuery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
-      .where(like(snippetFiles.language, `%${escapedQuery}%`));
-    
-    if (includeCodeBool) {
-      fileQuery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
-        .where(or(
-          like(snippetFiles.language, `%${escapedQuery}%`),
-          like(snippetFiles.code, `%${escapedQuery}%`)
-        ));
-    }
-    
-    const matchedFiles = await fileQuery.all();
-    matchedFiles.forEach(f => matchingSnippetIds.add(f.snippetId));
-
-    const searchConditions = [
-      like(snippets.title, `%${escapedQuery}%`),
-      sql`snippets.tags LIKE ${`%${escapedQuery}%`}`,
-    ];
-    
-    const searchOr = or(...searchConditions);
-    if (searchOr) {
-      // We will handle the title/tags match below, but if we have file matches we can use inArray
-      // Actually, it's easier to fetch snippets first or combine them.
-      // We push a complex OR: (title MATCH OR tags MATCH OR id IN (matchedFiles))
-    }
-  }
+  const conditions = await buildSnippetConditions({
+    q,
+    includeCode,
+    tags,
+    language,
+    collection,
+    authorId: session.user.id,
+  });
 
   const orderBy =
     sortMode === "oldest"
@@ -79,18 +51,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           : sortMode === "size-desc"
             ? desc(snippets.totalLines)
             : desc(snippets.createdAt);
-
-  // If there's a search, we want OR(title match, tag match, id IN matchedFiles)
-  if (query) {
-    const searchConditions = [
-      like(snippets.title, `%${escapedQuery}%`),
-      sql`snippets.tags LIKE ${`%${escapedQuery}%`}`,
-    ];
-    if (matchingSnippetIds.size > 0) {
-      searchConditions.push(inArray(snippets.id, Array.from(matchingSnippetIds)));
-    }
-    conditions.push(or(...searchConditions)!);
-  }
 
   const whereClause = and(...conditions);
   const userSnippets = await (whereClause

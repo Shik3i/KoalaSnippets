@@ -272,7 +272,8 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                         const params = new URLSearchParams(window.location.search);
                         if (isActive) params.delete("language");
                         else params.set("language", lang);
-                        window.location.href = `/dashboard?${params.toString()}`;
+                        const targetPath = ["/", "/dashboard", "/public"].includes(pathname) ? pathname : "/dashboard";
+                        window.location.href = `${targetPath}?${params.toString()}`;
                       }
                       setMobileOpen(false);
                     }}
@@ -319,7 +320,8 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                         } else {
                           params.delete("tags");
                         }
-                        window.location.href = `/dashboard?${params.toString()}`;
+                        const targetPath = ["/", "/dashboard", "/public"].includes(pathname) ? pathname : "/dashboard";
+                        window.location.href = `${targetPath}?${params.toString()}`;
                       }
                       setMobileOpen(false);
                     }}
