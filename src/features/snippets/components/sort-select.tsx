@@ -7,6 +7,7 @@ interface SortSelectProps {
   current: "newest" | "oldest" | "alphabetical" | "size-asc" | "size-desc";
 }
 
+const SORT_OPTIONS = [
   { value: "newest", label: "Newest" },
   { value: "oldest", label: "Oldest" },
   { value: "alphabetical", label: "Alphabetical" },

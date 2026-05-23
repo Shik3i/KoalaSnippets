@@ -155,7 +155,7 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
         </div>
 
         <div className="flex-1 overflow-hidden flex flex-col">
-          {(snippet as any).isPasswordProtected ? (
+          {("isPasswordProtected" in snippet && snippet.isPasswordProtected) ? (
             <PasswordPrompt 
               snippet={{
                 id: snippet.id,

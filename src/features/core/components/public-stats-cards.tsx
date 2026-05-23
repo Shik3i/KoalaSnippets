@@ -11,7 +11,7 @@ interface PublicStatsCardsProps {
 
 export function PublicStatsCards({ totalUsersCreated, totalSnippetsCreated }: PublicStatsCardsProps) {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { setTimeout(() => setMounted(true), 0); }, []);
 
   const cards = [
     {

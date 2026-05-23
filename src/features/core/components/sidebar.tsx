@@ -51,7 +51,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
   useEffect(() => {
     const saved = localStorage.getItem("koalasnippets_sidebar_width");
     if (saved) {
-      setWidth(parseInt(saved, 10));
+      setTimeout(() => setWidth(parseInt(saved, 10)), 0);
     }
   }, []);
 
@@ -233,7 +233,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                             window.location.reload();
                           }
                         }
-                      } catch (err) {}
+                      } catch (_) {}
                     }}
                     onClick={() => {
                       if (onTagClick) {

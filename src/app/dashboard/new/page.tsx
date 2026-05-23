@@ -94,15 +94,15 @@ export default function NewSnippetPage({
   const [error, setError] = useState("");
 
   useEffect(() => {
-    setMounted(true);
+    setTimeout(() => setMounted(true), 0);
     if (isImport) {
       try {
         const importData = sessionStorage.getItem("koalasnippets_import");
         if (importData) {
           const parsed = JSON.parse(importData);
-          if (parsed.title) setTitle(parsed.title);
-          if (parsed.files && parsed.files.length > 0) {
-            setFiles(parsed.files);
+          if (parsed.title) setTimeout(() => setTitle(parsed.title), 0);
+          if (parsed.files && Array.isArray(parsed.files) && parsed.files.length > 0) {
+            setTimeout(() => setFiles(parsed.files as { filename: string; code: string; language: string }[]), 0);
           }
           sessionStorage.removeItem("koalasnippets_import");
           
@@ -140,7 +140,7 @@ export default function NewSnippetPage({
       const url = isEditing && editData ? `/api/snippets/${editData.id}` : "/api/snippets";
       const method = isEditing && editData ? "PUT" : "POST";
 
-      const payload: any = { title, description, files, tags: tags.map((t) => t.toLowerCase()), visibility };
+      const payload: Record<string, unknown> = { title, description, files, tags: tags.map((t) => t.toLowerCase()), visibility };
       if (password) payload.password = password;
       if (expiresAt) payload.expiresAt = new Date(expiresAt).toISOString();
 

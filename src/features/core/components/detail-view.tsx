@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore, useRef } from "react";
+import { useState, useEffect, useSyncExternalStore, useRef } from "react";
 import * as htmlToImage from "html-to-image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -128,7 +128,7 @@ export function DetailView({
     if (!hash.startsWith("#L")) return;
 
     const parts = hash.substring(2).split("-L");
-    let start = parseInt(parts[0], 10);
+    const start = parseInt(parts[0], 10);
     let end = parts.length > 1 ? parseInt(parts[1], 10) : start;
 
     if (isNaN(start)) return;

@@ -11,15 +11,15 @@ export function ProtectedEmail({ encodedEmail }: ProtectedEmailProps) {
   const [email, setEmail] = useState("");
 
   useEffect(() => {
-    setMounted(true);
+    setTimeout(() => setMounted(true), 0);
     if (encodedEmail) {
       try {
         const decoded = atob(encodedEmail);
         if (decoded) {
-          setEmail(decoded);
+          setTimeout(() => setEmail(decoded), 0);
         }
       } catch {
-        setEmail("");
+        setTimeout(() => setEmail(""), 0);
       }
     }
   }, [encodedEmail]);

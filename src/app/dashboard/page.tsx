@@ -39,7 +39,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     conditions.push(eq(snippets.collectionId, collection));
   }
 
-  let matchingSnippetIds = new Set<string>();
+  const matchingSnippetIds = new Set<string>();
   if (query) {
     // We must search snippet_files too since code/language moved there.
     let fileQuery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)

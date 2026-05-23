@@ -45,11 +45,11 @@ export async function GET(request: Request) {
     }
   }
 
-  let matchingSnippetIds = new Set<string>();
+  const matchingSnippetIds = new Set<string>();
   if (query) {
-    const escapedQuery = query.replace(/%/g, "\\%").replace(/_/g, "\\_");
+    const escapedQuery = escapeLike(query);
     
-    let fileQuery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
+    const fileQuery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
       .where(like(snippetFiles.language, `%${escapedQuery}%`));
       
     // if (includeCode) {

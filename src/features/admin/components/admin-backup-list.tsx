@@ -19,7 +19,7 @@ function formatBytes(bytes: number): string {
 
 export function AdminBackupList() {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { setTimeout(() => setMounted(true), 0); }, []);
   const [backups, setBackups] = useState<BackupFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [triggering, setTriggering] = useState(false);

@@ -7,10 +7,24 @@ import { Lock } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { SnippetDetailClient } from "@/app/snippets/[id]/SnippetDetailClient";
 
-export function PasswordPrompt({ snippet, syntaxTheme }: { snippet: any, syntaxTheme: string }) {
+interface PasswordPromptProps {
+  snippet: {
+    id: string;
+    title: string;
+    description?: string;
+    tags?: string[];
+    visibility: "PRIVATE" | "SHARED" | "PUBLIC";
+    shareToken?: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+  syntaxTheme: string;
+}
+
+export function PasswordPrompt({ snippet, syntaxTheme }: PasswordPromptProps) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [unlockedFiles, setUnlockedFiles] = useState<any>(null);
+  const [unlockedFiles, setUnlockedFiles] = useState<{ id?: string; filename: string; code: string; language: string; highlightedCode: string }[] | null>(null);
   const { addToast } = useToast();
 
   const handleUnlock = async (e: React.FormEvent) => {

@@ -16,7 +16,7 @@ interface AdminUser {
 
 export function AdminUserList() {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { setTimeout(() => setMounted(true), 0); }, []);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
 

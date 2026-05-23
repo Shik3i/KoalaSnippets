@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Plus, Settings, Shield, Home, FileCode, Command, ArrowRight, Moon, Sun } from "lucide-react";
+import { Search, Plus, Settings, Shield, Home, FileCode, Command, ArrowRight, Moon } from "lucide-react";
 import { cn } from "@/features/core/utils/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -95,8 +95,10 @@ export function CommandPalette({ isAdmin = false }: CommandPaletteProps) {
   useEffect(() => {
     if (!isOpen) return;
     if (query.startsWith("/") || query.trim().length === 0) {
-      setLoading(false);
-      setSnippets([]);
+      setTimeout(() => {
+        setLoading(false);
+        setSnippets([]);
+      }, 0);
       return;
     }
 

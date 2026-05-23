@@ -21,7 +21,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const baseQuery = db.select().from(snippets);
   const conditions = [eq(snippets.visibility, "PUBLIC")];
 
-  let matchingSnippetIds = new Set<string>();
+  const matchingSnippetIds = new Set<string>();
   if (query) {
     let fileQuery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
       .where(like(snippetFiles.language, `%${escapedQuery}%`));
