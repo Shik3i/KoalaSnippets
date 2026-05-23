@@ -17,7 +17,7 @@ export async function POST(request: Request) {
 
   const forwardedFor = request.headers.get("x-forwarded-for");
   const ips = forwardedFor ? forwardedFor.split(",") : [];
-  const ip = ips.length > 0 ? ips[ips.length - 1].trim() : "unknown";
+  const ip = ips.length > 0 ? ips[0].trim() : "unknown";
   const limit = checkRateLimit(`login:${ip}`, 5, 15 * 60 * 1000);
 
   if (!limit.allowed) {

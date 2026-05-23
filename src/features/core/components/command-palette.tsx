@@ -153,7 +153,7 @@ export function CommandPalette({ isAdmin = false }: CommandPaletteProps) {
       html.classList.remove("theme-dark", "theme-light");
       html.classList.add(newTheme);
       
-      fetch("/api/users/me/preferences", {
+      fetch("/api/settings/appearance", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ appTheme: newTheme }),

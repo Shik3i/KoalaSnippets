@@ -6,8 +6,15 @@ import * as parserCss from "prettier/plugins/postcss";
 import * as parserMarkdown from "prettier/plugins/markdown";
 import * as parserEstree from "prettier/plugins/estree";
 import { getSession } from "@/features/auth/utils/session";
+import { verifyCsrf } from "@/features/core/utils/security";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  if (!verifyCsrf(request)) {
+    return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
+  }
+
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

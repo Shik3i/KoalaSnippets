@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useSyncExternalStore, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import * as htmlToImage from "html-to-image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -97,11 +97,8 @@ export function DetailView({
   onDuplicate,
   onToggleVisibility,
 }: DetailViewProps) {
-  const mounted = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false
-  );
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const [copied, setCopied] = useState(false);
   const [copyOpen, setCopyOpen] = useState(false);
   const [zenMode, setZenMode] = useState(false);
