@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { snippets, users, snippetFiles } from "@/db/schema";
 import { requireAdmin } from "@/features/admin/utils/admin-guard";
 import { verifyCsrf } from "@/features/core/utils/security";
-import { eq, desc, inArray } from "drizzle-orm";
+import { eq, desc, inArray, and } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
@@ -63,7 +63,12 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Snippet ID is required" }, { status: 400 });
   }
 
-  await db.delete(snippets).where(eq(snippets.id, body.id));
+  await db.delete(snippets).where(
+    and(
+      eq(snippets.id, body.id),
+      eq(snippets.visibility, "PUBLIC")
+    )
+  );
 
   return NextResponse.json({ message: "Snippet deleted" });
 }
