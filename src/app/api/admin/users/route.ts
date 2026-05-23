@@ -53,18 +53,18 @@ export async function DELETE(request: Request) {
   try {
     const { userId } = await request.json();
 
-  if (!userId) {
-    return NextResponse.json({ error: "User ID required" }, { status: 400 });
-  }
+    if (!userId) {
+      return NextResponse.json({ error: "User ID required" }, { status: 400 });
+    }
 
-  const target = await db.select().from(users).where(eq(users.id, userId)).get();
-  if (!target) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
-  }
+    const target = await db.select().from(users).where(eq(users.id, userId)).get();
+    if (!target) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
 
-  if (target.role === "ADMIN") {
-    return NextResponse.json({ error: "Cannot delete admin users" }, { status: 403 });
-  }
+    if (target.role === "ADMIN") {
+      return NextResponse.json({ error: "Cannot delete admin users" }, { status: 403 });
+    }
 
     db.transaction((tx) => {
       tx.delete(snippets).where(eq(snippets.authorId, userId)).run();

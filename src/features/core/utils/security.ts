@@ -18,7 +18,7 @@ export function verifyCsrf(request: Request): boolean {
 
   // Ensure origin/referer matches the host
   const host = request.headers.get("host");
-  if (!host) return true; // Can't verify against host, let it pass or fail? We'll fail if both missing, but if host is missing, we can't reliably check. We'll assume true if host is missing but origin is present.
+  if (!host) return false;
   
   try {
     const originUrl = origin ? new URL(origin) : new URL(referer!);

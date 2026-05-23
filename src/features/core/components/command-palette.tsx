@@ -147,10 +147,12 @@ export function CommandPalette({ isAdmin = false }: CommandPaletteProps) {
     
     if ("action" in item && item.action === "toggleTheme") {
       const html = document.documentElement;
-      const isDark = html.classList.contains("theme-dark");
-      const newTheme = isDark ? "theme-light" : "theme-dark";
-      
-      html.classList.remove("theme-dark", "theme-light");
+      const isLight = Array.from(html.classList).some((c) => c === "light" || c.startsWith("theme-light"));
+      const newTheme = isLight ? "theme-midnight" : "light";
+
+      html.classList.forEach((c) => {
+        if (c.startsWith("theme-") || c === "light") html.classList.remove(c);
+      });
       html.classList.add(newTheme);
       
       fetch("/api/settings/appearance", {
