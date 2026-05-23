@@ -3,13 +3,111 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { Search, Code, Command, Filter, X } from "lucide-react";
+import { Search, Code, Command, Filter, X, ChevronDown, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/features/core/utils/utils";
 
 interface SnippetSearchHeaderProps {
   placeholder?: string;
   availableTags?: string[];
   availableLanguages?: string[];
+}
+
+function FilterDropdown({
+  label,
+  options,
+  selected,
+  onToggle,
+}: {
+  label: string;
+  options: string[];
+  selected: string[];
+  onToggle: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setSearch("");
+      }
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClick);
+      return () => document.removeEventListener("mousedown", handleClick);
+    }
+  }, [open]);
+
+  const filtered = options.filter(o =>
+    o.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className={cn(
+          "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs transition-colors",
+          selected.length > 0
+            ? "border-primary/30 bg-primary/5 text-foreground"
+            : "border-border bg-muted/30 text-muted-foreground hover:border-muted-foreground/30"
+        )}
+      >
+        <span className="font-medium">{label}</span>
+        {selected.length > 0 && (
+          <span className="bg-primary text-[9px] text-primary-foreground rounded-full px-1.5 py-px">{selected.length}</span>
+        )}
+        <ChevronDown size={12} className={cn("transition-transform", open && "rotate-180")} />
+      </button>
+
+      {open && (
+        <div className="absolute top-full mt-1 left-0 w-56 bg-card border border-border rounded-lg shadow-xl z-50 p-1.5 space-y-1.5">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={`Search ${label.toLowerCase()}...`}
+            className="w-full h-7 px-2 text-[11px] bg-muted/50 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+            autoFocus
+          />
+          <div className="max-h-40 overflow-y-auto space-y-0.5">
+            {filtered.length === 0 ? (
+              <div className="text-[11px] text-muted-foreground px-2 py-2 text-center">No matches</div>
+            ) : (
+              filtered.map(option => {
+                const isSelected = selected.includes(option);
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => onToggle(option)}
+                    className={cn(
+                      "w-full flex items-center gap-2 px-2 py-1.5 rounded text-[11px] text-left transition-colors",
+                      isSelected
+                        ? "bg-primary/10 text-primary"
+                        : "hover:bg-muted/50 text-foreground"
+                    )}
+                  >
+                    <span className={cn(
+                      "w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0",
+                      isSelected ? "bg-primary border-primary" : "border-border"
+                    )}>
+                      {isSelected && <Check size={10} className="text-primary-foreground" />}
+                    </span>
+                    <span className={cn("truncate", label === "Languages" && "font-mono")}>{option}</span>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function SnippetSearchHeader({ 
@@ -24,10 +122,7 @@ export function SnippetSearchHeader({
   const [includeCode, setIncludeCode] = useState(searchParams.get("includeCode") === "true");
   const [filterMode, setFilterMode] = useState(searchParams.get("filterMode") ?? "and");
   const [searching, setSearching] = useState(false);
-  const [showFilters, setShowFilters] = useState(
-    (searchParams.get("tags")?.length ?? 0) > 0 ||
-    (searchParams.get("language")?.length ?? 0) > 0
-  );
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const activeTags = useMemo(
@@ -103,6 +198,7 @@ export function SnippetSearchHeader({
   }, []);
 
   const hasActiveFilters = activeTags.length > 0 || activeLanguages.length > 0 || activeCollection;
+  const activeFilterCount = activeTags.length + activeLanguages.length;
 
   return (
     <div className="sticky top-0 z-10 p-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border space-y-2">
@@ -138,15 +234,21 @@ export function SnippetSearchHeader({
       <div className="flex items-center gap-2 text-[11px] pt-1.5 border-t border-border/20">
         <button
           type="button"
-          onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors ${showFilters ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
-          aria-label="Toggle filters"
+          onClick={() => setFiltersExpanded(!filtersExpanded)}
+          className={cn(
+            "flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors",
+            filtersExpanded
+              ? 'bg-accent text-accent-foreground'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+          )}
+          aria-expanded={filtersExpanded}
+          aria-label="Toggle filter panel"
         >
-          <Filter size={12} suppressHydrationWarning />
+          <Filter size={12} />
           <span className="font-medium">Filters</span>
           {hasActiveFilters && (
-            <span className="w-4 h-4 rounded-full bg-primary text-[9px] text-primary-foreground flex items-center justify-center">
-              {activeTags.length + activeLanguages.length}
+            <span className="min-w-[16px] h-4 rounded-full bg-primary text-[9px] text-primary-foreground flex items-center justify-center px-1">
+              {activeFilterCount}
             </span>
           )}
         </button>
@@ -159,135 +261,81 @@ export function SnippetSearchHeader({
             className="rounded border-border text-primary focus:ring-ring focus:ring-offset-background"
             aria-label="Include code in search"
           />
-          <Code size={14} suppressHydrationWarning className="text-muted-foreground" />
+          <Code size={14} className="text-muted-foreground" />
           <span className="hidden sm:inline font-medium">Include code</span>
         </label>
       </div>
 
-      {showFilters && (
-        <div className="space-y-2 pt-1.5 border-t border-border/20">
-          {availableTags.length > 0 && (
-            <div>
-              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mb-1.5">Tags</span>
-              <div className="flex flex-wrap gap-1">
-                {availableTags.map(tag => {
-                  const isActive = activeTags.includes(tag);
-                  return (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => toggleTag(tag)}
-                      className={`px-2 py-0.5 rounded text-[11px] transition-colors cursor-pointer ${
-                        isActive
-                          ? 'bg-primary/20 text-primary border border-primary/30'
-                          : 'bg-muted/50 text-muted-foreground border border-transparent hover:border-border hover:text-foreground'
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+      {filtersExpanded && (
+        <div className="space-y-3 pt-2 pb-1 border-t border-border/20">
+          <div className="flex flex-wrap items-center gap-2">
+            <FilterDropdown
+              label="Tags"
+              options={availableTags}
+              selected={activeTags}
+              onToggle={toggleTag}
+            />
+            <FilterDropdown
+              label="Languages"
+              options={availableLanguages}
+              selected={activeLanguages}
+              onToggle={toggleLanguage}
+            />
 
-          {availableLanguages.length > 0 && (
-            <div>
-              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mb-1.5">Languages</span>
-              <div className="flex flex-wrap gap-1">
-                {availableLanguages.map(lang => {
-                  const isActive = activeLanguages.includes(lang);
-                  return (
-                    <button
-                      key={lang}
-                      type="button"
-                      onClick={() => toggleLanguage(lang)}
-                      className={`px-2 py-0.5 rounded text-[11px] font-mono transition-colors cursor-pointer ${
-                        isActive
-                          ? 'bg-primary/20 text-primary border border-primary/30'
-                          : 'bg-muted/50 text-muted-foreground border border-transparent hover:border-border hover:text-foreground'
-                      }`}
-                    >
-                      {lang}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 text-[11px] bg-muted/30 rounded-md p-0.5">
+            <div className="flex items-center gap-1 bg-muted/30 rounded-md p-0.5">
               <button
                 type="button"
-                onClick={() => {
-                  setFilterMode("and");
-                  updateParams({ filterMode: "and" });
-                }}
-                className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
-                  filterMode === "and"
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                onClick={() => { setFilterMode("and"); updateParams({ filterMode: "and" }); }}
+                className={cn(
+                  "px-2.5 py-1 rounded text-[11px] font-medium transition-colors",
+                  filterMode === "and" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
               >
                 AND
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setFilterMode("or");
-                  updateParams({ filterMode: "or" });
-                }}
-                className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
-                  filterMode === "or"
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                onClick={() => { setFilterMode("or"); updateParams({ filterMode: "or" }); }}
+                className={cn(
+                  "px-2.5 py-1 rounded text-[11px] font-medium transition-colors",
+                  filterMode === "or" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
               >
                 OR
               </button>
             </div>
-            <span className="text-[10px] text-muted-foreground">
-              {filterMode === "or" ? "Match any filter" : "Match all filters"}
+            <span className="text-[10px] text-muted-foreground hidden sm:inline">
+              {filterMode === "or" ? "Match any" : "Match all"}
             </span>
           </div>
-        </div>
-      )}
 
-      {hasActiveFilters && (
-        <div className="flex flex-wrap items-center gap-2 text-[11px] pt-1.5 border-t border-border/20">
-          <span className="text-muted-foreground font-medium">Active:</span>
-          {activeLanguages.map(lang => (
-            <Badge key={`lang-${lang}`} variant="secondary" className="gap-1 rounded-md py-0 px-2 h-5 flex items-center">
-              Lang: {lang}
-              <button type="button" onClick={() => toggleLanguage(lang)} className="hover:text-destructive font-bold ml-1 text-xs" aria-label={`Remove language ${lang}`}>
-                <X size={10} />
+          {hasActiveFilters && (
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+              {activeTags.map(tag => (
+                <Badge key={`t-${tag}`} variant="secondary" className="gap-1 rounded-md py-0 px-2 h-5 flex items-center text-[11px]">
+                  {tag}
+                  <button type="button" onClick={() => toggleTag(tag)} className="hover:text-destructive ml-0.5" aria-label={`Remove ${tag}`}>
+                    <X size={10} />
+                  </button>
+                </Badge>
+              ))}
+              {activeLanguages.map(lang => (
+                <Badge key={`l-${lang}`} variant="secondary" className="gap-1 rounded-md py-0 px-2 h-5 flex items-center text-[11px] font-mono">
+                  {lang}
+                  <button type="button" onClick={() => toggleLanguage(lang)} className="hover:text-destructive ml-0.5" aria-label={`Remove ${lang}`}>
+                    <X size={10} />
+                  </button>
+                </Badge>
+              ))}
+              <button
+                type="button"
+                onClick={() => updateParams({ tags: null, language: null, collection: null })}
+                className="text-[11px] text-muted-foreground hover:text-foreground hover:underline ml-1"
+              >
+                Clear all
               </button>
-            </Badge>
-          ))}
-          {activeTags.map(tag => (
-            <Badge key={`tag-${tag}`} variant="secondary" className="gap-1 rounded-md py-0 px-2 h-5 flex items-center">
-              Tag: {tag}
-              <button type="button" onClick={() => toggleTag(tag)} className="hover:text-destructive font-bold ml-1 text-xs" aria-label={`Remove tag ${tag}`}>
-                <X size={10} />
-              </button>
-            </Badge>
-          ))}
-          {activeCollection && (
-            <Badge variant="secondary" className="gap-1 rounded-md py-0 px-2 h-5 flex items-center">
-              Collection
-              <button type="button" onClick={() => updateParams({ collection: null })} className="hover:text-destructive font-bold ml-1 text-xs" aria-label="Clear collection filter">
-                <X size={10} />
-              </button>
-            </Badge>
+            </div>
           )}
-          <button
-            type="button"
-            onClick={() => updateParams({ tags: null, language: null, collection: null })}
-            className="text-primary hover:underline ml-2 text-[11px] font-medium"
-          >
-            Clear all
-          </button>
         </div>
       )}
     </div>
