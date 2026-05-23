@@ -1,4 +1,4 @@
-import { eq, like, or, and, inArray, SQL } from "drizzle-orm";
+import { eq, like, or, and, exists, SQL } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { snippets, snippetFiles } from "@/db/schema";
 import { db } from "@/db";
@@ -29,18 +29,20 @@ export async function buildSnippetConditions(params: FilterParams): Promise<SQL[
     conditions.push(eq(snippets.collectionId, params.collection));
   }
 
-  // 1. Language Filter
+  // 1. Language Filter (Optimized via EXISTS subquery)
   if (params.language) {
-    const langSnippetIds = await db.select({ snippetId: snippetFiles.snippetId })
-      .from(snippetFiles)
-      .where(eq(snippetFiles.language, params.language))
-      .all();
-    const langIds = langSnippetIds.map(f => f.snippetId);
-    if (langIds.length > 0) {
-      conditions.push(inArray(snippets.id, langIds));
-    } else {
-      conditions.push(eq(snippets.id, "nonexistent-id")); // Force empty result
-    }
+    conditions.push(
+      exists(
+        db.select()
+          .from(snippetFiles)
+          .where(
+            and(
+              eq(snippetFiles.snippetId, snippets.id),
+              eq(snippetFiles.language, params.language)
+            )
+          )
+      )
+    );
   }
 
   // 2. Tags Filter (AND logic for each comma-separated tag)
@@ -51,33 +53,32 @@ export async function buildSnippetConditions(params: FilterParams): Promise<SQL[
     });
   }
 
-  // 3. Text Search Query
+  // 3. Text Search Query (Optimized via EXISTS subquery for files search)
   if (params.q) {
     const escapedQuery = escapeLike(params.q);
     const includeCodeBool = params.includeCode === "true";
-
-    const matchingSnippetIds = new Set<string>();
-    let fileQuery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
-      .where(like(snippetFiles.language, `%${escapedQuery}%`));
-    
-    if (includeCodeBool) {
-      fileQuery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
-        .where(or(
-          like(snippetFiles.language, `%${escapedQuery}%`),
-          like(snippetFiles.code, `%${escapedQuery}%`)
-        ));
-    }
-    
-    const matchedFiles = await fileQuery.all();
-    matchedFiles.forEach(f => matchingSnippetIds.add(f.snippetId));
 
     const searchConditions: SQL[] = [
       like(snippets.title, `%${escapedQuery}%`),
       sql`snippets.tags LIKE ${`%${escapedQuery}%`}`,
     ];
-    if (matchingSnippetIds.size > 0) {
-      searchConditions.push(inArray(snippets.id, Array.from(matchingSnippetIds)));
-    }
+
+    const fileSearch = exists(
+      db.select()
+        .from(snippetFiles)
+        .where(
+          and(
+            eq(snippetFiles.snippetId, snippets.id),
+            includeCodeBool
+              ? or(
+                  like(snippetFiles.language, `%${escapedQuery}%`),
+                  like(snippetFiles.code, `%${escapedQuery}%`)
+                )
+              : like(snippetFiles.language, `%${escapedQuery}%`)
+          )
+        )
+    );
+    searchConditions.push(fileSearch);
     
     conditions.push(or(...searchConditions)!);
   }

@@ -21,6 +21,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV AUTH_PEPPER="build-time-dummy-pepper-ignore"
 ENV SESSION_SECRET="build-time-dummy-secret-ignore"
 
+ARG NEXT_PUBLIC_APP_VERSION
+ENV NEXT_PUBLIC_APP_VERSION=$NEXT_PUBLIC_APP_VERSION
+
 RUN --mount=type=cache,target=/app/.next/cache npm run build
 
 # Stage 3: Runner
