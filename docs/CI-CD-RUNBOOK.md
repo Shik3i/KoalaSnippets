@@ -80,6 +80,32 @@ Next.js 16 versucht standardmäßig, Routes zur Build-Zeit statisch zu rendern. 
 export const dynamic = "force-dynamic";
 ```
 
+### 3.2b `generateStaticParams()` zur Build-Zeit (⚠️ HÄUFIGER DOCKER-CRASH)
+`generateStaticParams()` wird von Next.js **während `next build`** ausgeführt — nicht erst zur Laufzeit. Wenn diese Funktion SQLite abfragt, crasht der Docker-Build weil `./data/` im Builder-Stage nicht existiert.
+
+**Fehlermeldung:**
+```
+TypeError: Cannot open database because the directory does not exist
+Error: Failed to collect page data for /snippets/[id]
+```
+
+**Lösung:** `generateStaticParams()` IMMER mit try/catch schützen:
+```typescript
+export async function generateStaticParams() {
+  try {
+    const items = await db.select().from(myTable).all();
+    return items.map((i) => ({ id: i.id }));
+  } catch {
+    return []; // DB nicht verfügbar (Docker-Build) → keine statischen Seiten
+  }
+}
+```
+
+Und im Dockerfile sicherstellen, dass das DB-Verzeichnis existiert:
+```dockerfile
+RUN mkdir -p /app/data /app/backups
+```
+
 ### 3.3 npm ci vs. npm install in Alpine
 `npm ci` verlangt eine exakte Übereinstimmung zwischen `package.json` und `package-lock.json`. Alpine Linux verwendet teilweise andere npm-Versionen, was zu lockfile-Version-Konflikten führt.
 

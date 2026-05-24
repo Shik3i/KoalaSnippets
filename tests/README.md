@@ -86,14 +86,54 @@ npx tsx tests/unit/tools.test.ts
 node --test --test-name-pattern="SQL" --import tsx tests/**/*.test.ts
 ```
 
-## Pre-Commit Checklist
+## Pre-Push Production Checklist
 
-Before committing, always run:
+KoalaSnippets läuft in Produktion als Docker-Container. Ein lokaler Build mit `npm run build` reicht **nicht** aus — der Build muss auch in einer sauberen Docker-Umgebung funktionieren.
+
+### Warum lokaler Build nicht genügt
+
+| Was | Lokal (Dev) | Docker Builder | Risiko |
+|-----|------------|----------------|--------|
+| SQLite-DB | Existiert unter `./data/` | **Nicht vorhanden** | `generateStaticParams()` und andere Build-Time-DB-Zugriffe crashen |
+| `.env` | Vorhanden | **Nicht vorhanden** | `process.env.*`-Abhängigkeiten crashen |
+| `node_modules` | Existiert | Frischer `npm install` | Lockfile-Konflikte |
+| Verzeichnisse | `data/`, `backups/` existieren | **Nicht vorhanden** | DB-Connection crasht wenn Zielverzeichnis fehlt |
+
+### Checkliste: Vor jedem Push und Tag
 
 ```bash
-npm run lint
+# 1. Statische Analyse & Tests
+npm run lint          # Darf 0 Fehler haben
+npm test              # Alle 182+ Tests müssen grün sein
+
+# 2. Lokaler Build (muss sauber sein)
 npm run build
-npm test
+
+# 3. ⚠️ CLEAN-SLATE BUILD (simuliert Docker-Umgebung)
+#    Datenverzeichnis löschen, dann Build — DARF NICHT CRASHEN:
+Remove-Item -Recurse -Force data -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+npm run build
+#    Wenn dieser Build fehlschlägt: NICHT PUSHEN. Fixen!
+
+# 4. Docker-Build simulieren (optional aber empfohlen)
+docker build --target builder .
 ```
 
-All three must pass with zero errors before pushing.
+### Häufige Build-Time-Fehler und ihre Ursachen
+
+| Fehler | Ursache | Fix |
+|--------|---------|-----|
+| `Cannot open database because the directory does not exist` | `generateStaticParams()` oder Page-Komponente greift zur Build-Zeit auf SQLite zu | Mit `try/catch` wrappen oder `force-dynamic` setzen |
+| `The directory does not exist` | Code erwartet dass `data/` existiert | Dockerfile: `RUN mkdir -p /app/data` im Builder-Stage |
+| `process.env.X is undefined` | Env-Variable nur in `.env`, nicht im Dockerfile gesetzt | Dockerfile-Builder: `ENV VAR="dummy"` setzen |
+
+### Was bei neuen Features zu testen ist
+
+Wenn du eine neue Page oder API-Route erstellst:
+
+- [ ] Funktioniert sie mit **existierender** DB?
+- [ ] Funktioniert sie **ohne** DB? (Docker-Build-sicher)
+- [ ] Hat jede API-Route mit DB-Zugriff `export const dynamic = "force-dynamic"`?
+- [ ] Wird `generateStaticParams()` mit `try/catch` geschützt?
+- [ ] Existieren benötigte Verzeichnisse (`data/`, `backups/`) im Dockerfile-Builder-Stage?

@@ -23,6 +23,30 @@ AUTH_PEPPER=dummy_pepper_for_build npm run build
 - If the build fails (e.g., TypeScript errors, missing modules, conflicting types), **DO NOT PUSH**. Fix the errors and rebuild.
 - *Known Exception*: The Turbopack warning `Encountered unexpected file in NFT list` regarding `next.config.ts` is a known Next.js upstream issue and can be safely ignored as long as the build succeeds (`✓ Compiled successfully`).
 
+### C. Clean-Slate Build Check (CRITICAL — MANDATORY)
+Der reguläre `npm run build` läuft in deiner Dev-Umgebung mit existierender SQLite-DB und `.env`-Datei. In der Docker-Produktionsumgebung existieren diese **nicht** — Next.js crasht dann beim `generateStaticParams()` oder anderen Build-Time-DB-Zugriffen.
+
+**Dieser Check simuliert die Docker-Build-Umgebung und MUSS vor jedem Push bestanden werden:**
+
+```powershell
+# Windows PowerShell
+Remove-Item -Recurse -Force data -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+npm run build
+```
+
+```bash
+# Linux/macOS
+rm -rf data .next
+npm run build
+```
+
+**Wenn dieser Build fehlschlägt: NICHT PUSHEN.** Der Docker-Build auf GitHub Actions wird garantiert crashen. Häufige Fehlerursachen:
+
+- `generateStaticParams()` greift zur Build-Zeit auf SQLite zu → mit `try/catch` wrappen
+- Page-Komponente führt DB-Query aus statt `force-dynamic` zu nutzen
+- `data/` oder `backups/` Verzeichnis wird erwartet aber ist nicht im Dockerfile angelegt
+
 ## 2. Commit & Push Guidelines
 - **Granular Commits**: Use conventional commits (`feat:`, `fix:`, `refactor:`, `docs:`).
 - **Atomic Changes**: Commit logical chunks of work together.
