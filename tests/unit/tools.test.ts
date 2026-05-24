@@ -70,7 +70,7 @@ describe("tryParseJson", () => {
 
   it("parses nested objects", () => {
     const result = tryParseJson('{"a":{"b":{"c":1}}}');
-    assert.strictEqual((result as Record<string, unknown>).a.b.c, 1);
+    assert.strictEqual(((result as Record<string, Record<string, Record<string, unknown>>>)?.a?.b?.c), 1);
   });
 });
 

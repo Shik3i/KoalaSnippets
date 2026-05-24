@@ -48,12 +48,12 @@ describe("Migration Integrity", () => {
   });
 
   it("no stale snapshot files without corresponding SQL migration", () => {
-    const journal = JSON.parse(fs.readFileSync(JOURNAL_PATH, "utf-8"));
-    const journalTags = new Set(journal.entries.map((e: { tag: string }) => e.tag));
+    const journal: { entries: { tag: string }[] } = JSON.parse(fs.readFileSync(JOURNAL_PATH, "utf-8"));
+    const journalTags = new Set(journal.entries.map((e) => e.tag));
     const snapshots = fs.readdirSync(META_DIR).filter((f) => f.endsWith("_snapshot.json"));
     for (const snap of snapshots) {
       const idxPrefix = snap.split("_")[0];
-      const matchingEntry = [...journalTags].find((t: string) => t.startsWith(idxPrefix + "_"));
+      const matchingEntry = [...journalTags].find((t) => t.startsWith(idxPrefix + "_"));
       assert.ok(
         matchingEntry,
         `Stale snapshot without journal entry: ${snap} (no matching migration found for prefix ${idxPrefix})`
