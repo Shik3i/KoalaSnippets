@@ -1,63 +1,96 @@
 # 🗺️ KoalaSnippets Roadmap
 
-This document tracks both completed and planned features for KoalaSnippets.
+Diese Datei dient als zentrale Planungsdokumentation für neue Features.
+Abgeschlossene Features werden nach Deployment aus dieser Datei entfernt.
+
+## Format für neue Feature Requests
+
+Jedes neue Feature soll nach folgendem Schema dokumentiert werden:
+
+```markdown
+### 🏷️ Phase X: <Thema>
+*<Ein-Satz-Beschreibung der Phase>*
+
+#### 1. <Feature-Name>
+- **Description**: <Was soll das Feature tun? Welches Problem löst es?>
+- **Implementation**:
+  - <Konkreter Schritt 1 mit Dateipfad>
+  - <Konkreter Schritt 2 mit Dateipfad>
+  - <Konkreter Schritt 3 mit Dateipfad>
+- **Estimated Effort**: ~XXX lines of code.
+
+#### 2. <Feature-Name>
+...
+```
+
+**Regeln:**
+- Jede Phase hat ein klares Thema (z.B. "Performance", "Sharing", "Developer Tools")
+- Jedes Feature beschreibt WAS es tut, WIE es implementiert wird und WIEVIEL Aufwand es kostet
+- Dateipfade müssen konkret sein (`src/features/...`, `src/app/...`)
+- Der Mermaid-Graph am Anfang zeigt die Abhängigkeiten zwischen Phasen
+- Geschätzte LOC beziehen sich auf die reine Code-Änderung (ohne Tests/Kommentare)
 
 ---
 
-## ✅ Completed Phases
+## 🔮 Nächste Phasen
 
-### Phase 5: Performance & System Resilience
-- [x] SQLite WAL Checkpoint Automation (`backup.ts:45`, runs `PRAGMA wal_checkpoint(TRUNCATE)`)
-- [x] HTTP Conditional Caching (ETag/304) on all API endpoints (`src/features/core/utils/etag.ts`)
-- [x] Static Edge-Caching (ISR) for /stats, /snippets/[id] (generateStaticParams + revalidate)
+```mermaid
+graph TD
+    Phase9[Phase 9: Social Features] --> Phase10[Phase 10: Enterprise]
+```
 
-### Phase 6: Sharing & Onboarding
-- [x] Snippet Forking (forked_from_id column, forkSnippet action, Fork button + lineage badge)
-- [x] QR Code Sharing (zero-dependency Canvas QR renderer, share modal with copy/download)
-- [x] Immersive Empty States (EmptyState component with CSS abstract art + CTA buttons)
+### 🤝 Phase 9: Social & Collaboration
+*Erweitert die Community-Interaktion mit Kommentaren, Reaktionen und Benachrichtigungen.*
 
-### Phase 7: Developer Tools Hub (`/tools`)
-- [x] Tools Hub page with card grid navigation
-- [x] UUID Generator (bulk v4, plain/SQL/JSON export)
-- [x] Password Generator (custom length, char sets, entropy meter)
-- [x] Text Diff Checker (LCS-based side-by-side diff)
-- [x] Hash Generator (MD5, SHA-1/256/512 via Web Crypto API)
-- [x] JSON Formatter (beautify, minify, validate)
-- [x] JWT Decoder (header/payload inspection, 100% browser-side)
-- [x] Base64 Encoder/Decoder (bidirectional with swap mode)
-- All tools run 100% client-side, zero network requests
+#### 1. Snippet Comments & Discussions
+- **Description**: Erlaube Nutzern, öffentliche Snippets zu kommentieren. Thread-basierte Diskussionen mit Markdown-Support.
+- **Implementation**:
+  - `snippet_comments` Tabelle in `src/db/schema.ts` (id, snippet_id, user_id, content, parent_id, created_at)
+  - Kommentar-UI unterhalb des Code-Blocks in `src/features/core/components/detail-view.tsx`
+  - API-Route `src/app/api/snippets/[id]/comments/route.ts`
+- **Estimated Effort**: ~400 lines of code.
 
-### Phase 8: Headless Workflows & CLI
-- [x] External Snippet Importer (SSRF-protected URL import with preview modal)
-- [x] Personal API Keys (api_keys table, Bearer token auth, timing-safe comparison)
-- [x] CLI Scripts (`cli/koala.ps1`, `cli/koala.sh` — list, push, pull, search)
+#### 2. Snippet Reactions (Emoji)
+- **Description**: Quick emoji reactions (👍, ❤️, 🚀) auf Snippets ohne kompletten Kommentar.
+- **Implementation**:
+  - `snippet_reactions` Tabelle (snippet_id, user_id, emoji)
+  - Reaktion-Leiste in DetailView und SnippetCard
+  - Optimistisches UI-Update mit Debounce
+- **Estimated Effort**: ~200 lines of code.
 
-### Phase 4 & Prior
-- [x] Mobile Floating Action Button (FAB)
-- [x] Local Auto-Save & Draft Recovery
-- [x] Multi-File Snippets & Revisions
-- [x] Hardened WAL-Mode Database
-- [x] Grandfather-Father-Son Backups
-
----
-
-## 🧪 Test Suite
-
-182 unit, integration, CLI, and security tests across 41 suites.
-Run with `npm test`. See `tests/README.md` for details.
-
-- [x] Unit tests: API keys, importer security, tools, validations, migration integrity
-- [x] Integration tests: Auth guards, visibility matrix, rate limiting, fork validation
-- [x] CLI tests: Argument parsing, snippet formatting
-- [x] Security tests: SQL injection, XSS, path traversal, prototype pollution, SSRF bypass
+#### 3. Webhook Notifications
+- **Description**: Sende Webhooks bei Events (neuer Fork, neuer Kommentar). Nutzer konfigurieren URLs in den Settings.
+- **Implementation**:
+  - `webhooks` Tabelle und Settings-UI in `src/app/settings/`
+  - Outbound HTTP POST mit Signatur (HMAC) in `src/features/core/utils/webhook.ts`
+  - Rate-Limiting und Retry-Logik
+- **Estimated Effort**: ~300 lines of code.
 
 ---
 
-## 🔮 Future Ideas (Unplanned)
+### 🏢 Phase 10: Enterprise & Ops
+*Features für Teams und Betrieb.*
 
-- [ ] Snippet comments / discussions
-- [ ] Webhook notifications for forks
-- [ ] OAuth / OIDC authentication
-- [ ] Snippet version diff viewer
-- [ ] Public snippet marketplace / directory
-- [ ] Kubernetes deployment manifests
+#### 1. OAuth / OIDC Authentication
+- **Description**: Login via GitHub, Google, oder generischem OIDC-Provider zusätzlich zur lokalen Registrierung.
+- **Implementation**:
+  - NextAuth.js oder custom OIDC-Client in `src/features/auth/`
+  - `oauth_accounts` Tabelle für verknüpfte Accounts
+  - Konfiguration via Environment-Variablen (`OAUTH_GITHUB_CLIENT_ID`, etc.)
+- **Estimated Effort**: ~500 lines of code.
+
+#### 2. Snippet Collections (Ordner-Struktur)
+- **Description**: Hierarchische Ordner für Snippets mit Drag & Drop.
+- **Implementation**:
+  - `collections` Tabelle um `parent_id` und `sort_order` erweitern
+  - Tree-View in der Sidebar
+  - Drag & Drop API in `src/features/snippets/components/`
+- **Estimated Effort**: ~350 lines of code.
+
+#### 3. Audit Log Dashboard
+- **Description**: UI für Admin-Audit-Logs mit Filterung und Export.
+- **Implementation**:
+  - Admin-Seite `src/app/admin/audit/page.tsx`
+  - Filterbare Tabelle mit Pagination
+  - CSV-Export
+- **Estimated Effort**: ~200 lines of code.
