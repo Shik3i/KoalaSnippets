@@ -13,9 +13,11 @@ import { Sidebar } from "@/features/core/components/sidebar";
 import { useToast } from "@/components/ui/toast";
 import { useKeyboardShortcuts } from "@/features/snippets/utils/keyboard-shortcuts";
 import { SUPPORTED_LANGUAGES } from "@/features/snippets/utils/shiki";
+import { detectLanguage } from "@/features/snippets/utils/language-detection";
 import { revalidateDashboard } from "@/features/core/actions/revalidate";
 import { X, Plus, ChevronDown, Wand2, History, Map as MapIcon } from "lucide-react";
 import { HistoryModal } from "@/features/snippets/components/history-modal";
+import { GlobalDropzone } from "@/features/core/components/global-dropzone";
 
 interface DuplicateData {
   title: string;
@@ -219,6 +221,7 @@ export default function NewSnippetPage({
 
   return (
     <div className="flex h-screen">
+      <GlobalDropzone />
       <Sidebar isAuthenticated={true} />
       <div className="flex-1 overflow-auto p-6">
         <Card className="max-w-2xl mx-auto">
@@ -343,7 +346,18 @@ export default function NewSnippetPage({
                     value={activeCode}
                     onChange={(newCode) => {
                       const newFiles = [...files];
+                      const oldCode = newFiles[activeTab].code;
                       newFiles[activeTab].code = newCode;
+                      
+                      // Paste heuristic: auto-detect language if pasting into empty editor
+                      if (oldCode.length < 5 && newCode.length > 20 && newFiles[activeTab].language === "typescript") {
+                        const guessed = detectLanguage(newCode);
+                        if (guessed && guessed !== "typescript" && SUPPORTED_LANGUAGES.includes(guessed)) {
+                          newFiles[activeTab].language = guessed;
+                          addToast(`Auto-detected language: ${guessed}`, "info");
+                        }
+                      }
+                      
                       setFiles(newFiles);
                     }}
                     placeholder="Paste your code here..."

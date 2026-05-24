@@ -5,6 +5,7 @@ import { Sidebar } from "@/features/core/components/sidebar";
 import { SnippetSearchHeader } from "@/features/snippets/components/search-header";
 import { DashboardContent } from "@/features/snippets/components/dashboard-content";
 import { highlightCode } from "@/features/snippets/utils/shiki";
+import { GlobalDropzone } from "@/features/core/components/global-dropzone";
 import { db } from "@/db";
 import { snippets, snippetFiles } from "@/db/schema";
 import { eq, desc, asc, and, inArray } from "drizzle-orm";
@@ -112,6 +113,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   return (
     <div className="flex h-screen">
+      <GlobalDropzone />
       <Sidebar
         tags={sidebarTags}
         languages={sidebarLanguages}
