@@ -15,6 +15,10 @@ import {
   RefreshCw,
   Maximize2,
   Minimize2,
+  Regex,
+  Clock,
+  Link2,
+  Palette,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -26,6 +30,10 @@ const tools = [
   { id: "json", icon: Braces, title: "JSON Formatter", description: "Beautify, minify, and validate JSON strings instantly.", color: "text-orange-400", bgColor: "bg-orange-500/10" },
   { id: "jwt", icon: FileKey, title: "JWT Decoder", description: "Decode JWT header and payload in your browser.", color: "text-rose-400", bgColor: "bg-rose-500/10" },
   { id: "base64", icon: Binary, title: "Base64 Encoder", description: "Encode/decode Base64 entirely in the browser.", color: "text-blue-400", bgColor: "bg-blue-500/10" },
+  { id: "regex", icon: Regex, title: "Regex Tester", description: "Test regular expressions with live match highlighting and flags.", color: "text-pink-400", bgColor: "bg-pink-500/10" },
+  { id: "timestamp", icon: Clock, title: "Timestamp Converter", description: "Convert Unix timestamps to human-readable dates and vice versa.", color: "text-teal-400", bgColor: "bg-teal-500/10" },
+  { id: "url", icon: Link2, title: "URL Encoder / Decoder", description: "Encode and decode URLs, query parameters, and components.", color: "text-indigo-400", bgColor: "bg-indigo-500/10" },
+  { id: "color", icon: Palette, title: "Color Converter", description: "Convert between HEX, RGB, and HSL color formats with live preview.", color: "text-fuchsia-400", bgColor: "bg-fuchsia-500/10" },
 ] as const;
 
 type ToolId = (typeof tools)[number]["id"];
@@ -359,6 +367,317 @@ function DiffTool() {
   );
 }
 
+function RegexTool() {
+  const [pattern, setPattern] = useState("");
+  const [flags, setFlags] = useState("gi");
+  const [testString, setTestString] = useState("");
+
+  const regexResult = useMemo(() => {
+    if (!pattern || !testString) return { matches: [] as { match: string; index: number }[], error: "", valid: false };
+    try {
+      const regex = new RegExp(pattern, flags);
+      const matches = [...testString.matchAll(regex)].map((m) => ({ match: m[0], index: m.index! }));
+      return { matches, error: "", valid: true };
+    } catch (e) {
+      return { matches: [] as { match: string; index: number }[], error: (e as Error).message, valid: false };
+    }
+  }, [pattern, flags, testString]);
+
+  const highlighted = useMemo(() => {
+    if (!pattern || !testString || regexResult.error) return testString;
+    const regex = new RegExp(pattern, flags);
+    const parts: { text: string; isMatch: boolean }[] = [];
+    let lastIndex = 0;
+    for (const m of testString.matchAll(regex)) {
+      if (m.index! > lastIndex) parts.push({ text: testString.slice(lastIndex, m.index!), isMatch: false });
+      parts.push({ text: m[0], isMatch: true });
+      lastIndex = m.index! + m[0].length;
+    }
+    if (lastIndex < testString.length) parts.push({ text: testString.slice(lastIndex), isMatch: false });
+    return parts;
+  }, [pattern, flags, testString, regexResult.error]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2 items-end">
+        <div className="flex-1">
+          <label className="block text-xs text-muted-foreground mb-1">Pattern</label>
+          <input value={pattern} onChange={(e) => setPattern(e.target.value)} placeholder="[a-z]+" className="w-full px-3 py-2 bg-card border border-border rounded-lg font-mono text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+        </div>
+        <div className="w-24">
+          <label className="block text-xs text-muted-foreground mb-1">Flags</label>
+          <input value={flags} onChange={(e) => setFlags(e.target.value.replace(/[^gimsuy]/g, ""))} placeholder="gi" className="w-full px-3 py-2 bg-card border border-border rounded-lg font-mono text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+        </div>
+      </div>
+      {regexResult.error && <div className="px-3 py-2 bg-rose-500/10 border border-rose-500/30 rounded-lg text-sm text-rose-400">{regexResult.error}</div>}
+      <div>
+        <label className="block text-xs text-muted-foreground mb-1">Test String</label>
+        <textarea value={testString} onChange={(e) => setTestString(e.target.value)} placeholder="Enter text to test against..." className="w-full h-32 px-4 py-3 bg-card border border-border rounded-lg font-mono text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary" />
+      </div>
+      {pattern && testString && !regexResult.error && (
+        <>
+          <div className="px-3 py-2 bg-muted/50 border border-border rounded-lg text-sm">
+            <span className="text-muted-foreground">{regexResult.matches.length} match{regexResult.matches.length !== 1 ? "es" : ""} found</span>
+          </div>
+          <div className="px-4 py-3 bg-muted/50 border border-border rounded-lg font-mono text-sm whitespace-pre-wrap break-all leading-relaxed">
+            {(highlighted as { text: string; isMatch: boolean }[]).map((part, i) => (
+              <span key={i} className={part.isMatch ? "bg-emerald-500/20 text-emerald-400 rounded px-0.5" : ""}>{part.text}</span>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function TimestampTool() {
+  const [input, setInput] = useState("");
+  const [mode, setMode] = useState<"to-date" | "to-ts">("to-date");
+
+  const result = useMemo(() => {
+    if (!input.trim()) return null;
+    if (mode === "to-date") {
+      const ts = parseInt(input, 10);
+      if (isNaN(ts)) return { error: "Invalid timestamp" };
+      const ms = ts.toString().length <= 10 ? ts * 1000 : ts;
+      const date = new Date(ms);
+      if (isNaN(date.getTime())) return { error: "Invalid date" };
+      return {
+        iso: date.toISOString(),
+        local: date.toLocaleString(),
+        utc: date.toUTCString(),
+        seconds: Math.floor(ms / 1000),
+        milliseconds: ms,
+      };
+    } else {
+      const date = new Date(input);
+      if (isNaN(date.getTime())) return { error: "Invalid date string" };
+      return {
+        seconds: Math.floor(date.getTime() / 1000),
+        milliseconds: date.getTime(),
+        iso: date.toISOString(),
+        local: date.toLocaleString(),
+        utc: date.toUTCString(),
+      };
+    }
+  }, [input, mode]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <Button variant={mode === "to-date" ? "default" : "outline"} size="sm" onClick={() => setMode("to-date")}>Timestamp → Date</Button>
+        <Button variant={mode === "to-ts" ? "default" : "outline"} size="sm" onClick={() => setMode("to-ts")}>Date → Timestamp</Button>
+      </div>
+      <div>
+        <label className="block text-xs text-muted-foreground mb-1">{mode === "to-date" ? "Unix Timestamp (sec or ms)" : "Date String (ISO, locale, etc.)"}</label>
+        <input value={input} onChange={(e) => setInput(e.target.value)} placeholder={mode === "to-date" ? "1700000000" : "2024-01-15T10:30:00Z"} className="w-full px-3 py-2 bg-card border border-border rounded-lg font-mono text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+      </div>
+      {result && "error" in result && <div className="px-3 py-2 bg-rose-500/10 border border-rose-500/30 rounded-lg text-sm text-rose-400">{result.error}</div>}
+      {result && !("error" in result) && (
+        <div className="space-y-2">
+          {("seconds" in result) && (
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-3 bg-muted/50 border border-border rounded-lg">
+                <div className="text-[10px] text-muted-foreground uppercase">Unix (seconds)</div>
+                <div className="font-mono text-sm mt-1">{result.seconds}</div>
+              </div>
+              <div className="p-3 bg-muted/50 border border-border rounded-lg">
+                <div className="text-[10px] text-muted-foreground uppercase">Unix (milliseconds)</div>
+                <div className="font-mono text-sm mt-1">{result.milliseconds}</div>
+              </div>
+            </div>
+          )}
+          {("iso" in result) && (
+            <div className="p-3 bg-muted/50 border border-border rounded-lg">
+              <div className="text-[10px] text-muted-foreground uppercase">ISO 8601</div>
+              <div className="font-mono text-sm mt-1">{result.iso}</div>
+            </div>
+          )}
+          {("local" in result) && (
+            <div className="p-3 bg-muted/50 border border-border rounded-lg">
+              <div className="text-[10px] text-muted-foreground uppercase">Local Time</div>
+              <div className="font-mono text-sm mt-1">{result.local}</div>
+            </div>
+          )}
+          {("utc" in result) && (
+            <div className="p-3 bg-muted/50 border border-border rounded-lg">
+              <div className="text-[10px] text-muted-foreground uppercase">UTC</div>
+              <div className="font-mono text-sm mt-1">{result.utc}</div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function UrlTool() {
+  const [input, setInput] = useState("");
+  const [mode, setMode] = useState<"encode" | "decode">("encode");
+  const [variant, setVariant] = useState<"component" | "full">("component");
+  const [output, setOutput] = useState("");
+  const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const handleConvert = () => {
+    setError(""); setOutput("");
+    try {
+      if (mode === "encode") {
+        setOutput(variant === "component" ? encodeURIComponent(input) : encodeURI(input));
+      } else {
+        setOutput(decodeURIComponent(input));
+      }
+    } catch {
+      setError(mode === "decode" ? "Invalid encoded string." : "Encoding failed.");
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2 flex-wrap">
+        <Button variant={mode === "encode" ? "default" : "outline"} size="sm" onClick={() => setMode("encode")}>Encode</Button>
+        <Button variant={mode === "decode" ? "default" : "outline"} size="sm" onClick={() => setMode("decode")}>Decode</Button>
+        {mode === "encode" && (
+          <>
+            <Button variant={variant === "component" ? "outline" : "ghost"} size="sm" onClick={() => setVariant("component")}>Component</Button>
+            <Button variant={variant === "full" ? "outline" : "ghost"} size="sm" onClick={() => setVariant("full")}>Full URL</Button>
+          </>
+        )}
+      </div>
+      <textarea value={input} onChange={(e) => { setInput(e.target.value); setError(""); setOutput(""); }} placeholder={mode === "encode" ? "Enter text to encode..." : "Enter encoded string..."} className="w-full h-32 px-4 py-3 bg-card border border-border rounded-lg font-mono text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary" />
+      {error && <div className="px-4 py-2 bg-rose-500/10 border border-rose-500/30 rounded-lg text-sm text-rose-400">{error}</div>}
+      <Button onClick={handleConvert} disabled={!input}>{mode === "encode" ? "Encode" : "Decode"}</Button>
+      {output && (
+        <div className="relative">
+          <textarea readOnly value={output} rows={Math.min(10, output.split("\n").length)} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg font-mono text-sm resize-none" />
+          <Button variant="ghost" size="icon" onClick={async () => { await navigator.clipboard.writeText(output); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="absolute top-2 right-2" aria-label="Copy">
+            {copied ? <Check size={14} /> : <Copy size={14} />}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const cleaned = hex.replace("#", "");
+  if (cleaned.length !== 3 && cleaned.length !== 6) return null;
+  const hexStr = cleaned.length === 3 ? cleaned.split("").map((c) => c + c).join("") : cleaned;
+  const num = parseInt(hexStr, 16);
+  if (isNaN(num)) return null;
+  return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+}
+
+function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: number } {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  let h = 0, s = 0;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+}
+
+function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
+  h /= 360; s /= 100; l /= 100;
+  let r: number, g: number, b: number;
+  if (s === 0) { r = g = b = l; }
+  else {
+    const hue2rgb = (p: number, q: number, t: number) => {
+      if (t < 0) t += 1; if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    };
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1 / 3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1 / 3);
+  }
+  return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+  return "#" + [r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("");
+}
+
+function ColorTool() {
+  const [hex, setHex] = useState("#3b82f6");
+  const [rgb, setRgb] = useState({ r: 59, g: 130, b: 246 });
+  const [hsl, setHsl] = useState({ h: 217, s: 91, l: 60 });
+  const [copied, setCopied] = useState("");
+
+  const updateFromHex = (value: string) => {
+    setHex(value);
+    const parsed = hexToRgb(value);
+    if (parsed) {
+      setRgb(parsed);
+      setHsl(rgbToHsl(parsed.r, parsed.g, parsed.b));
+    }
+  };
+
+  const updateFromRgb = (r: number, g: number, b: number) => {
+    const clamped = { r: Math.min(255, Math.max(0, r)), g: Math.min(255, Math.max(0, g)), b: Math.min(255, Math.max(0, b)) };
+    setRgb(clamped);
+    setHex(rgbToHex(clamped.r, clamped.g, clamped.b));
+    setHsl(rgbToHsl(clamped.r, clamped.g, clamped.b));
+  };
+
+  const updateFromHsl = (h: number, s: number, l: number) => {
+    const clamped = { h: ((h % 360) + 360) % 360, s: Math.min(100, Math.max(0, s)), l: Math.min(100, Math.max(0, l)) };
+    setHsl(clamped);
+    const rgbVal = hslToRgb(clamped.h, clamped.s, clamped.l);
+    setRgb(rgbVal);
+    setHex(rgbToHex(rgbVal.r, rgbVal.g, rgbVal.b));
+  };
+
+  const copyValue = async (label: string, value: string) => {
+    await navigator.clipboard.writeText(value);
+    setCopied(label);
+    setTimeout(() => setCopied(""), 2000);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-4">
+        <div className="w-24 h-24 rounded-xl border border-border shadow-inner" style={{ backgroundColor: hex }} />
+        <div className="flex-1 space-y-2">
+          <div>
+            <label className="block text-xs text-muted-foreground mb-1">HEX</label>
+            <div className="flex gap-1">
+              <input value={hex} onChange={(e) => updateFromHex(e.target.value)} className="flex-1 px-3 py-2 bg-card border border-border rounded-lg font-mono text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+              <Button variant="ghost" size="sm" onClick={() => copyValue("hex", hex)} aria-label="Copy HEX">{copied === "hex" ? <Check size={14} /> : <Copy size={14} />}</Button>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs text-muted-foreground mb-1">RGB</label>
+            <div className="flex gap-1">
+              <input value={`rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`} onChange={(e) => { const m = e.target.value.match(/(\d+)/g); if (m?.length === 3) updateFromRgb(parseInt(m[0]), parseInt(m[1]), parseInt(m[2])); }} className="flex-1 px-3 py-2 bg-card border border-border rounded-lg font-mono text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+              <Button variant="ghost" size="sm" onClick={() => copyValue("rgb", `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`)} aria-label="Copy RGB">{copied === "rgb" ? <Check size={14} /> : <Copy size={14} />}</Button>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs text-muted-foreground mb-1">HSL</label>
+            <div className="flex gap-1">
+              <input value={`hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`} onChange={(e) => { const m = e.target.value.match(/(\d+)/g); if (m?.length === 3) updateFromHsl(parseInt(m[0]), parseInt(m[1]), parseInt(m[2])); }} className="flex-1 px-3 py-2 bg-card border border-border rounded-lg font-mono text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+              <Button variant="ghost" size="sm" onClick={() => copyValue("hsl", `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`)} aria-label="Copy HSL">{copied === "hsl" ? <Check size={14} /> : <Copy size={14} />}</Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // -- Headers and icons for each tool --
 
 const toolMeta: Record<ToolId, { icon: typeof Fingerprint; title: string; color: string; bgColor: string }> = {
@@ -369,6 +688,10 @@ const toolMeta: Record<ToolId, { icon: typeof Fingerprint; title: string; color:
   json: { icon: Braces, title: "JSON Formatter", color: "text-orange-400", bgColor: "bg-orange-500/10" },
   jwt: { icon: FileKey, title: "JWT Decoder", color: "text-rose-400", bgColor: "bg-rose-500/10" },
   base64: { icon: Binary, title: "Base64 Encoder / Decoder", color: "text-blue-400", bgColor: "bg-blue-500/10" },
+  regex: { icon: Regex, title: "Regex Tester", color: "text-pink-400", bgColor: "bg-pink-500/10" },
+  timestamp: { icon: Clock, title: "Timestamp Converter", color: "text-teal-400", bgColor: "bg-teal-500/10" },
+  url: { icon: Link2, title: "URL Encoder / Decoder", color: "text-indigo-400", bgColor: "bg-indigo-500/10" },
+  color: { icon: Palette, title: "Color Converter", color: "text-fuchsia-400", bgColor: "bg-fuchsia-500/10" },
 };
 
 // -- Main page component --
@@ -386,6 +709,10 @@ export default function ToolsHubPage() {
       case "json": return <JsonTool />;
       case "jwt": return <JwtTool />;
       case "base64": return <Base64Tool />;
+      case "regex": return <RegexTool />;
+      case "timestamp": return <TimestampTool />;
+      case "url": return <UrlTool />;
+      case "color": return <ColorTool />;
     }
   };
 
