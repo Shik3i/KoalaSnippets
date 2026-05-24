@@ -39,6 +39,7 @@ export const snippets = sqliteTable("snippets", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
   deletedAt: integer("deleted_at", { mode: "timestamp" }),
+  forkedFromId: text("forked_from_id"),
 }, (table) => [
   index("snippet_created_at_idx").on(table.createdAt),
   index("snippet_author_created_at_idx").on(table.authorId, table.createdAt),
@@ -127,6 +128,14 @@ export const snippetsRelations = relations(snippets, ({ one, many }) => ({
   collection: one(collections, {
     fields: [snippets.collectionId],
     references: [collections.id],
+  }),
+  forkedFrom: one(snippets, {
+    fields: [snippets.forkedFromId],
+    references: [snippets.id],
+    relationName: "forkedFrom",
+  }),
+  forks: many(snippets, {
+    relationName: "forkedFrom",
   }),
   files: many(snippetFiles),
   revisions: many(snippetRevisions),

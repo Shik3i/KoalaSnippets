@@ -3,10 +3,11 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
-import { Upload } from "lucide-react";
+import { Upload, Plus, Globe, Trash2 } from "lucide-react";
 import { SnippetCard } from "./snippet-card";
 import { SnippetTableRow } from "./snippet-table-row";
 import { BulkActionBar } from "./bulk-action-bar";
+import { EmptyState } from "@/features/core/components/empty-state";
 
 interface SnippetData {
   id: string;
@@ -216,10 +217,31 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
 
       <div className="flex-1 overflow-y-auto p-3 sm:p-4">
         {localSnippets.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-            <p className="text-lg mb-2">{isTrashView ? "Trash is empty" : "No snippets yet"}</p>
-            {!isTrashView && <p className="text-sm">Click &quot;New Snippet&quot; to create your first one</p>}
-          </div>
+          isTrashView ? (
+            <EmptyState
+              icon={<Trash2 size={48} />}
+              title="Trash is empty"
+              description="Deleted snippets will appear here. You can restore them or permanently delete them."
+            />
+          ) : (
+            <EmptyState
+              title="No snippets yet"
+              description="Create your first snippet or browse the public directory for inspiration."
+              actions={[
+                {
+                  label: "New Snippet",
+                  icon: <Plus size={14} />,
+                  onClick: () => router.push("/dashboard/new"),
+                },
+                {
+                  label: "Browse Public",
+                  icon: <Globe size={14} />,
+                  variant: "outline",
+                  onClick: () => router.push("/public"),
+                },
+              ]}
+            />
+          )
         ) : viewMode === "table" ? (
           <div className="overflow-x-auto">
             <table className="w-full">

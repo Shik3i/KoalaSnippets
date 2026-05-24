@@ -1,14 +1,14 @@
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import { getSession } from "@/features/auth/utils/session";
 import { Sidebar } from "@/features/core/components/sidebar";
 import { SnippetSearchHeader } from "@/features/snippets/components/search-header";
 import { DashboardContent } from "@/features/snippets/components/dashboard-content";
-import { highlightCode } from "@/features/snippets/utils/shiki";
 import { GlobalDropzone } from "@/features/core/components/global-dropzone";
+import { highlightCode } from "@/features/snippets/utils/shiki";
 import { db } from "@/db";
 import { snippets, snippetFiles } from "@/db/schema";
 import { eq, desc, asc, and, inArray } from "drizzle-orm";
+import { cookies } from "next/headers";
 import { buildSnippetConditions } from "@/features/snippets/utils/filters";
 
 export const dynamic = "force-dynamic";
@@ -125,9 +125,16 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <SnippetSearchHeader availableTags={sidebarTags} availableLanguages={sidebarLanguages} sort={sortMode} viewMode={viewMode} resultCount={highlightedSnippets.length} />
         <DashboardContent
           snippets={highlightedSnippets.map((s) => ({
-            ...s,
-            visibility: s.visibility as "PRIVATE" | "SHARED" | "PUBLIC",
+            id: (s as Record<string, unknown>).id as string,
+            title: (s as Record<string, unknown>).title as string,
+            description: (s as Record<string, unknown>).description as string | null,
+            language: s.language as string ?? "plaintext",
+            tags: (s as Record<string, unknown>).tags as string[] | null,
+            visibility: ((s as Record<string, unknown>).visibility ?? "PRIVATE") as "PRIVATE" | "SHARED" | "PUBLIC",
             authorUsername: session.user.username,
+            totalLines: ((s as Record<string, unknown>).totalLines ?? 0) as number,
+            createdAt: (s as Record<string, unknown>).createdAt as Date,
+            highlightedCode: s.highlightedCode as string | undefined,
           }))}
           viewMode={viewMode}
           density={density}

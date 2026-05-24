@@ -20,7 +20,7 @@ export async function GET() {
 
   const allTags = new Set<string>();
   userSnippets.forEach((s) => {
-    s.tags?.forEach((t) => allTags.add(t.toLowerCase()));
+    s.tags?.forEach((t: string) => allTags.add(t.toLowerCase()));
   });
 
   return NextResponse.json({ tags: Array.from(allTags).sort() });

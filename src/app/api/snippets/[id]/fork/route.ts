@@ -1,0 +1,30 @@
+import { NextResponse } from "next/server";
+import { getSession } from "@/features/auth/utils/session";
+import { forkSnippet } from "@/features/snippets/utils/fork";
+
+export const dynamic = "force-dynamic";
+
+export async function POST(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+
+  const result = await forkSnippet(id, session.user.id, session.user.username);
+
+  if (!result.success) {
+    const status = result.error?.includes("not found") ? 404
+      : result.error?.includes("own snippet") ? 400
+      : result.error?.includes("forkable") ? 400
+      : result.error?.includes("quota") ? 403
+      : 500;
+    return NextResponse.json({ error: result.error }, { status });
+  }
+
+  return NextResponse.json({ success: true, id: result.id }, { status: 201 });
+}

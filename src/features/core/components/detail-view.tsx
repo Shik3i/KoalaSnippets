@@ -8,6 +8,7 @@ import { cn } from "@/features/core/utils/utils";
 import { useToast } from "@/components/ui/toast";
 import { VISIBILITY_CONFIG } from "@/features/snippets/utils/constants";
 import { useRecentSnippets } from "@/features/core/hooks/use-recent-snippets";
+import { QrCode } from "@/features/snippets/components/qr-code";
 import {
   Pencil,
   Trash2,
@@ -18,6 +19,7 @@ import {
   CopyPlus,
   Camera,
   RotateCcw,
+  GitFork,
 } from "lucide-react";
 
 interface DetailViewProps {
@@ -32,11 +34,14 @@ interface DetailViewProps {
   isOwner: boolean;
   isSubmitting?: boolean;
   deletedAt?: Date | null;
+  forkedFromId?: string;
+  forkedFromTitle?: string;
   onEdit?: () => void;
   onDelete?: () => void;
   onRestore?: () => void;
   onDuplicate?: () => void;
   onToggleVisibility?: () => void;
+  onFork?: () => void;
 }
 
 const LANGUAGE_EXTENSIONS: Record<string, string> = {
@@ -90,11 +95,14 @@ export function DetailView({
   isOwner,
   isSubmitting,
   deletedAt,
+  forkedFromId,
+  forkedFromTitle,
   onEdit,
   onDelete,
   onRestore,
   onDuplicate,
   onToggleVisibility,
+  onFork,
 }: DetailViewProps) {
   const mounted = useSyncExternalStore(
     () => () => {},
@@ -104,6 +112,7 @@ export function DetailView({
   const [copied, setCopied] = useState(false);
   const [copyOpen, setCopyOpen] = useState(false);
   const [zenMode, setZenMode] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const { addToast } = useToast();
   const VisIcon = VISIBILITY_CONFIG[visibility].icon;
   const { addRecentSnippet } = useRecentSnippets();
@@ -214,13 +223,21 @@ export function DetailView({
   };
 
   const handleShare = () => {
+    setShareModalOpen(true);
+  };
+
+  const getShareUrl = () => {
     const url = new URL(window.location.href);
     if (visibility === "SHARED" && shareToken) {
       url.searchParams.set("token", shareToken);
     } else {
       url.searchParams.delete("token");
     }
-    navigator.clipboard.writeText(url.toString());
+    return url.toString();
+  };
+
+  const handleCopyShareLink = () => {
+    navigator.clipboard.writeText(getShareUrl());
     addToast("Share link copied!", "success");
   };
 
@@ -303,8 +320,13 @@ export function DetailView({
                     </Button>
                   </>
                 )}
-                {visibility === "SHARED" && (
-                  <Button variant="ghost" size="icon" onClick={handleShare} aria-label="Copy share link" disabled={isSubmitting}>
+                {!isOwner && onFork && (visibility === "PUBLIC" || visibility === "SHARED") && (
+                  <Button variant="ghost" size="icon" onClick={onFork} aria-label="Fork snippet" className="text-primary hover:text-primary/80 hover:bg-primary/10" disabled={isSubmitting}>
+                    <GitFork size={16} suppressHydrationWarning />
+                  </Button>
+                )}
+                {(visibility === "SHARED" || visibility === "PUBLIC") && (
+                  <Button variant="ghost" size="icon" onClick={handleShare} aria-label="Share snippet" disabled={isSubmitting}>
                     <Share2 size={16} suppressHydrationWarning />
                   </Button>
                 )}
@@ -329,6 +351,18 @@ export function DetailView({
                 {tag}
               </Badge>
             ))}
+          </div>
+        )}
+
+        {forkedFromId && forkedFromTitle && (
+          <div className="flex items-center gap-1.5">
+            <GitFork size={12} className="text-muted-foreground" suppressHydrationWarning />
+            <span className="text-xs text-muted-foreground">
+              Forked from{" "}
+              <a href={`/snippets/${forkedFromId}`} className="text-primary hover:underline">
+                {forkedFromTitle}
+              </a>
+            </span>
           </div>
         )}
       </div>
@@ -481,6 +515,67 @@ export function DetailView({
           />
         </div>
       )}
+      
+      {shareModalOpen && (
+        <div
+          className="fixed inset-0 z-[110] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setShareModalOpen(false)}
+        >
+          <div
+            className="bg-card border border-border rounded-xl p-6 max-w-sm w-full shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold mb-4">Share Snippet</h3>
+
+            <div className="flex justify-center mb-4">
+              <div className="bg-white p-3 rounded-lg border border-border">
+                <QrCode value={getShareUrl()} size={180} />
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 gap-1.5"
+                onClick={handleCopyShareLink}
+              >
+                <Copy size={14} suppressHydrationWarning />
+                Copy Link
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 gap-1.5"
+                onClick={() => {
+                  const canvas = document.querySelector("#qr-canvas-download canvas") as HTMLCanvasElement | null;
+                  if (canvas) {
+                    const link = document.createElement("a");
+                    link.download = `koalasnippet-${title.replace(/\s+/g, "_")}.png`;
+                    link.href = canvas.toDataURL();
+                    link.click();
+                    addToast("QR code downloaded!", "success");
+                  }
+                }}
+              >
+                <Download size={14} suppressHydrationWarning />
+                Download QR
+              </Button>
+            </div>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full mt-3"
+              onClick={() => setShareModalOpen(false)}
+            >
+              Close
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div id="qr-canvas-download" className="hidden">
+        <QrCode value={getShareUrl()} size={300} />
+      </div>
     </div>
   );
 }

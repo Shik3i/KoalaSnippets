@@ -36,7 +36,7 @@ interface PageProps {
   searchParams: Promise<{ token?: string }>;
 }
 
-async function getSnippet(id: string, token?: string) {
+async function getSnippet(id: string, token?: string): Promise<Record<string, unknown> | null> {
   const snippet = await db.select().from(snippets).where(eq(snippets.id, id)).get();
 
   if (!snippet) {
@@ -48,30 +48,34 @@ async function getSnippet(id: string, token?: string) {
 
   const files = await db.select().from(snippetFiles).where(eq(snippetFiles.snippetId, snippet.id)).all();
   
-  const snippetWithFiles = {
+  let forkedFromTitle: string | undefined;
+  if (snippet.forkedFromId) {
+    const parent = await db.select({ title: snippets.title }).from(snippets).where(eq(snippets.id, snippet.forkedFromId)).get();
+    forkedFromTitle = parent?.title;
+  }
+  
+  const snippetWithFiles: Record<string, unknown> = {
     ...snippet,
-    files
+    files,
+    forkedFromTitle
   };
 
-  // The owner must ALWAYS be able to see their snippet, regardless of visibility or missing tokens in the URL.
   if (isOwner) {
     return snippetWithFiles;
   }
 
-  // SHARED snippets are accessible if the correct token is provided
   if (snippet.visibility === "SHARED") {
     if (token && snippet.shareToken && constantTimeCompare(snippet.shareToken, token)) {
       if (snippet.passwordHash && !isOwner) {
-        return { ...snippet, files: [], isPasswordProtected: true };
+        return { ...snippetWithFiles, files: [], isPasswordProtected: true };
       }
       return snippetWithFiles;
     }
   }
 
-  // PUBLIC snippets are accessible to anyone
   if (snippet.visibility === "PUBLIC") {
     if (snippet.passwordHash && !isOwner) {
-      return { ...snippet, files: [], isPasswordProtected: true };
+      return { ...snippetWithFiles, files: [], isPasswordProtected: true };
     }
     return snippetWithFiles;
   }
@@ -90,10 +94,12 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     };
   }
 
-  const mainLanguage = snippet.files?.[0]?.language ?? "plaintext";
-  const tagsStr = snippet.tags?.length ? ` · ${snippet.tags.join(", ")}` : "";
-  const title = `${snippet.title} · ${mainLanguage}${tagsStr}`;
-  const description = snippet.description ?? `Code snippet in ${mainLanguage} from KoalaSnippets`;
+  const snippetFilesArr = snippet.files as Array<{ language?: string }> | undefined;
+  const mainLanguage = snippetFilesArr?.[0]?.language ?? "plaintext";
+  const snippetTags = snippet.tags as string[] | null | undefined;
+  const tagsStr = snippetTags?.length ? ` · ${snippetTags.join(", ")}` : "";
+  const title = `${snippet.title as string} · ${mainLanguage}${tagsStr}`;
+  const description = (snippet.description as string | null) ?? `Code snippet in ${mainLanguage} from KoalaSnippets`;
 
   return {
     title,
@@ -128,7 +134,7 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
   const syntaxTheme = session?.user?.preferences?.syntaxTheme ?? "github-dark";
   
   const highlightedFiles = await Promise.all(
-    (snippet.files || []).map(async (file) => {
+    ((snippet.files || []) as Array<{ id: string; filename: string; code: string; language: string }>).map(async (file) => {
       let highlightedCode: string;
       try {
         highlightedCode = await highlightCode(file.code, file.language, syntaxTheme);
@@ -146,8 +152,8 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
     })
   );
 
-  const isOwner = session?.user.id === snippet.authorId;
-  const backUrl = snippet.visibility === "PUBLIC" ? "/public" : "/dashboard";
+  const isOwner = session?.user.id === (snippet.authorId as string);
+  const backUrl = (snippet.visibility as string) === "PUBLIC" ? "/public" : "/dashboard";
 
   return (
     <div className="flex h-screen">
@@ -165,34 +171,36 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
         </div>
 
         <div className="flex-1 overflow-hidden flex flex-col">
-          {("isPasswordProtected" in snippet && snippet.isPasswordProtected) ? (
+          {(snippet.isPasswordProtected as boolean) ? (
             <PasswordPrompt 
               snippet={{
-                id: snippet.id,
-                title: snippet.title,
-                description: snippet.description ?? undefined,
-                tags: snippet.tags ?? undefined,
-                visibility: snippet.visibility,
-                shareToken: snippet.shareToken ?? undefined,
-                createdAt: snippet.createdAt,
-                updatedAt: snippet.updatedAt,
-                deletedAt: snippet.deletedAt,
+                id: snippet.id as string,
+                title: snippet.title as string,
+                description: snippet.description as string | undefined,
+                tags: snippet.tags as string[] | undefined,
+                visibility: snippet.visibility as "PRIVATE" | "SHARED" | "PUBLIC",
+                shareToken: snippet.shareToken as string | undefined,
+                createdAt: snippet.createdAt as Date,
+                updatedAt: snippet.updatedAt as Date,
+                deletedAt: snippet.deletedAt as Date | null,
               }}
               syntaxTheme={syntaxTheme} 
             />
           ) : (
             <SnippetDetailClient
-              id={snippet.id}
-              title={snippet.title}
-              description={snippet.description ?? undefined}
+              id={snippet.id as string}
+              title={snippet.title as string}
+              description={snippet.description as string | undefined}
               files={highlightedFiles}
-              tags={snippet.tags ?? undefined}
+              tags={snippet.tags as string[] | undefined}
               visibility={snippet.visibility as "PRIVATE" | "SHARED" | "PUBLIC"}
-              shareToken={snippet.shareToken ?? undefined}
-              createdAt={snippet.createdAt}
-              updatedAt={snippet.updatedAt}
-              deletedAt={snippet.deletedAt}
+              shareToken={snippet.shareToken as string | undefined}
+              createdAt={snippet.createdAt as Date}
+              updatedAt={snippet.updatedAt as Date}
+              deletedAt={snippet.deletedAt as Date | null}
               isOwner={isOwner}
+              forkedFromId={snippet.forkedFromId as string | undefined}
+              forkedFromTitle={snippet.forkedFromTitle as string | undefined}
             />
           )}
         </div>

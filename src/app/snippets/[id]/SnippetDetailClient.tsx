@@ -19,6 +19,8 @@ interface SnippetDetailClientProps {
   updatedAt: Date;
   deletedAt?: Date | null;
   isOwner: boolean;
+  forkedFromId?: string;
+  forkedFromTitle?: string;
 }
 
 export function SnippetDetailClient(props: SnippetDetailClientProps) {
@@ -110,9 +112,26 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
         addToast(`Visibility changed to ${next}`, "success");
         await revalidateDashboard();
         await revalidateSnippet(props.id);
-        router.refresh(); // Still refresh locally to update current view
+        router.refresh();
       } else {
         addToast("Failed to change visibility", "error");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFork = async () => {
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/snippets/${props.id}/fork`, { method: "POST" });
+      const data = await res.json();
+      if (res.ok && data.id) {
+        addToast("Snippet forked successfully!", "success");
+        await revalidateDashboard();
+        router.push(`/snippets/${data.id}`);
+      } else {
+        addToast(data.error || "Failed to fork snippet", "error");
       }
     } finally {
       setIsSubmitting(false);
@@ -129,6 +148,7 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
         onRestore={handleRestore}
         onDuplicate={handleDuplicate}
         onToggleVisibility={handleToggleVisibility}
+        onFork={handleFork}
       />
       <ConfirmModal
         open={deleteModalOpen}

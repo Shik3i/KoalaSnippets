@@ -117,8 +117,16 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         <SnippetSearchHeader availableTags={sidebarTags} availableLanguages={sidebarLanguages} sort={sortMode} viewMode={viewMode} resultCount={highlightedSnippets.length} />
         <DashboardContent
           snippets={highlightedSnippets.map((s) => ({
-            ...s,
-            visibility: s.visibility as "PRIVATE" | "SHARED" | "PUBLIC",
+            id: (s as Record<string, unknown>).id as string,
+            title: (s as Record<string, unknown>).title as string,
+            description: (s as Record<string, unknown>).description as string | null,
+            language: s.language as string ?? "plaintext",
+            tags: (s as Record<string, unknown>).tags as string[] | null,
+            visibility: ((s as Record<string, unknown>).visibility ?? "PUBLIC") as "PRIVATE" | "SHARED" | "PUBLIC",
+            authorUsername: (s as Record<string, unknown>).authorUsername as string | undefined,
+            totalLines: ((s as Record<string, unknown>).totalLines ?? 0) as number,
+            createdAt: (s as Record<string, unknown>).createdAt as Date,
+            highlightedCode: s.highlightedCode as string | undefined,
           }))}
           viewMode={viewMode}
           density={density}
