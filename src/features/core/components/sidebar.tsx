@@ -27,6 +27,7 @@ import {
   Github,
   Trash2,
   Clock,
+  Wrench,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -43,6 +44,7 @@ const navItems = [
   { href: "/dashboard", label: "My Snippets", icon: FileCode },
   { href: "/dashboard/trash", label: "Trash", icon: Trash2 },
   { href: "/public", label: "Public Explorer", icon: Globe },
+  { href: "/tools", label: "Dev Tools", icon: Wrench },
   { href: "/stats", label: "Statistics", icon: BarChart3 },
 ];
 

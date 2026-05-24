@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { Plus, FileDown, ClipboardPaste, X } from "lucide-react";
+import { Plus, FileDown, ClipboardPaste, X, Wrench } from "lucide-react";
 import { cn } from "@/features/core/utils/utils";
 
 export function MobileFAB() {
@@ -93,6 +93,14 @@ export function MobileFAB() {
         >
           New Snippet
           <Plus size={16} />
+        </Link>
+        <Link
+          href="/tools"
+          onClick={() => setIsOpen(false)}
+          className="flex items-center gap-2 px-3 py-2 rounded-full bg-accent text-accent-foreground shadow-lg backdrop-blur-md border border-border/50 text-sm font-medium hover:bg-accent/80 active:scale-95 transition-all"
+        >
+          Dev Tools
+          <Wrench size={16} />
         </Link>
       </div>
 
