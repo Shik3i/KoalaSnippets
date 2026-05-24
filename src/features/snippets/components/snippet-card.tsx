@@ -133,7 +133,7 @@ export function SnippetCard({
         >
           {title}
         </h3>
-        <VisIcon size={12} className={cn("shrink-0 mt-1", VISIBILITY_CONFIG[visibility].color)} suppressHydrationWarning />
+        <VisIcon size={12} className={cn("shrink-0 mt-1", VISIBILITY_CONFIG[visibility].color)} suppressHydrationWarning aria-label={`Visibility: ${visibility}`} />
       </div>
 
       <div className="flex items-center gap-2 flex-wrap mb-2">

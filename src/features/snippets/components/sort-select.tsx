@@ -32,7 +32,7 @@ export function SortSelect({ current }: SortSelectProps) {
 
   return (
     <div className="flex items-center gap-1.5">
-      <ArrowUpDown size={14} className="text-muted-foreground shrink-0" suppressHydrationWarning />
+      <ArrowUpDown size={14} className="text-muted-foreground shrink-0" suppressHydrationWarning aria-hidden="true" />
       <select
         value={current}
         onChange={(e) => handleChange(e.target.value)}

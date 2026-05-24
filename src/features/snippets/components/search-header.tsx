@@ -357,6 +357,8 @@ export function SnippetSearchHeader({
                   "px-2.5 py-1 rounded text-[11px] font-medium transition-colors",
                   filterMode === "and" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 )}
+                aria-label="Match all filters (AND)"
+                aria-pressed={filterMode === "and"}
               >
                 AND
               </button>
@@ -367,6 +369,8 @@ export function SnippetSearchHeader({
                   "px-2.5 py-1 rounded text-[11px] font-medium transition-colors",
                   filterMode === "or" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 )}
+                aria-label="Match any filter (OR)"
+                aria-pressed={filterMode === "or"}
               >
                 OR
               </button>

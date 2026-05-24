@@ -51,11 +51,12 @@ const navItems = [
 export function Sidebar({ tags = [], languages = [], isAuthenticated = false, isAdmin = false, onTagClick, onLanguageClick }: SidebarProps) {
   const pathname = usePathname();
   const searchParamsObj = useSearchParams();
-  const { recentSnippets } = useRecentSnippets();
+  const { recentSnippets, clearRecentSnippets } = useRecentSnippets();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collections, setCollections] = useState<{ id: string; name: string }[]>([]);
   const [newCollectionName, setNewCollectionName] = useState("");
   const [addingCollection, setAddingCollection] = useState(false);
+  const [creatingCollection, setCreatingCollection] = useState(false);
   const [width, setWidth] = useState(240);
   const [isResizing, setIsResizing] = useState(false);
 
@@ -210,30 +211,41 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                   onChange={(e) => setNewCollectionName(e.target.value)}
                   onKeyDown={async (e) => {
                     if (e.key === "Escape") { setAddingCollection(false); return; }
-                    if (e.key !== "Enter" || !newCollectionName.trim()) return;
-                    const res = await fetch("/api/collections", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ name: newCollectionName.trim() })
-                    });
-                    if (res.ok) {
-                      const data = await res.json();
-                      setCollections(prev => [...prev, data.collection]);
+                    if (e.key !== "Enter" || !newCollectionName.trim() || creatingCollection) return;
+                    setCreatingCollection(true);
+                    try {
+                      const res = await fetch("/api/collections", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ name: newCollectionName.trim() })
+                      });
+                      if (res.ok) {
+                        const data = await res.json();
+                        setCollections(prev => [...prev, data.collection]);
+                      }
+                    } finally {
+                      setCreatingCollection(false);
+                      setAddingCollection(false);
+                      setNewCollectionName("");
                     }
-                    setAddingCollection(false);
-                    setNewCollectionName("");
                   }}
                   placeholder="Collection name"
-                  className="flex-1 h-7 px-2 text-[11px] bg-muted/50 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="flex-1 h-7 px-2 text-[11px] bg-muted/50 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+                  disabled={creatingCollection}
                   autoFocus
                 />
                 <button
                   type="button"
-                  onClick={() => setAddingCollection(false)}
-                  className="text-muted-foreground hover:text-foreground p-1"
+                  onClick={() => { if (!creatingCollection) setAddingCollection(false); }}
+                  className="text-muted-foreground hover:text-foreground p-1 disabled:opacity-50"
+                  disabled={creatingCollection}
                   aria-label="Cancel"
                 >
-                  <X size={12} />
+                  {creatingCollection ? (
+                    <div className="w-3 h-3 border border-muted-foreground border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <X size={12} />
+                  )}
                 </button>
               </div>
             )}
@@ -373,9 +385,18 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
 
         {recentSnippets.length > 0 && (
           <div className="px-3 py-2 border-t border-border overflow-y-auto max-h-48">
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1 flex items-center gap-1.5">
-              <Clock size={12} />
-              Recently Accessed
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Clock size={12} />
+                Recently Accessed
+              </span>
+              <button
+                onClick={clearRecentSnippets}
+                className="text-muted-foreground hover:text-destructive transition-colors p-0.5 rounded"
+                aria-label="Clear recently accessed snippets"
+              >
+                <X size={10} />
+              </button>
             </h3>
             <div className="space-y-0.5">
               {recentSnippets.map((snippet) => (

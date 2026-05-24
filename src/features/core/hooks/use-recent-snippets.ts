@@ -39,5 +39,14 @@ export function useRecentSnippets() {
     });
   };
 
-  return { recentSnippets, addRecentSnippet };
+  const clearRecentSnippets = () => {
+    setRecentSnippets([]);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (err) {
+      console.error("Failed to clear recent snippets", err);
+    }
+  };
+
+  return { recentSnippets, addRecentSnippet, clearRecentSnippets };
 }
