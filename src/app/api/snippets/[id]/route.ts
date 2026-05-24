@@ -136,10 +136,14 @@ export async function PUT(
         
         let totalChars = 0;
         let linesCount = 0;
+        let combinedCode = "";
         for (const f of files) {
           totalChars += (f as { code: string }).code.length;
           linesCount += (f as { code: string }).code.split('\n').length;
+          combinedCode += (f as { code: string }).code;
         }
+
+        snippetUpdates.contentHash = crypto.createHash("sha256").update(combinedCode).digest("hex");
 
         if (totalChars > maxChars) {
           throw new Error(`Snippet code too long (Max: ${maxChars} chars)`);
@@ -203,17 +207,24 @@ export async function PUT(
           }
 
           const fileUpdate: Record<string, unknown> = {};
-          if (code !== undefined) fileUpdate.code = code;
-          if (language !== undefined) fileUpdate.language = language;
+          if (code !== undefined) {
+            fileUpdate.code = code;
+          }
+          if (language !== undefined) {
+            fileUpdate.language = language;
+          }
           tx.update(snippetFiles).set(fileUpdate).where(eq(snippetFiles.id, existingFiles[0].id)).run();
 
-          // Recompute total lines from all database files of this snippet
+          // Recompute total lines and contentHash from all database files of this snippet
           const allFiles = tx.select().from(snippetFiles).where(eq(snippetFiles.snippetId, id)).all();
           let linesCount = 0;
+          let combinedCode = "";
           for (const f of allFiles) {
             linesCount += f.code.split('\n').length;
+            combinedCode += f.code;
           }
           newTotalLines = linesCount;
+          snippetUpdates.contentHash = crypto.createHash("sha256").update(combinedCode).digest("hex");
         }
       }
 
