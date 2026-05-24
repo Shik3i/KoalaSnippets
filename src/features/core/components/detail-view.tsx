@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/features/core/utils/utils";
 import { useToast } from "@/components/ui/toast";
 import { VISIBILITY_CONFIG } from "@/features/snippets/utils/constants";
+import { useRecentSnippets } from "@/features/core/hooks/use-recent-snippets";
 import {
   Pencil,
   Trash2,
@@ -105,8 +106,15 @@ export function DetailView({
   const [zenMode, setZenMode] = useState(false);
   const { addToast } = useToast();
   const VisIcon = VISIBILITY_CONFIG[visibility].icon;
+  const { addRecentSnippet } = useRecentSnippets();
   const normalRef = useRef<HTMLDivElement>(null);
   const zenRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (id && title) {
+      addRecentSnippet(id, title);
+    }
+  }, [id, title, addRecentSnippet]);
 
   const [activeTab, setActiveTab] = useState(0);
   const activeFile = files[activeTab] || files[0];

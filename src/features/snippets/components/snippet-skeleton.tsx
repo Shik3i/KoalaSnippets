@@ -1,28 +1,39 @@
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+
 
 export function SnippetSkeleton() {
   return (
-    <Card className="flex flex-col h-[280px] bg-card/50 border-border/50 animate-pulse">
-      <CardHeader className="flex flex-row items-start justify-between pb-2 space-y-0">
-        <div className="space-y-2 w-full">
-          <div className="h-5 w-2/3 bg-muted rounded-md" />
-          <div className="h-4 w-1/3 bg-muted rounded-md" />
+    <div className="group block rounded-xl border border-border/50 bg-card/40 p-3 sm:p-4 relative overflow-hidden h-[180px]">
+      {/* Shimmer Effect */}
+      <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-primary/5 to-transparent z-0" />
+      
+      <div className="relative z-10 flex flex-col h-full">
+        {/* Header (Title & Visibility Icon) */}
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="h-5 w-2/3 bg-muted/60 rounded-md animate-pulse" />
+          <div className="h-4 w-4 bg-muted/60 rounded-full shrink-0 animate-pulse" />
         </div>
-      </CardHeader>
-      <CardContent className="flex-1 overflow-hidden pt-0 mt-2">
-        <div className="h-full bg-muted/50 rounded-md border border-border/20 p-4 space-y-2">
-          <div className="h-3 w-5/6 bg-muted rounded-full" />
-          <div className="h-3 w-4/6 bg-muted rounded-full" />
-          <div className="h-3 w-3/6 bg-muted rounded-full" />
+
+        {/* Metadata Badges */}
+        <div className="flex items-center gap-2 flex-wrap mb-3">
+          <div className="h-4 w-12 bg-muted/60 rounded animate-pulse" />
+          <div className="h-4 w-20 bg-muted/60 rounded animate-pulse" />
+          <div className="h-4 w-24 bg-muted/60 rounded animate-pulse" />
         </div>
-      </CardContent>
-      <CardFooter className="pt-2 flex justify-between items-center text-xs">
-        <div className="flex gap-2">
-          <div className="h-5 w-12 bg-muted rounded-full" />
-          <div className="h-5 w-16 bg-muted rounded-full" />
+
+        {/* Tags */}
+        <div className="flex flex-wrap gap-1 mb-3">
+          <div className="h-4 w-10 bg-muted/60 rounded animate-pulse" />
+          <div className="h-4 w-14 bg-muted/60 rounded animate-pulse" />
+          <div className="h-4 w-12 bg-muted/60 rounded animate-pulse" />
         </div>
-        <div className="h-4 w-20 bg-muted rounded-md" />
-      </CardFooter>
-    </Card>
+
+        {/* Code Preview Placeholder */}
+        <div className="mt-auto h-16 w-full bg-muted/30 rounded-md border border-border/30 flex flex-col justify-center px-3 space-y-2">
+          <div className="h-2 w-5/6 bg-muted/50 rounded-full animate-pulse" />
+          <div className="h-2 w-3/6 bg-muted/50 rounded-full animate-pulse" />
+          <div className="h-2 w-4/6 bg-muted/50 rounded-full animate-pulse" />
+        </div>
+      </div>
+    </div>
   );
 }

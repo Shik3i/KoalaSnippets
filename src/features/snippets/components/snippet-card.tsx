@@ -6,6 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/features/core/utils/utils";
 import { VISIBILITY_CONFIG } from "@/features/snippets/utils/constants";
 import { SafeZone } from "@/components/ui/safe-zone";
+import { ContextMenu } from "@/components/ui/context-menu";
+import { useToast } from "@/components/ui/toast";
+import { LinkIcon, Pencil, Trash2 } from "lucide-react";
 
 interface SnippetCardProps {
   id: string;
@@ -44,6 +47,7 @@ export function SnippetCard({
     () => false
   );
   const VisIcon = VISIBILITY_CONFIG[visibility].icon;
+  const { addToast } = useToast();
 
   const dateStr = mounted
     ? new Date(createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'numeric', year: 'numeric' })
@@ -58,8 +62,43 @@ export function SnippetCard({
 
   const estimatedReadingTime = Math.max(1, Math.ceil(totalLines / 50));
 
+  const getLanguageGradient = (lang: string) => {
+    switch (lang.toLowerCase()) {
+      case "typescript":
+      case "ts": return "from-blue-600/30 to-blue-900/10";
+      case "javascript":
+      case "js": return "from-yellow-500/30 to-yellow-900/10";
+      case "python": return "from-green-500/30 to-green-900/10";
+      case "rust": return "from-orange-600/30 to-orange-900/10";
+      case "go": return "from-cyan-500/30 to-cyan-900/10";
+      case "html": return "from-orange-500/30 to-orange-900/10";
+      case "css": return "from-blue-500/30 to-blue-900/10";
+      default: return "from-slate-700/30 to-slate-900/10";
+    }
+  };
+
+  const gradientClass = getLanguageGradient(language);
+
   return (
     <SafeZone name={`SnippetCard-${id}`}>
+    <ContextMenu
+      options={[
+        { label: "Copy Link", icon: LinkIcon, onClick: () => {
+          const url = `${window.location.origin}/snippets/${id}`;
+          navigator.clipboard.writeText(url);
+          addToast("Link copied to clipboard", "success");
+        }},
+        { label: "Edit Snippet", icon: Pencil, onClick: () => {
+          window.location.href = `/snippets/${id}`;
+        }},
+        { label: "Delete", icon: Trash2, variant: "destructive", onClick: () => {
+          fetch(`/api/snippets/${id}`, { method: "DELETE" }).then(() => {
+            addToast("Snippet deleted", "info", { label: "Undo", onClick: () => fetch(`/api/snippets/${id}`, { method: "PUT", body: JSON.stringify({ isRestore: true }) }) });
+            setTimeout(() => window.location.reload(), 2000);
+          });
+        }}
+      ]}
+    >
     <Link
       href={`/snippets/${id}`}
       draggable
@@ -67,12 +106,14 @@ export function SnippetCard({
         e.dataTransfer.setData("application/json", JSON.stringify({ type: "snippet", id }));
       }}
       className={cn(
-        "group block rounded-lg border border-border bg-card p-3 sm:p-4 transition-all hover:border-primary/50 hover:shadow-sm relative cursor-grab active:cursor-grabbing",
+        "group block rounded-xl border border-border bg-card transition-all hover:border-primary/50 hover:shadow-lg relative cursor-grab active:cursor-grabbing overflow-hidden",
         selected && "border-primary/50 ring-1 ring-primary/30 bg-primary/5"
       )}
       style={{ viewTransitionName: `snippet-card-${id}` }}
       aria-label={`View snippet: ${title}`}
     >
+      <div className={cn("h-10 w-full absolute top-0 left-0 bg-gradient-to-r opacity-50 transition-opacity group-hover:opacity-100", gradientClass)} />
+      <div className="p-3 sm:p-4 relative z-10">
       {onToggleSelect && (
         <div className="absolute top-2 left-2 z-10" onClick={(e) => e.preventDefault()}>
           <input
@@ -154,7 +195,9 @@ export function SnippetCard({
           }}
         />
       )}
+      </div>
     </Link>
+    </ContextMenu>
     </SafeZone>
   );
 }

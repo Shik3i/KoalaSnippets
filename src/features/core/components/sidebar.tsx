@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/features/core/utils/utils";
+import { useRecentSnippets } from "@/features/core/hooks/use-recent-snippets";
+import { MobileFAB } from "@/features/core/components/mobile-fab";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -24,6 +26,7 @@ import {
   PlusCircle,
   Github,
   Trash2,
+  Clock,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -46,6 +49,7 @@ const navItems = [
 export function Sidebar({ tags = [], languages = [], isAuthenticated = false, isAdmin = false, onTagClick, onLanguageClick }: SidebarProps) {
   const pathname = usePathname();
   const searchParamsObj = useSearchParams();
+  const { recentSnippets } = useRecentSnippets();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collections, setCollections] = useState<{ id: string; name: string }[]>([]);
   const [newCollectionName, setNewCollectionName] = useState("");
@@ -364,6 +368,30 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
             </div>
           </div>
         )}
+
+        {recentSnippets.length > 0 && (
+          <div className="px-3 py-2 border-t border-border overflow-y-auto max-h-48">
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1 flex items-center gap-1.5">
+              <Clock size={12} />
+              Recently Accessed
+            </h3>
+            <div className="space-y-0.5">
+              {recentSnippets.map((snippet) => (
+                <Link
+                  key={snippet.id}
+                  href={`/snippets/${snippet.id}`}
+                  onClick={() => setMobileOpen(false)}
+                  className="w-full flex flex-col px-2 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors group"
+                >
+                  <span className="truncate group-hover:text-primary transition-colors">{snippet.title}</span>
+                  <span className="text-[10px] opacity-70">
+                    {new Date(snippet.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
         </div>
 
         <div className="mt-auto border-t border-border">
@@ -460,6 +488,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
           onClick={() => setMobileOpen(false)}
         />
       )}
+      <MobileFAB />
     </>
   );
 }

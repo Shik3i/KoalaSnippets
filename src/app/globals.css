@@ -388,3 +388,7 @@ body {
   from { background-position: 0 0, 0 0; }
   to { background-position: 0 400px, 0 600px; }
 }
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
