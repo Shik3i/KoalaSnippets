@@ -37,6 +37,7 @@ export const snippets = sqliteTable("snippets", {
   passwordHash: text("password_hash"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  deletedAt: integer("deleted_at", { mode: "timestamp" }),
 });
 
 export const sessions = sqliteTable("sessions", {

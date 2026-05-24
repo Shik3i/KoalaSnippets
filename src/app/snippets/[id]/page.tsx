@@ -166,6 +166,7 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
                 shareToken: snippet.shareToken ?? undefined,
                 createdAt: snippet.createdAt,
                 updatedAt: snippet.updatedAt,
+                deletedAt: snippet.deletedAt,
               }}
               syntaxTheme={syntaxTheme} 
             />
@@ -180,6 +181,7 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
               shareToken={snippet.shareToken ?? undefined}
               createdAt={snippet.createdAt}
               updatedAt={snippet.updatedAt}
+              deletedAt={snippet.deletedAt}
               isOwner={isOwner}
             />
           )}

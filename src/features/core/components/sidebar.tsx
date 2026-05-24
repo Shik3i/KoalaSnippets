@@ -23,6 +23,7 @@ import {
   Folder,
   PlusCircle,
   Github,
+  Trash2,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -37,6 +38,7 @@ interface SidebarProps {
 const navItems = [
   { href: "/", label: "Home", icon: Home },
   { href: "/dashboard", label: "My Snippets", icon: FileCode },
+  { href: "/dashboard/trash", label: "Trash", icon: Trash2 },
   { href: "/public", label: "Public Explorer", icon: Globe },
   { href: "/stats", label: "Statistics", icon: BarChart3 },
 ];
@@ -144,7 +146,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
         <div className="flex-1 overflow-y-auto">
         <nav className="p-3 space-y-1">
           {navItems.map((item) => {
-            if (item.href === "/dashboard" && !isAuthenticated) {
+            if ((item.href === "/dashboard" || item.href === "/dashboard/trash") && !isAuthenticated) {
               return null;
             }
             const Icon = item.icon;

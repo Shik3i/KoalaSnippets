@@ -26,9 +26,10 @@ interface DashboardContentProps {
   viewMode: "grid" | "table";
   density: "compact" | "preview" | "full";
   allowSelection?: boolean;
+  isTrashView?: boolean;
 }
 
-export function DashboardContent({ snippets, viewMode, density, allowSelection = true }: DashboardContentProps) {
+export function DashboardContent({ snippets, viewMode, density, allowSelection = true, isTrashView = false }: DashboardContentProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDragging, setIsDragging] = useState(false);
   const router = useRouter();
@@ -154,8 +155,8 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
       <div className="flex-1 overflow-y-auto p-3 sm:p-4">
         {snippets.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-            <p className="text-lg mb-2">No snippets yet</p>
-            <p className="text-sm">Click &quot;New Snippet&quot; to create your first one</p>
+            <p className="text-lg mb-2">{isTrashView ? "Trash is empty" : "No snippets yet"}</p>
+            {!isTrashView && <p className="text-sm">Click &quot;New Snippet&quot; to create your first one</p>}
           </div>
         ) : viewMode === "table" ? (
           <div className="overflow-x-auto">

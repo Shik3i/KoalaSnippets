@@ -41,6 +41,7 @@ export const snippetSchema = z.object({
   collectionId: z.string().nullable().optional(),
   expiresAt: z.union([z.string(), z.date()]).nullable().optional(),
   password: z.string().nullable().optional(),
+  isRestore: z.boolean().optional(),
 });
 
 export const updateSnippetSchema = snippetSchema.partial();

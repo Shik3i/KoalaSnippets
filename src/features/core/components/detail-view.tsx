@@ -16,6 +16,7 @@ import {
   Download,
   CopyPlus,
   Camera,
+  RotateCcw,
 } from "lucide-react";
 
 interface DetailViewProps {
@@ -29,8 +30,10 @@ interface DetailViewProps {
   files: { id?: string; filename: string; code: string; language: string; highlightedCode: string }[];
   isOwner: boolean;
   isSubmitting?: boolean;
+  deletedAt?: Date | null;
   onEdit?: () => void;
   onDelete?: () => void;
+  onRestore?: () => void;
   onDuplicate?: () => void;
   onToggleVisibility?: () => void;
 }
@@ -85,8 +88,10 @@ export function DetailView({
   files,
   isOwner,
   isSubmitting,
+  deletedAt,
   onEdit,
   onDelete,
+  onRestore,
   onDuplicate,
   onToggleVisibility,
 }: DetailViewProps) {
@@ -105,6 +110,33 @@ export function DetailView({
 
   const [activeTab, setActiveTab] = useState(0);
   const activeFile = files[activeTab] || files[0];
+  const [envVars, setEnvVars] = useState<Record<string, string>>({});
+
+  const VAR_REGEX = /\{\{([A-Z0-9_]+)\}\}/g;
+  const detectedVars = Array.from(new Set(
+    files.flatMap(f => {
+      const matches = f.code.match(VAR_REGEX) || [];
+      return matches.map(m => m.slice(2, -2));
+    })
+  ));
+
+  const handleEnvChange = (key: string, value: string) => {
+    setEnvVars(prev => ({ ...prev, [key]: value }));
+  };
+
+  const escapeHtml = (unsafe: string) => {
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+  };
+
+  const processedCode = activeFile ? activeFile.code.replace(VAR_REGEX, (match, key) => envVars[key] || match) : "";
+  const processedHighlightedCode = activeFile ? activeFile.highlightedCode.replace(VAR_REGEX, (match, key) => {
+    return envVars[key] ? escapeHtml(envVars[key]) : match;
+  }) : "";
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -147,7 +179,7 @@ export function DetailView({
 
   const handleCopy = async (format: "raw" | "markdown" = "raw") => {
     if (!activeFile) return;
-    let textToCopy = activeFile.code;
+    let textToCopy = processedCode;
     if (format === "markdown") {
       textToCopy = "```" + activeFile.language + "\n" + textToCopy + "\n```";
     }
@@ -161,7 +193,7 @@ export function DetailView({
   const handleDownload = () => {
     if (!activeFile) return;
     const filename = getFilename(activeFile.filename, activeFile.language);
-    const blob = new Blob([activeFile.code], { type: "text/plain" });
+    const blob = new Blob([processedCode], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -234,28 +266,43 @@ export function DetailView({
           </div>
 
           <div className="flex items-center gap-1">
-            {isOwner && (
+            {deletedAt ? (
+              isOwner && (
+                <>
+                  <Button variant="ghost" size="icon" onClick={onRestore} aria-label="Restore snippet" className="text-primary hover:text-primary/80 hover:bg-primary/10" disabled={isSubmitting}>
+                    <RotateCcw size={16} suppressHydrationWarning />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={onDelete} aria-label="Permanently delete snippet" className="text-destructive hover:text-destructive hover:bg-destructive/10" disabled={isSubmitting}>
+                    <Trash2 size={16} suppressHydrationWarning />
+                  </Button>
+                </>
+              )
+            ) : (
               <>
-                <Button variant="ghost" size="icon" onClick={onEdit} aria-label="Edit snippet" disabled={isSubmitting}>
-                  <Pencil size={16} suppressHydrationWarning />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={onDuplicate} aria-label="Duplicate snippet" disabled={isSubmitting}>
-                  <CopyPlus size={16} suppressHydrationWarning />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={onToggleVisibility} aria-label="Toggle visibility" disabled={isSubmitting}>
-                  <VisIcon size={16} suppressHydrationWarning />
-                </Button>
+                {isOwner && (
+                  <>
+                    <Button variant="ghost" size="icon" onClick={onEdit} aria-label="Edit snippet" disabled={isSubmitting}>
+                      <Pencil size={16} suppressHydrationWarning />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={onDuplicate} aria-label="Duplicate snippet" disabled={isSubmitting}>
+                      <CopyPlus size={16} suppressHydrationWarning />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={onToggleVisibility} aria-label="Toggle visibility" disabled={isSubmitting}>
+                      <VisIcon size={16} suppressHydrationWarning />
+                    </Button>
+                  </>
+                )}
+                {visibility === "SHARED" && (
+                  <Button variant="ghost" size="icon" onClick={handleShare} aria-label="Copy share link" disabled={isSubmitting}>
+                    <Share2 size={16} suppressHydrationWarning />
+                  </Button>
+                )}
+                {isOwner && (
+                  <Button variant="ghost" size="icon" onClick={onDelete} aria-label="Delete snippet" className="text-destructive hover:text-destructive" disabled={isSubmitting}>
+                    <Trash2 size={16} suppressHydrationWarning />
+                  </Button>
+                )}
               </>
-            )}
-            {visibility === "SHARED" && (
-              <Button variant="ghost" size="icon" onClick={handleShare} aria-label="Copy share link" disabled={isSubmitting}>
-                <Share2 size={16} suppressHydrationWarning />
-              </Button>
-            )}
-            {isOwner && (
-              <Button variant="ghost" size="icon" onClick={onDelete} aria-label="Delete snippet" className="text-destructive hover:text-destructive" disabled={isSubmitting}>
-                <Trash2 size={16} suppressHydrationWarning />
-              </Button>
             )}
           </div>
         </div>
@@ -294,7 +341,7 @@ export function DetailView({
           </div>
         )}
 
-        <div className="flex-1 overflow-auto relative">
+        <div className="flex-1 overflow-auto relative bg-muted/20">
           <div className="absolute top-3 right-3 z-20 flex gap-2">
             <div className="relative">
               <Button
@@ -345,8 +392,34 @@ export function DetailView({
             </Button>
           </div>
 
+          {detectedVars.length > 0 && (
+            <div className="px-4 pt-12 pb-2 relative z-10 max-w-4xl lg:mx-auto">
+              <div className="bg-background/60 backdrop-blur-xl border border-primary/30 rounded-xl p-5 shadow-[0_0_40px_-10px_rgba(var(--primary),0.2)]">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-primary font-mono font-bold tracking-wider">.ENV</span>
+                  <Badge variant="outline" className="text-[10px] border-primary/30 text-primary/80 bg-primary/5">Local Only</Badge>
+                  <span className="text-xs text-muted-foreground ml-auto">Fill variables to update snippet</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {detectedVars.map(v => (
+                    <div key={v} className="flex flex-col gap-1.5 relative group">
+                      <label className="text-[11px] uppercase font-bold text-muted-foreground tracking-widest pl-1">{v}</label>
+                      <input 
+                        type="text"
+                        className="bg-card/50 border border-border/50 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 text-foreground transition-all placeholder:text-muted-foreground/30"
+                        placeholder="[ Enter value ]"
+                        value={envVars[v] || ""}
+                        onChange={(e) => handleEnvChange(v, e.target.value)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeFile && (
-            <div className="p-4 pt-12 pb-8 flex justify-center items-start min-h-full bg-muted/20">
+            <div className={cn("p-4 flex justify-center items-start min-h-full", detectedVars.length === 0 && "pt-12 pb-8")}>
               <div
                 ref={normalRef}
                 className="w-full max-w-4xl p-6 sm:p-10 rounded-2xl bg-gradient-to-tr from-slate-950 via-[#131b2e] to-slate-950 flex items-center justify-center border border-white/5"
@@ -366,7 +439,7 @@ export function DetailView({
                 </div>
                 <div
                   className="p-6 font-mono text-sm leading-relaxed overflow-auto detail-view-code"
-                  dangerouslySetInnerHTML={{ __html: activeFile.highlightedCode }}
+                  dangerouslySetInnerHTML={{ __html: processedHighlightedCode }}
                   style={{ fontFamily: "var(--font-jetbrains), monospace" }}
                 />
               </div>
@@ -392,7 +465,7 @@ export function DetailView({
           <div 
             ref={zenRef}
             className="flex-1 overflow-auto bg-[#0d1117] rounded-xl border border-white/10 p-6 font-mono text-sm leading-relaxed text-white/90 detail-view-code"
-            dangerouslySetInnerHTML={{ __html: activeFile.highlightedCode }}
+            dangerouslySetInnerHTML={{ __html: processedHighlightedCode }}
             style={{ fontFamily: "var(--font-jetbrains), monospace" }}
           />
         </div>

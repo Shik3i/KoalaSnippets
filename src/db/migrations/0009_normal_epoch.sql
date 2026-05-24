@@ -1,0 +1,1 @@
+ALTER TABLE `snippets` ADD `deleted_at` integer;

@@ -69,6 +69,7 @@ export async function GET(
     shareToken: snippet.visibility === "SHARED" ? snippet.shareToken : undefined,
     createdAt: snippet.createdAt,
     updatedAt: snippet.updatedAt,
+    deletedAt: snippet.deletedAt,
     isOwner: session?.user.id === snippet.authorId,
   });
 }
@@ -102,7 +103,11 @@ export async function PUT(
     }
 
     const updates: Record<string, unknown> = { ...parsed.data, updatedAt: new Date() };
-    const { code, language, files, ...snippetUpdates } = updates;
+    const { code, language, files, isRestore, ...snippetUpdates } = updates;
+
+    if (isRestore) {
+      snippetUpdates.deletedAt = null;
+    }
 
     if (snippetUpdates.visibility === "SHARED" && !snippet.shareToken) {
       snippetUpdates.shareToken = generateShareToken();
@@ -248,7 +253,13 @@ export async function DELETE(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  await db.delete(snippets).where(eq(snippets.id, id));
+  if (!snippet.deletedAt) {
+    // Soft delete
+    await db.update(snippets).set({ deletedAt: new Date() }).where(eq(snippets.id, id));
+  } else {
+    // Hard delete
+    await db.delete(snippets).where(eq(snippets.id, id));
+  }
 
   return NextResponse.json({ success: true });
 }

@@ -17,6 +17,7 @@ interface SnippetDetailClientProps {
   shareToken?: string;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date | null;
   isOwner: boolean;
 }
 
@@ -60,7 +61,7 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
     try {
       const res = await fetch(`/api/snippets/${props.id}`, { method: "DELETE" });
       if (res.ok) {
-        addToast("Snippet deleted", "success");
+        addToast(props.deletedAt ? "Snippet permanently deleted" : "Snippet moved to trash", "success");
         await revalidateDashboard();
         router.push("/dashboard");
       } else {
@@ -69,6 +70,27 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
     } finally {
       setIsSubmitting(false);
       setDeleteModalOpen(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/snippets/${props.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isRestore: true }),
+      });
+      if (res.ok) {
+        addToast("Snippet restored from trash", "success");
+        await revalidateDashboard();
+        await revalidateSnippet(props.id);
+        router.push("/dashboard");
+      } else {
+        addToast("Failed to restore snippet", "error");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -104,6 +126,7 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
         isSubmitting={isSubmitting}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onRestore={handleRestore}
         onDuplicate={handleDuplicate}
         onToggleVisibility={handleToggleVisibility}
       />
@@ -111,9 +134,9 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
         open={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={confirmDelete}
-        title="Delete Snippet"
-        description="Are you sure you want to delete this snippet? This action cannot be undone."
-        confirmLabel="Delete"
+        title={props.deletedAt ? "Permanently Delete Snippet" : "Move to Trash"}
+        description={props.deletedAt ? "Are you sure you want to permanently delete this snippet? This action cannot be undone." : "Are you sure you want to move this snippet to the trash?"}
+        confirmLabel={props.deletedAt ? "Permanently Delete" : "Move to Trash"}
         variant="destructive"
         loading={isSubmitting}
       />

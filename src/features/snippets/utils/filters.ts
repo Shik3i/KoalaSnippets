@@ -1,4 +1,4 @@
-import { eq, like, or, and, exists, inArray, SQL } from "drizzle-orm";
+import { eq, like, or, and, exists, inArray, SQL, isNull, isNotNull } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { snippets, snippetFiles } from "@/db/schema";
 import { db } from "@/db";
@@ -13,6 +13,7 @@ interface FilterParams {
   authorId?: string;
   visibility?: "PRIVATE" | "SHARED" | "PUBLIC";
   filterMode?: string;
+  isTrash?: boolean;
 }
 
 export async function buildSnippetConditions(params: FilterParams): Promise<SQL[]> {
@@ -21,6 +22,12 @@ export async function buildSnippetConditions(params: FilterParams): Promise<SQL[
 
   if (params.authorId) {
     conditions.push(eq(snippets.authorId, params.authorId));
+  }
+
+  if (params.isTrash) {
+    conditions.push(isNotNull(snippets.deletedAt));
+  } else {
+    conditions.push(isNull(snippets.deletedAt));
   }
 
   if (params.visibility) {

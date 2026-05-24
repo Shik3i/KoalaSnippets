@@ -17,6 +17,7 @@ interface PasswordPromptProps {
     shareToken?: string;
     createdAt: Date;
     updatedAt: Date;
+    deletedAt?: Date | null;
   };
   syntaxTheme: string;
 }
@@ -60,6 +61,7 @@ export function PasswordPrompt({ snippet, syntaxTheme }: PasswordPromptProps) {
         shareToken={snippet.shareToken}
         createdAt={snippet.createdAt}
         updatedAt={snippet.updatedAt}
+        deletedAt={snippet.deletedAt}
         isOwner={false}
       />
     );

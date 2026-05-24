@@ -30,6 +30,7 @@ export async function GET(request: Request) {
   const baseQuery = db.select().from(snippets);
 
   const conditions = [];
+  conditions.push(isNull(snippets.deletedAt));
 
   if (visibility === "PUBLIC") {
     conditions.push(eq(snippets.visibility, "PUBLIC"));
