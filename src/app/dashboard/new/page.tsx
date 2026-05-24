@@ -18,6 +18,9 @@ import { revalidateDashboard } from "@/features/core/actions/revalidate";
 import { X, Plus, ChevronDown, Wand2, History, Map as MapIcon } from "lucide-react";
 import { HistoryModal } from "@/features/snippets/components/history-modal";
 import { GlobalDropzone } from "@/features/core/components/global-dropzone";
+import { useLocalStorageDraft } from "@/features/snippets/utils/use-draft";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { SafeZone } from "@/components/ui/safe-zone";
 
 interface DuplicateData {
   title: string;
@@ -98,24 +101,43 @@ export default function NewSnippetPage({
   const activeCode = files[activeTab]?.code ?? "";
   const isLongFile = activeCode.split('\n').length > 50;
 
+  const draftKey = isEditing && editId ? `draft_edit_${editId}` : "draft_new_snippet";
+  const currentData = useMemo(() => ({ title, description, files, tags, visibility }), [title, description, files, tags, visibility]);
+  const { hasDraft, loadDraft, clearDraft } = useLocalStorageDraft(draftKey, currentData, 3000);
+
+  const handleRestoreDraft = () => {
+    const draft = loadDraft();
+    if (draft) {
+      if (draft.title !== undefined) setTitle(draft.title);
+      if (draft.description !== undefined) setDescription(draft.description);
+      if (draft.files) setFiles(draft.files);
+      if (draft.tags) setTags(draft.tags);
+      if (draft.visibility) setVisibility(draft.visibility);
+      addToast("Draft restored", "success");
+    }
+    clearDraft();
+  };
+
   useEffect(() => {
     const dupData = readDuplicateData();
     const eData = readEditData();
     
     if (eData || dupData) {
       const data = eData || dupData!;
-      if (eData) {
-        setIsEditing(true);
-        setEditId(eData.id);
-        addToast("Editing snippet", "info");
-      } else if (dupData) {
-        addToast("Pre-filled with duplicated snippet", "info");
-      }
-      if (data.title) setTitle(data.title);
-      if (data.description) setDescription(data.description);
-      if (data.files?.length) setFiles(data.files);
-      if (data.tags) setTags(data.tags);
-      if (data.visibility) setVisibility(data.visibility);
+      setTimeout(() => {
+        if (eData) {
+          setIsEditing(true);
+          setEditId(eData.id);
+          addToast("Editing snippet", "info");
+        } else if (dupData) {
+          addToast("Pre-filled with duplicated snippet", "info");
+        }
+        if (data.title) setTitle(data.title);
+        if (data.description) setDescription(data.description);
+        if (data.files?.length) setFiles(data.files);
+        if (data.tags) setTags(data.tags);
+        if (data.visibility) setVisibility(data.visibility);
+      }, 0);
     }
 
     if (isImport) {
@@ -174,6 +196,7 @@ export default function NewSnippetPage({
       }
 
       addToast(isEditing ? "Snippet updated!" : "Snippet saved!", "success");
+      clearDraft();
       await revalidateDashboard();
       
       const snippetId = (isEditing && editId) ? editId : data.id;
@@ -350,31 +373,33 @@ export default function NewSnippetPage({
                 </div>
 
                 <div className="p-2 relative">
-                  <CodeEditor
-                    id="code"
-                    value={activeCode}
-                    onChange={(newCode) => {
-                      const newFiles = [...files];
-                      const oldCode = newFiles[activeTab].code;
-                      newFiles[activeTab].code = newCode;
-                      
-                      // Paste heuristic: auto-detect language if pasting into empty editor
-                      if (oldCode.length < 5 && newCode.length > 20 && newFiles[activeTab].language === "typescript") {
-                        const guessed = detectLanguage(newCode);
-                        if (guessed && guessed !== "typescript" && SUPPORTED_LANGUAGES.includes(guessed)) {
-                          newFiles[activeTab].language = guessed;
-                          addToast(`Auto-detected language: ${guessed}`, "info");
+                  <SafeZone name="CodeEditor">
+                    <CodeEditor
+                      id="code"
+                      value={activeCode}
+                      onChange={(newCode) => {
+                        const newFiles = [...files];
+                        const oldCode = newFiles[activeTab].code;
+                        newFiles[activeTab].code = newCode;
+                        
+                        // Paste heuristic: auto-detect language if pasting into empty editor
+                        if (oldCode.length < 5 && newCode.length > 20 && newFiles[activeTab].language === "typescript") {
+                          const guessed = detectLanguage(newCode);
+                          if (guessed && guessed !== "typescript" && SUPPORTED_LANGUAGES.includes(guessed)) {
+                            newFiles[activeTab].language = guessed;
+                            addToast(`Auto-detected language: ${guessed}`, "info");
+                          }
                         }
-                      }
-                      
-                      setFiles(newFiles);
-                    }}
-                    placeholder="Paste your code here..."
-                    rows={12}
-                    className="font-mono text-sm border-0 focus-visible:ring-0 rounded-none shadow-none resize-y min-h-[300px]"
-                    required
-                    showMinimap={showMinimap && isLongFile}
-                  />
+                        
+                        setFiles(newFiles);
+                      }}
+                      placeholder="Paste your code here..."
+                      rows={12}
+                      className="font-mono text-sm border-0 focus-visible:ring-0 rounded-none shadow-none resize-y min-h-[300px]"
+                      required
+                      showMinimap={showMinimap && isLongFile}
+                    />
+                  </SafeZone>
                 </div>
               </div>
 
@@ -554,6 +579,14 @@ export default function NewSnippetPage({
           }} 
         />
       )}
+      <ConfirmModal
+        open={hasDraft && !isImport}
+        onClose={clearDraft}
+        onConfirm={handleRestoreDraft}
+        title="Unsaved Draft Found"
+        description="We found an unsaved draft of this snippet. Would you like to restore it?"
+        confirmLabel="Restore Draft"
+      />
     </div>
   );
 }

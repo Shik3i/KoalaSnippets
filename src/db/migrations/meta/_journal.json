@@ -78,6 +78,20 @@
       "when": 1779592556220,
       "tag": "0010_jazzy_big_bertha",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1779640451678,
+      "tag": "0011_demonic_firebird",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1779640628214,
+      "tag": "0012_curvy_gateway",
+      "breakpoints": true
     }
   ]
 }

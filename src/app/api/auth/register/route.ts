@@ -63,8 +63,8 @@ export async function POST(request: Request) {
           .set({ totalUsersCreated: sql`total_users_created + 1` })
           .where(eq(siteStatistics.id, 1)).run();
       });
-    } catch (dbError: any) {
-      if (dbError.code === "SQLITE_CONSTRAINT_UNIQUE") {
+    } catch (dbError: unknown) {
+      if (dbError && typeof dbError === "object" && "code" in dbError && (dbError as { code: string }).code === "SQLITE_CONSTRAINT_UNIQUE") {
         return NextResponse.json({ error: "Username already taken" }, { status: 409 });
       }
       throw dbError;

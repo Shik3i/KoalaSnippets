@@ -42,6 +42,18 @@ export function runVacuumBackup(): string {
   return backupPath;
 }
 
+export function runWalCheckpoint(): void {
+  const dbPath = getDbPath();
+  const db = new Database(dbPath);
+  try {
+    db.pragma("wal_checkpoint(TRUNCATE)");
+  } catch (err) {
+    console.error("[backup] WAL checkpoint failed:", err);
+  } finally {
+    db.close();
+  }
+}
+
 export function parseBackupDate(filename: string): Date {
   const basename = path.basename(filename);
   const dateStr = basename.replace("backup-", "").replace(".db", "");

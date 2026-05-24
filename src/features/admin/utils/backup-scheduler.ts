@@ -1,4 +1,4 @@
-import { runBackupWithRetention } from "./backup";
+import { runBackupWithRetention, runWalCheckpoint } from "./backup";
 import { cleanupExpiredSessions } from "@/features/auth/utils/session";
 
 const BACKUP_INTERVAL_MS = 6 * 60 * 60 * 1000;
@@ -13,6 +13,7 @@ export function startBackupScheduler() {
   console.log("[backup] Starting automated backup scheduler (every 6 hours)");
 
   try {
+    runWalCheckpoint();
     runBackupWithRetention();
     cleanupExpiredSessions().catch(console.error);
   } catch (err) {
@@ -21,6 +22,7 @@ export function startBackupScheduler() {
 
   backupInterval = setInterval(() => {
     try {
+      runWalCheckpoint();
       const result = runBackupWithRetention();
       cleanupExpiredSessions().catch(console.error);
       console.log(`[backup] Backup completed: ${result.backupPath} (${result.deleted} old backups removed)`);

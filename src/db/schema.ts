@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
 
 export interface UserPreferences {
@@ -38,7 +38,12 @@ export const snippets = sqliteTable("snippets", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
   deletedAt: integer("deleted_at", { mode: "timestamp" }),
-});
+}, (table) => [
+  index("snippet_created_at_idx").on(table.createdAt),
+  index("snippet_author_created_at_idx").on(table.authorId, table.createdAt),
+  index("snippet_visibility_idx").on(table.visibility),
+  index("snippet_collection_idx").on(table.collectionId)
+]);
 
 export const sessions = sqliteTable("sessions", {
   id: text("id").primaryKey(),
@@ -60,14 +65,19 @@ export const collections = sqliteTable("collections", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-});
+}, (table) => [
+  index("collection_user_idx").on(table.userId)
+]);
 
 export const userFavorites = sqliteTable("user_favorites", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   snippetId: text("snippet_id").notNull().references(() => snippets.id, { onDelete: "cascade" }),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-});
+}, (table) => [
+  index("favorite_user_idx").on(table.userId),
+  index("favorite_snippet_idx").on(table.snippetId)
+]);
 
 export const snippetFiles = sqliteTable("snippet_files", {
   id: text("id").primaryKey(),
@@ -75,7 +85,10 @@ export const snippetFiles = sqliteTable("snippet_files", {
   filename: text("filename").notNull(),
   code: text("code").notNull(),
   language: text("language").notNull(),
-});
+}, (table) => [
+  index("file_snippet_idx").on(table.snippetId),
+  index("file_language_idx").on(table.language)
+]);
 
 export const snippetRevisions = sqliteTable("snippet_revisions", {
   id: text("id").primaryKey(),
@@ -164,6 +177,23 @@ export const auditLogs = sqliteTable("audit_logs", {
 export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
   user: one(users, {
     fields: [auditLogs.userId],
+    references: [users.id],
+  }),
+}));
+
+export const crashReports = sqliteTable("crash_reports", {
+  id: text("id").primaryKey(),
+  errorMessage: text("error_message").notNull(),
+  stackTrace: text("stack_trace"),
+  userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+  route: text("route"),
+  metadata: text("metadata", { mode: "json" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
+export const crashReportsRelations = relations(crashReports, ({ one }) => ({
+  user: one(users, {
+    fields: [crashReports.userId],
     references: [users.id],
   }),
 }));

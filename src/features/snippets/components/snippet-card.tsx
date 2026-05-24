@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/features/core/utils/utils";
 import { VISIBILITY_CONFIG } from "@/features/snippets/utils/constants";
+import { SafeZone } from "@/components/ui/safe-zone";
 
 interface SnippetCardProps {
   id: string;
@@ -54,6 +55,7 @@ export function SnippetCard({
     : `Vom ${dateStr}`;
 
   return (
+    <SafeZone name={`SnippetCard-${id}`}>
     <Link
       href={`/snippets/${id}`}
       draggable
@@ -144,5 +146,6 @@ export function SnippetCard({
         />
       )}
     </Link>
+    </SafeZone>
   );
 }
