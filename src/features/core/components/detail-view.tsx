@@ -5,6 +5,7 @@ import * as htmlToImage from "html-to-image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/features/core/utils/utils";
+import { computeSnippetStats } from "@/features/snippets/utils/snippet-stats";
 import { useToast } from "@/components/ui/toast";
 import { VISIBILITY_CONFIG } from "@/features/snippets/utils/constants";
 import { useRecentSnippets } from "@/features/core/hooks/use-recent-snippets";
@@ -20,6 +21,9 @@ import {
   Camera,
   RotateCcw,
   GitFork,
+  FileText,
+  BarChart3,
+  ChevronDown,
 } from "lucide-react";
 
 interface DetailViewProps {
@@ -128,6 +132,8 @@ export function DetailView({
   const [activeTab, setActiveTab] = useState(0);
   const activeFile = files[activeTab] || files[0];
   const [envVars, setEnvVars] = useState<Record<string, string>>({});
+  const [statsOpen, setStatsOpen] = useState(false);
+  const stats = computeSnippetStats(files);
 
   const VAR_REGEX = /\{\{([A-Z0-9_]+)\}\}/g;
   const detectedVars = Array.from(new Set(
@@ -211,6 +217,34 @@ export function DetailView({
     if (!activeFile) return;
     const filename = getFilename(activeFile.filename, activeFile.language);
     const blob = new Blob([processedCode], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    addToast(`Downloaded ${filename}`, "success");
+  };
+
+  const handleDownloadMarkdown = () => {
+    const frontmatter = [
+      "---",
+      `title: "${title.replace(/"/g, '\\"')}"`,
+      description ? `description: "${description.replace(/"/g, '\\"')}"` : null,
+      tags && tags.length > 0 ? `tags: [${tags.join(", ")}]` : null,
+      `language: ${activeFile.language}`,
+      "---",
+      "",
+      "```" + activeFile.language,
+      processedCode,
+      "```",
+    ].filter(Boolean).join("\n");
+
+    const sanitizedName = title.replace(/[^a-zA-Z0-9_-]/g, "_").toLowerCase();
+    const filename = `${sanitizedName}.md`;
+    const blob = new Blob([frontmatter], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -416,15 +450,34 @@ export function DetailView({
               <Camera size={14} suppressHydrationWarning />
               Screenshot
             </Button>
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 bg-card/80 backdrop-blur-sm"
+                onClick={handleDownload}
+                aria-label="Download code file"
+              >
+                <Download size={14} suppressHydrationWarning />
+                Download
+              </Button>
+              <button
+                onClick={() => setStatsOpen(!statsOpen)}
+                className="absolute -right-0 top-0 bottom-0 w-5 flex items-center justify-center hover:bg-muted/50 rounded-r transition-colors"
+                aria-label="Toggle snippet statistics"
+              >
+                <ChevronDown size={10} className={cn("transition-transform text-muted-foreground", statsOpen && "rotate-180")} />
+              </button>
+            </div>
             <Button
               variant="outline"
               size="sm"
               className="gap-1.5 bg-card/80 backdrop-blur-sm"
-              onClick={handleDownload}
-              aria-label="Download code file"
+              onClick={handleDownloadMarkdown}
+              aria-label="Download as Markdown"
             >
-              <Download size={14} suppressHydrationWarning />
-              Download
+              <FileText size={14} suppressHydrationWarning />
+              .md
             </Button>
             <Button
               variant="outline"
@@ -493,6 +546,51 @@ export function DetailView({
           )}
         </div>
       </div>
+      
+      {statsOpen && (
+        <div className="border-t border-border bg-card/50 backdrop-blur-sm p-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center gap-2 mb-3">
+              <BarChart3 size={14} className="text-muted-foreground" />
+              <h3 className="text-sm font-semibold">Snippet Statistics</h3>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+              <div className="p-3 bg-muted/50 rounded-lg border border-border">
+                <div className="text-[10px] text-muted-foreground uppercase">Characters</div>
+                <div className="text-lg font-mono font-semibold">{stats.characters.toLocaleString()}</div>
+              </div>
+              <div className="p-3 bg-muted/50 rounded-lg border border-border">
+                <div className="text-[10px] text-muted-foreground uppercase">Words</div>
+                <div className="text-lg font-mono font-semibold">{stats.words.toLocaleString()}</div>
+              </div>
+              <div className="p-3 bg-muted/50 rounded-lg border border-border">
+                <div className="text-[10px] text-muted-foreground uppercase">Lines</div>
+                <div className="text-lg font-mono font-semibold">{stats.lines.toLocaleString()}</div>
+              </div>
+              <div className="p-3 bg-muted/50 rounded-lg border border-border">
+                <div className="text-[10px] text-muted-foreground uppercase">Read Time</div>
+                <div className="text-lg font-mono font-semibold">~{stats.estimatedReadTime} min</div>
+              </div>
+            </div>
+            {stats.languageDistribution.length > 1 && (
+              <div>
+                <div className="text-[10px] text-muted-foreground uppercase mb-2">Language Distribution</div>
+                <div className="space-y-1.5">
+                  {stats.languageDistribution.map((lang) => (
+                    <div key={lang.language} className="flex items-center gap-2">
+                      <span className="text-xs font-mono w-24 truncate">{lang.language}</span>
+                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-primary rounded-full" style={{ width: `${lang.percentage}%` }} />
+                      </div>
+                      <span className="text-xs text-muted-foreground w-10 text-right">{lang.percentage}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       
       {zenMode && activeFile && (
         <div className="fixed inset-0 z-[100] bg-[#0d1117] flex flex-col p-4 overflow-hidden animate-in fade-in duration-200">

@@ -16,7 +16,7 @@ import { useKeyboardShortcuts } from "@/features/snippets/utils/keyboard-shortcu
 import { SUPPORTED_LANGUAGES } from "@/features/snippets/utils/shiki";
 import { detectLanguage } from "@/features/snippets/utils/language-detection";
 import { revalidateDashboard } from "@/features/core/actions/revalidate";
-import { X, Plus, ChevronDown, Wand2, History, Map as MapIcon } from "lucide-react";
+import { X, Plus, ChevronDown, Wand2, History, Map as MapIcon, AlertTriangle } from "lucide-react";
 import { HistoryModal } from "@/features/snippets/components/history-modal";
 import { GlobalDropzone } from "@/features/core/components/global-dropzone";
 import { useLocalStorageDraft } from "@/features/snippets/utils/use-draft";
@@ -173,6 +173,7 @@ export default function NewSnippetPage({
   // Removed duplicate toast useEffect
 
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
+  const [duplicateSnippetId, setDuplicateSnippetId] = useState<string | null>(null);
 
   const handleSubmit = async (e?: React.FormEvent, ignoreDuplicate = false) => {
     e?.preventDefault();
@@ -204,6 +205,7 @@ export default function NewSnippetPage({
       const data = await res.json();
       if (!res.ok) {
         if (res.status === 409 && data.isDuplicate) {
+          setDuplicateSnippetId(data.existingId ?? null);
           setShowDuplicateWarning(true);
           return;
         }
@@ -605,18 +607,40 @@ export default function NewSnippetPage({
         description="We found an unsaved draft of this snippet. Would you like to restore it?"
         confirmLabel="Restore Draft"
       />
-      <ConfirmModal
-        open={showDuplicateWarning}
-        onClose={() => setShowDuplicateWarning(false)}
-        onConfirm={() => {
-          setShowDuplicateWarning(false);
-          handleSubmit(undefined, true);
-        }}
-        title="Duplicate Snippet Detected"
-        description="You already have a snippet with this exact code. Are you sure you want to save another copy?"
-        confirmLabel="Save Anyway"
-        variant="destructive"
-      />
+      {showDuplicateWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowDuplicateWarning(false)}>
+          <div className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
+                <AlertTriangle size={16} className="text-amber-400" />
+              </div>
+              <h3 className="text-lg font-semibold">Duplicate Snippet Detected</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              You already have a snippet with this exact code.
+            </p>
+            {duplicateSnippetId && (
+              <div className="mb-4 p-3 bg-muted/50 rounded-lg border border-border">
+                <p className="text-xs text-muted-foreground mb-1">Existing snippet:</p>
+                <a href={`/snippets/${duplicateSnippetId}`} className="text-sm text-primary hover:underline font-mono">
+                  View Snippet →
+                </a>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setShowDuplicateWarning(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" className="flex-1" onClick={() => {
+                setShowDuplicateWarning(false);
+                handleSubmit(undefined, true);
+              }}>
+                Save Anyway
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );
