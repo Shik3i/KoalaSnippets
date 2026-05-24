@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Copy, Check, Braces, Minimize2, Maximize2 } from "lucide-react";
+import { Copy, Check, Braces, Minimize2, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function JsonFormatterPage() {
@@ -51,13 +50,8 @@ export default function JsonFormatterPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <div className="border-b border-border p-4">
-        <Link href="/tools" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft size={14} /> Back to Tools
-        </Link>
-      </div>
-      <div className="flex-1 p-6 md:p-8 max-w-4xl mx-auto w-full">
+    <div className="flex-1 overflow-auto">
+      <div className="p-6 md:p-8 max-w-4xl mx-auto w-full">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
             <Braces size={20} className="text-orange-400" />

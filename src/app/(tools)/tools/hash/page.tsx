@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Copy, Check, Hash } from "lucide-react";
+import { Copy, Check, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const ALGOS = ["SHA-256", "SHA-512", "SHA-1", "MD5"] as const;
@@ -79,13 +78,8 @@ export default function HashGeneratorPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <div className="border-b border-border p-4">
-        <Link href="/tools" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft size={14} /> Back to Tools
-        </Link>
-      </div>
-      <div className="flex-1 p-6 md:p-8 max-w-3xl mx-auto w-full">
+    <div className="flex-1 overflow-auto">
+      <div className="p-6 md:p-8 max-w-3xl mx-auto w-full">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
             <Hash size={20} className="text-cyan-400" />
