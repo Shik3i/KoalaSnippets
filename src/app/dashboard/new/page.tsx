@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sidebar } from "@/features/core/components/sidebar";
+import { Breadcrumb } from "@/features/core/components/breadcrumb";
 import { useToast } from "@/components/ui/toast";
 import { useKeyboardShortcuts } from "@/features/snippets/utils/keyboard-shortcuts";
 import { SUPPORTED_LANGUAGES } from "@/features/snippets/utils/shiki";
@@ -270,7 +271,9 @@ export default function NewSnippetPage({
     <div className="flex h-screen">
       <GlobalDropzone />
       <Sidebar isAuthenticated={true} />
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Breadcrumb />
+        <div className="flex-1 overflow-auto p-6">
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
             <CardTitle>{isEditing ? "Edit Snippet" : "New Snippet"}</CardTitle>
@@ -614,6 +617,7 @@ export default function NewSnippetPage({
         confirmLabel="Save Anyway"
         variant="destructive"
       />
+      </div>
     </div>
   );
 }

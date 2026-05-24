@@ -6,6 +6,7 @@ import { snippets, snippetFiles } from "@/db/schema";
 import { getSession } from "@/features/auth/utils/session";
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { Sidebar } from "@/features/core/components/sidebar";
+import { BreadcrumbWithCollection } from "@/features/core/components/breadcrumb";
 import { SnippetDetailClient } from "./SnippetDetailClient";
 import { PasswordPrompt } from "@/features/snippets/components/password-prompt";
 import { eq } from "drizzle-orm";
@@ -164,7 +165,10 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
       <Sidebar isAuthenticated={!!session} isAdmin={session?.user.role === "ADMIN"} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="border-b border-border p-4">
+        <BreadcrumbWithCollection
+          snippetTitle={snippet.title as string}
+        />
+        <div className="px-4 py-2">
           <Link
             href={backUrl}
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"

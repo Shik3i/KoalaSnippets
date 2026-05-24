@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getSession } from "@/features/auth/utils/session";
 import { Sidebar } from "@/features/core/components/sidebar";
+import { Breadcrumb } from "@/features/core/components/breadcrumb";
 import { SnippetSearchHeader } from "@/features/snippets/components/search-header";
 import { DashboardContent } from "@/features/snippets/components/dashboard-content";
 import { GlobalDropzone } from "@/features/core/components/global-dropzone";
@@ -125,6 +126,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </Suspense>
 
       <div className="flex-1 flex flex-col overflow-hidden">
+        <Suspense fallback={<div className="h-9 border-b border-border bg-card/50" />}>
+          <Breadcrumb />
+        </Suspense>
         <SnippetSearchHeader availableTags={sidebarTags} availableLanguages={sidebarLanguages} sort={sortMode} viewMode={viewMode} resultCount={highlightedSnippets.length} />
         <DashboardContent
           snippets={highlightedSnippets.map((s) => ({
