@@ -3,11 +3,12 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
-import { Upload, Plus, Globe, Trash2 } from "lucide-react";
+import { Upload, Plus, Globe, Trash2, Download } from "lucide-react";
 import { SnippetCard } from "./snippet-card";
 import { SnippetTableRow } from "./snippet-table-row";
 import { BulkActionBar } from "./bulk-action-bar";
 import { EmptyState } from "@/features/core/components/empty-state";
+import { ImportWizard } from "@/features/snippets/components/import-wizard";
 
 interface SnippetData {
   id: string;
@@ -34,6 +35,7 @@ interface DashboardContentProps {
 export function DashboardContent({ snippets, viewMode, density, allowSelection = true, isTrashView = false, hasMoreInitial = false }: DashboardContentProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDragging, setIsDragging] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const router = useRouter();
   const { addToast } = useToast();
 
@@ -213,6 +215,15 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
             </label>
           )}
         </div>
+        {!isTrashView && (
+          <button
+            onClick={() => setImportOpen(true)}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Download size={14} />
+            Import from URL
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 sm:p-4">
@@ -232,6 +243,12 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
                   label: "New Snippet",
                   icon: <Plus size={14} />,
                   onClick: () => router.push("/dashboard/new"),
+                },
+                {
+                  label: "Import from URL",
+                  icon: <Download size={14} />,
+                  variant: "outline",
+                  onClick: () => setImportOpen(true),
                 },
                 {
                   label: "Browse Public",
@@ -313,6 +330,8 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
       {allowSelection && selectedIds.size > 0 && (
         <BulkActionBar selectedIds={Array.from(selectedIds)} onClear={clearSelection} />
       )}
+
+      <ImportWizard open={importOpen} onClose={() => setImportOpen(false)} />
     </div>
   );
 }

@@ -110,6 +110,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   sessions: many(sessions),
   collections: many(collections),
   favorites: many(userFavorites),
+  apiKeys: many(apiKeys),
 }));
 
 export const collectionsRelations = relations(collections, ({ one, many }) => ({
@@ -204,6 +205,25 @@ export const crashReports = sqliteTable("crash_reports", {
 export const crashReportsRelations = relations(crashReports, ({ one }) => ({
   user: one(users, {
     fields: [crashReports.userId],
+    references: [users.id],
+  }),
+}));
+
+export const apiKeys = sqliteTable("api_keys", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  lastUsedAt: integer("last_used_at", { mode: "timestamp" }),
+}, (table) => [
+  index("api_key_user_idx").on(table.userId),
+  index("api_key_token_hash_idx").on(table.tokenHash),
+]);
+
+export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
+  user: one(users, {
+    fields: [apiKeys.userId],
     references: [users.id],
   }),
 }));

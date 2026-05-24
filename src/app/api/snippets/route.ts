@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import crypto from "crypto";
 import { db } from "@/db";
 import { snippets, siteStatistics, siteSettings, snippetFiles } from "@/db/schema";
-import { getSession } from "@/features/auth/utils/session";
+import { getAuth } from "@/features/auth/utils/session";
 import { snippetSchema } from "@/features/core/utils/validations";
 import { generateId, generateShareToken, hashPassword } from "@/features/auth/utils/auth";
 import { eq, desc, like, or, and, sql, count, inArray, isNull, gt } from "drizzle-orm";
@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 const PAGE_SIZE = 50;
 
 export async function GET(request: Request) {
-  const session = await getSession();
+  const session = await getAuth(request);
   const { searchParams } = new URL(request.url);
   const visibility = searchParams.get("visibility");
   const query = searchParams.get("q") ?? "";
@@ -147,7 +147,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
   }
 
-  const session = await getSession();
+  const session = await getAuth(request);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

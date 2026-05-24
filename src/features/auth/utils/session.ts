@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { sessions, users } from "@/db/schema";
 import { eq, lt } from "drizzle-orm";
 import { hashSessionToken, generateSessionToken } from "./auth";
+import { authenticateApiKey } from "./api-key";
 
 const SESSION_COOKIE_NAME = "ks_session";
 const SESSION_DURATION_DAYS = 30;
@@ -112,4 +113,25 @@ export async function setSessionCookie(token: string) {
 
 export async function cleanupExpiredSessions() {
   await db.delete(sessions).where(lt(sessions.expiresAt, new Date()));
+}
+
+export async function getAuth(request: Request) {
+  const session = await getSession();
+  if (session) return { ...session, apiKeyId: undefined as string | undefined };
+
+  const authHeader = request.headers.get("authorization");
+  if (authHeader) {
+    const apiSession = await authenticateApiKey(authHeader);
+    if (apiSession) {
+      return {
+        id: apiSession.apiKeyId,
+        userId: apiSession.user.id,
+        expiresAt: new Date(Date.now() + 3600_000),
+        user: apiSession.user,
+        apiKeyId: apiSession.apiKeyId,
+      };
+    }
+  }
+
+  return null;
 }

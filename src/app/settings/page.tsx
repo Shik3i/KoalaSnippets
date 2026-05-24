@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/features/auth/utils/session";
 import { Sidebar } from "@/features/core/components/sidebar";
 import { PasswordChangeForm } from "@/features/auth/components/password-change-form";
+import { ApiKeyManager } from "@/features/auth/components/api-key-manager";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,7 @@ export default async function SettingsPage() {
             <p className="text-muted-foreground mt-1">Manage your account settings</p>
           </div>
           <PasswordChangeForm />
+          <ApiKeyManager />
         </div>
       </div>
     </div>

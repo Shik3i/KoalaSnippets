@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { snippets, snippetFiles, siteSettings, snippetRevisions } from "@/db/schema";
-import { getSession } from "@/features/auth/utils/session";
+import { getAuth } from "@/features/auth/utils/session";
 import { updateSnippetSchema } from "@/features/core/utils/validations";
 import { generateShareToken, generateId, hashPassword } from "@/features/auth/utils/auth";
 import { eq, desc } from "drizzle-orm";
@@ -24,7 +24,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const session = await getSession();
+  const session = await getAuth(_request);
   const url = new URL(_request.url);
   const token = url.searchParams.get("token");
 
@@ -93,7 +93,7 @@ export async function PUT(
     return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
   }
 
-  const session = await getSession();
+  const session = await getAuth(request);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -278,7 +278,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
   }
 
-  const session = await getSession();
+  const session = await getAuth(_request);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
