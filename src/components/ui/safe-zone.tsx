@@ -39,7 +39,7 @@ export class SafeZone extends Component<SafeZoneProps, SafeZoneState> {
           metadata: { name: this.props.name, componentStack: errorInfo.componentStack },
         }),
       }).catch((e) => console.error("Failed to send crash report:", e));
-    } catch (e) {
+    } catch {
       // Ignore fetch errors
     }
   }

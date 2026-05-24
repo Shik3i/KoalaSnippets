@@ -20,6 +20,7 @@ interface SnippetCardProps {
   selected?: boolean;
   onToggleSelect?: (id: string) => void;
   authorUsername?: string;
+  totalLines?: number;
 }
 
 export function SnippetCard({
@@ -35,6 +36,7 @@ export function SnippetCard({
   selected = false,
   onToggleSelect,
   authorUsername,
+  totalLines = 0,
 }: SnippetCardProps) {
   const mounted = useSyncExternalStore(
     () => () => {},
@@ -53,6 +55,8 @@ export function SnippetCard({
   const dateDisplay = mounted
     ? `Vom ${dateStr}${timeStr ? `, ${timeStr}` : ''}`
     : `Vom ${dateStr}`;
+
+  const estimatedReadingTime = Math.max(1, Math.ceil(totalLines / 50));
 
   return (
     <SafeZone name={`SnippetCard-${id}`}>
@@ -95,6 +99,11 @@ export function SnippetCard({
         <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
           {language}
         </Badge>
+        {totalLines > 0 && (
+          <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+            {totalLines} LOC • ~{estimatedReadingTime} min read
+          </span>
+        )}
         <span className="text-xs text-muted-foreground truncate">
           {dateDisplay}{authorUsername ? ` • Erstellt von ${authorUsername}` : ""}
         </span>

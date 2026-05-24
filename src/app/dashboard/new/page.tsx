@@ -21,6 +21,7 @@ import { GlobalDropzone } from "@/features/core/components/global-dropzone";
 import { useLocalStorageDraft } from "@/features/snippets/utils/use-draft";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { SafeZone } from "@/components/ui/safe-zone";
+import { snippetSchema } from "@/features/core/utils/validations";
 
 interface DuplicateData {
   title: string;
@@ -159,7 +160,7 @@ export default function NewSnippetPage({
         console.error("Failed to parse import data", err);
       }
     }
-  }, [isImport]);
+  }, [isImport, addToast]);
 
   useEffect(() => {
     fetch("/api/tags")
@@ -170,7 +171,9 @@ export default function NewSnippetPage({
 
   // Removed duplicate toast useEffect
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
+
+  const handleSubmit = async (e?: React.FormEvent, ignoreDuplicate = false) => {
     e?.preventDefault();
     setError("");
     setLoading(true);
@@ -182,6 +185,14 @@ export default function NewSnippetPage({
       const payload: Record<string, unknown> = { title, description, files, tags: tags.map((t) => t.toLowerCase()), visibility };
       if (password) payload.password = password;
       if (expiresAt) payload.expiresAt = new Date(expiresAt).toISOString();
+      if (ignoreDuplicate) payload.ignoreDuplicate = true;
+
+      const parsed = snippetSchema.safeParse(payload);
+      if (!parsed.success) {
+        setError(parsed.error.errors[0].message);
+        setLoading(false);
+        return;
+      }
 
       const res = await fetch(url, {
         method,
@@ -191,6 +202,10 @@ export default function NewSnippetPage({
 
       const data = await res.json();
       if (!res.ok) {
+        if (res.status === 409 && data.isDuplicate) {
+          setShowDuplicateWarning(true);
+          return;
+        }
         setError(data.error ?? (isEditing ? "Failed to update snippet" : "Failed to create snippet"));
         return;
       }
@@ -586,6 +601,18 @@ export default function NewSnippetPage({
         title="Unsaved Draft Found"
         description="We found an unsaved draft of this snippet. Would you like to restore it?"
         confirmLabel="Restore Draft"
+      />
+      <ConfirmModal
+        open={showDuplicateWarning}
+        onClose={() => setShowDuplicateWarning(false)}
+        onConfirm={() => {
+          setShowDuplicateWarning(false);
+          handleSubmit(undefined, true);
+        }}
+        title="Duplicate Snippet Detected"
+        description="You already have a snippet with this exact code. Are you sure you want to save another copy?"
+        confirmLabel="Save Anyway"
+        variant="destructive"
       />
     </div>
   );

@@ -1,0 +1,1 @@
+ALTER TABLE `snippets` ADD `content_hash` text;

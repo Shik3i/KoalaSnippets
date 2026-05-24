@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
 import { Upload } from "lucide-react";
@@ -16,9 +16,9 @@ interface SnippetData {
   tags: string[] | null;
   visibility: "PRIVATE" | "SHARED" | "PUBLIC";
   createdAt: Date | string;
-  updatedAt: Date | string;
   highlightedCode?: string;
   authorUsername?: string;
+  totalLines: number;
 }
 
 interface DashboardContentProps {
@@ -27,13 +27,75 @@ interface DashboardContentProps {
   density: "compact" | "preview" | "full";
   allowSelection?: boolean;
   isTrashView?: boolean;
+  hasMoreInitial?: boolean;
 }
 
-export function DashboardContent({ snippets, viewMode, density, allowSelection = true, isTrashView = false }: DashboardContentProps) {
+export function DashboardContent({ snippets, viewMode, density, allowSelection = true, isTrashView = false, hasMoreInitial = false }: DashboardContentProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDragging, setIsDragging] = useState(false);
   const router = useRouter();
   const { addToast } = useToast();
+
+  const [localSnippets, setLocalSnippets] = useState<SnippetData[]>(snippets);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(hasMoreInitial);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Sync with prop changes (e.g. when searching or filtering)
+  useEffect(() => {
+    setTimeout(() => {
+      setLocalSnippets(snippets);
+      setPage(1);
+      setHasMore(hasMoreInitial);
+    }, 0);
+  }, [snippets, hasMoreInitial]);
+
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+    try {
+      const currentUrl = new URL(window.location.href);
+      const searchParams = new URLSearchParams(currentUrl.search);
+      searchParams.set("page", (page + 1).toString());
+      if (isTrashView) searchParams.set("visibility", "TRASH");
+
+      const res = await fetch(`/api/snippets?${searchParams.toString()}`);
+      const data = await res.json();
+
+      if (data.snippets && data.snippets.length > 0) {
+        setLocalSnippets((prev) => [...prev, ...data.snippets]);
+        setPage(data.page);
+        setHasMore(data.hasMore);
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error("Failed to load more snippets:", error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [hasMore, isLoadingMore, isTrashView, page]);
+
+  useEffect(() => {
+    if (!hasMore || isLoadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore();
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, loadMore]);
 
   const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -48,14 +110,14 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
   }, []);
 
   const selectAll = useCallback(() => {
-    setSelectedIds(new Set(snippets.map((s) => s.id)));
-  }, [snippets]);
+    setSelectedIds(new Set(localSnippets.map((s) => s.id)));
+  }, [localSnippets]);
 
   const clearSelection = useCallback(() => {
     setSelectedIds(new Set());
   }, []);
 
-  const allSelected = snippets.length > 0 && selectedIds.size === snippets.length;
+  const allSelected = localSnippets.length > 0 && selectedIds.size === localSnippets.length;
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -153,7 +215,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 sm:p-4">
-        {snippets.length === 0 ? (
+        {localSnippets.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <p className="text-lg mb-2">{isTrashView ? "Trash is empty" : "No snippets yet"}</p>
             {!isTrashView && <p className="text-sm">Click &quot;New Snippet&quot; to create your first one</p>}
@@ -176,7 +238,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
                 </tr>
               </thead>
               <tbody>
-                {snippets.map((s) => (
+                {localSnippets.map((s) => (
                   <SnippetTableRow
                     key={s.id}
                     id={s.id}
@@ -194,7 +256,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {snippets.map((s) => (
+            {localSnippets.map((s) => (
               <SnippetCard
                 key={s.id}
                 id={s.id}
@@ -209,8 +271,19 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
                 selected={selectedIds.has(s.id)}
                 onToggleSelect={allowSelection ? toggleSelect : undefined}
                 authorUsername={s.authorUsername}
+                totalLines={s.totalLines}
               />
             ))}
+          </div>
+        )}
+        
+        {hasMore && (
+          <div ref={loadMoreRef} className="py-6 flex justify-center items-center">
+            {isLoadingMore ? (
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <div className="h-6" /> 
+            )}
           </div>
         )}
       </div>

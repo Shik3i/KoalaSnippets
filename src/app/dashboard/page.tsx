@@ -57,8 +57,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   const whereClause = and(...conditions);
   const userSnippets = await (whereClause
-    ? baseQuery.where(whereClause).orderBy(orderBy).all()
-    : baseQuery.orderBy(orderBy).all()
+    ? baseQuery.where(whereClause).orderBy(orderBy).limit(50).all()
+    : baseQuery.orderBy(orderBy).limit(50).all()
   );
 
   const snippetIds = userSnippets.map(s => s.id);
@@ -131,6 +131,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           }))}
           viewMode={viewMode}
           density={density}
+          hasMoreInitial={highlightedSnippets.length === 50}
         />
       </div>
     </div>

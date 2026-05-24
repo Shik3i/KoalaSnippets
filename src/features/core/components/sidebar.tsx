@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/features/core/utils/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

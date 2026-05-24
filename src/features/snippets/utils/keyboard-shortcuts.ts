@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useCallback, type RefObject } from "react";
+import { useRouter } from "next/navigation";
 
 interface UseKeyboardShortcutsOptions {
   searchInputRef?: RefObject<HTMLInputElement | null>;
@@ -8,6 +9,8 @@ interface UseKeyboardShortcutsOptions {
 }
 
 export function useKeyboardShortcuts({ searchInputRef, onSave }: UseKeyboardShortcutsOptions = {}) {
+  const router = useRouter();
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       const isMac = navigator.platform.toUpperCase().includes("MAC");
@@ -21,12 +24,18 @@ export function useKeyboardShortcuts({ searchInputRef, onSave }: UseKeyboardShor
         }
       }
 
-      if (modifier && e.key.toLowerCase() === "s") {
+      if (modifier && (e.key.toLowerCase() === "s" || e.key === "Enter")) {
+        if (e.key === "Enter" && !e.metaKey && !e.ctrlKey) return;
         e.preventDefault();
         onSave?.();
       }
+
+      if (e.altKey && e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        router.push("/dashboard/new");
+      }
     },
-    [searchInputRef, onSave]
+    [searchInputRef, onSave, router]
   );
 
   useEffect(() => {

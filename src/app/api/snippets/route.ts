@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import { db } from "@/db";
 import { snippets, siteStatistics, siteSettings, snippetFiles } from "@/db/schema";
 import { getSession } from "@/features/auth/utils/session";
@@ -165,6 +166,20 @@ export async function POST(request: Request) {
 
     const normalizedTags = tags?.map((t) => t.toLowerCase()) ?? null;
     const passwordHash = password ? await hashPassword(password) : null;
+    
+    const combinedCode = filesToInsert.map(f => f.code).join("");
+    const contentHash = crypto.createHash("sha256").update(combinedCode).digest("hex");
+    
+    if (body.ignoreDuplicate !== true) {
+      const existing = await db.select({ id: snippets.id }).from(snippets).where(
+        and(eq(snippets.authorId, session.user.id), eq(snippets.contentHash, contentHash), isNull(snippets.deletedAt))
+      ).get();
+      
+      if (existing) {
+        return NextResponse.json({ error: "Duplicate snippet detected", isDuplicate: true, existingId: existing.id }, { status: 409 });
+      }
+    }
+
     let snippetData: typeof snippets.$inferInsert;
 
     db.transaction((tx) => {
@@ -182,6 +197,7 @@ export async function POST(request: Request) {
         visibility,
         shareToken: visibility === "SHARED" ? generateShareToken() : null,
         totalLines,
+        contentHash,
         passwordHash,
         expiresAt: expiresAt ? new Date(expiresAt) : null,
         createdAt: new Date(),

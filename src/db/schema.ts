@@ -34,6 +34,7 @@ export const snippets = sqliteTable("snippets", {
   expiresAt: integer("expires_at", { mode: "timestamp" }),
   collectionId: text("collection_id").references(() => collections.id, { onDelete: "set null" }),
   totalLines: integer("total_lines").notNull().default(0),
+  contentHash: text("content_hash"),
   passwordHash: text("password_hash"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),

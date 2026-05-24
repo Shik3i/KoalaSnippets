@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { crashReports } from "@/db/schema";
 import crypto from "crypto";
-import { cookies } from "next/headers";
 import { getSession } from "@/features/auth/utils/session";
 
 export async function POST(request: Request) {

@@ -23,6 +23,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     visibility: snippets.visibility,
     createdAt: snippets.createdAt,
     updatedAt: snippets.updatedAt,
+    totalLines: snippets.totalLines,
     authorUsername: users.username
   }).from(snippets).innerJoin(users, eq(snippets.authorId, users.id));
   
@@ -50,8 +51,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
   const whereClause = and(...conditions);
   const publicSnippets = await (whereClause
-    ? baseQuery.where(whereClause).orderBy(orderBy).all()
-    : baseQuery.orderBy(orderBy).all()
+    ? baseQuery.where(whereClause).orderBy(orderBy).limit(50).all()
+    : baseQuery.orderBy(orderBy).limit(50).all()
   );
 
   const snippetIds = publicSnippets.map(s => s.id);
@@ -122,6 +123,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           viewMode={viewMode}
           density={density}
           allowSelection={false}
+          hasMoreInitial={highlightedSnippets.length === 50}
         />
       </div>
     </div>

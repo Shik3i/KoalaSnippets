@@ -259,6 +259,9 @@ export function DetailView({
                 <VisIcon size={12} suppressHydrationWarning />
                 {VISIBILITY_CONFIG[visibility].label}
               </span>
+              <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                {files.reduce((acc, f) => acc + f.code.split('\n').length, 0)} LOC • ~{Math.max(1, Math.ceil(files.reduce((acc, f) => acc + f.code.split('\n').length, 0) / 50))} min read
+              </span>
               <span className="text-xs text-muted-foreground">
                 Updated {mounted ? new Date(updatedAt).toLocaleDateString() : new Date(updatedAt).toISOString().split('T')[0]}
               </span>
