@@ -75,6 +75,7 @@ function getFilename(title: string, language: string): string {
 }
 
 export function DetailView({
+  id,
   title,
   description,
   tags,
@@ -207,11 +208,19 @@ export function DetailView({
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div 
+      className="flex flex-col h-full overflow-hidden"
+      style={{ viewTransitionName: `snippet-card-${id}` }}
+    >
       <div className="p-4 border-b border-border space-y-3">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-xl font-semibold">{title}</h1>
+            <h1 
+              className="text-xl font-semibold"
+              style={{ viewTransitionName: `snippet-title-${id}` }}
+            >
+              {title}
+            </h1>
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="secondary">{files.length} {files.length === 1 ? 'file' : 'files'}</Badge>
               <span className={cn("flex items-center gap-1 text-xs", VISIBILITY_CONFIG[visibility].color)}>

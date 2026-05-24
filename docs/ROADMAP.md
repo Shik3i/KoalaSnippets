@@ -38,17 +38,7 @@ cat error.log | koala push --title "Nginx Crash Log" --visibility private
 **Technical Implementation Details**:
 - **Frontend**: Update the Command Palette component to accept context props (current route/view). Dynamically inject actions based on the active React context.
 
-### Paste to Auto-Fill (Smart Clipboard)
 
-**Status**: Planned  
-**Description**: Reduce friction when creating new snippets by automatically detecting the programming language when code is pasted into an empty editor.
-
-**Example Workflow**:
-- User creates a new snippet and pastes `function() { return <div>; }` into the editor.
-- The language dropdown automatically switches from "Plain Text" to "TSX / JSX".
-
-**Technical Implementation Details**:
-- **Frontend**: Add an `onPaste` event listener to the custom CodeEditor. Use a lightweight heuristic function or syntax-detection library to guess the language and update the language state accordingly.
 
 ### Soft-Deletes & Trash Bin
 
@@ -113,18 +103,7 @@ cat error.log | koala push --title "Nginx Crash Log" --visibility private
 
 ---
 
-### Drag & Drop Smart-Importer
 
-**Status**: Planned  
-**Description**: Eliminate all friction when creating snippets. Users should be able to drag-and-drop local source code files or paste clipboard data directly into the dashboard. KoalaSnippets will automatically parse the file content, detect the programming language, and open a pre-filled creation modal.
-
-**Example Workflow**:
-- Dragging a local `auth.ts` file onto the dashboard instantly opens the new snippet dialog.
-- The title is set to `auth.ts`, syntax highlighting is selected as `TypeScript`, and the code content is fully populated.
-
-**Technical Implementation Details**:
-- **Drag & Drop**: Implement a React drop-zone overlay on the core dashboard.
-- **Language Detection**: Implement filename extension mapping and a simple content-based heuristic matching.
 
 ---
 *Got ideas? Open an issue or submit a PR!*

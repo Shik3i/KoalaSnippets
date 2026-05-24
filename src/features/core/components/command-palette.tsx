@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { Search, Plus, Settings, Shield, Home, FileCode, Command, ArrowRight, Moon } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import { Search, Plus, Settings, Shield, Home, FileCode, Command, ArrowRight, Moon, Copy, Pencil } from "lucide-react";
 import { cn } from "@/features/core/utils/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -32,6 +32,7 @@ const commands = [
 
 export function CommandPalette({ isAdmin = false }: CommandPaletteProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [snippets, setSnippets] = useState<SnippetResult[]>([]);
@@ -130,7 +131,18 @@ export function CommandPalette({ isAdmin = false }: CommandPaletteProps) {
   }, [query, isOpen]);
 
   // Filter commands by query
-  const filteredCommands = commands.filter((cmd) => {
+  let currentCommands = [...commands];
+  
+  if (pathname.startsWith("/snippets/")) {
+    const snippetId = pathname.split("/")[2];
+    currentCommands = [
+      { label: "Copy Snippet Link", value: "/copy", action: "copyShareLink", description: "Copy URL to clipboard", icon: Copy },
+      { label: "Edit Snippet", value: "/edit", href: `/dashboard/new?edit=${snippetId}`, description: "Edit current snippet", icon: Pencil },
+      ...currentCommands
+    ];
+  }
+
+  const filteredCommands = currentCommands.filter((cmd) => {
     if (cmd.value === "/backups" && !isAdmin) return false;
     const q = query.toLowerCase().trim();
     if (!q) return true;
@@ -145,23 +157,27 @@ export function CommandPalette({ isAdmin = false }: CommandPaletteProps) {
 
     setIsOpen(false);
     
-    if ("action" in item && item.action === "toggleTheme") {
-      const html = document.documentElement;
-      const isLight = Array.from(html.classList).some((c) => c === "light" || c.startsWith("theme-light"));
-      const newTheme = isLight ? "theme-midnight" : "light";
+    if ("action" in item) {
+      if (item.action === "toggleTheme") {
+        const html = document.documentElement;
+        const isLight = Array.from(html.classList).some((c) => c === "light" || c.startsWith("theme-light"));
+        const newTheme = isLight ? "theme-midnight" : "light";
 
-      html.classList.forEach((c) => {
-        if (c.startsWith("theme-") || c === "light") html.classList.remove(c);
-      });
-      html.classList.add(newTheme);
-      
-      fetch("/api/settings/appearance", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ appTheme: newTheme }),
-      }).catch(console.error);
-      
-      return;
+        html.classList.forEach((c) => {
+          if (c.startsWith("theme-") || c === "light") html.classList.remove(c);
+        });
+        html.classList.add(newTheme);
+        
+        fetch("/api/settings/appearance", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ appTheme: newTheme }),
+        }).catch(console.error);
+        return;
+      } else if (item.action === "copyShareLink") {
+        navigator.clipboard.writeText(window.location.href).catch(console.error);
+        return;
+      }
     }
 
     if ("href" in item && typeof item.href === "string") {

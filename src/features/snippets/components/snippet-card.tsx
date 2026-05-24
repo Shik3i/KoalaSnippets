@@ -64,6 +64,7 @@ export function SnippetCard({
         "group block rounded-lg border border-border bg-card p-3 sm:p-4 transition-all hover:border-primary/50 hover:shadow-sm relative cursor-grab active:cursor-grabbing",
         selected && "border-primary/50 ring-1 ring-primary/30 bg-primary/5"
       )}
+      style={{ viewTransitionName: `snippet-card-${id}` }}
       aria-label={`View snippet: ${title}`}
     >
       {onToggleSelect && (
@@ -79,7 +80,10 @@ export function SnippetCard({
         </div>
       )}
       <div className={cn("flex items-start justify-between gap-2 mb-2", onToggleSelect && "ml-6")}>
-        <h3 className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+        <h3 
+          className="font-medium text-sm truncate group-hover:text-primary transition-colors"
+          style={{ viewTransitionName: `snippet-title-${id}` }}
+        >
           {title}
         </h3>
         <VisIcon size={12} className={cn("shrink-0 mt-1", VISIBILITY_CONFIG[visibility].color)} suppressHydrationWarning />
