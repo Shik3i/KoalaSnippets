@@ -13,7 +13,17 @@ import { escapeHtml } from "@/features/core/utils/security";
 import crypto from "crypto";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 120;
+
+export async function generateStaticParams() {
+  const publicSnippets = await db
+    .select({ id: snippets.id })
+    .from(snippets)
+    .where(eq(snippets.visibility, "PUBLIC"))
+    .all();
+
+  return publicSnippets.map((s) => ({ id: s.id }));
+}
 
 function constantTimeCompare(a: string, b: string): boolean {
   const hashA = crypto.createHash('sha256').update(a).digest();

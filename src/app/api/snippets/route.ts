@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import crypto from "crypto";
 import { db } from "@/db";
 import { snippets, siteStatistics, siteSettings, snippetFiles } from "@/db/schema";
@@ -9,6 +10,7 @@ import { eq, desc, like, or, and, sql, count, inArray, isNull, gt } from "drizzl
 import { getSafePage, verifyCsrf } from "@/features/core/utils/security";
 import { escapeLike } from "@/features/core/utils/sql";
 import { logUserAction } from "@/features/admin/utils/audit";
+import { generateETag, isNotModified, notModifiedResponse, setETag } from "@/features/core/utils/etag";
 
 export const dynamic = "force-dynamic";
 
@@ -99,7 +101,26 @@ export async function GET(request: Request) {
     ? await db.select().from(snippetFiles).where(inArray(snippetFiles.snippetId, snippetIds)).all()
     : [];
 
-  return NextResponse.json({
+  const latestUpdate = results.reduce<Date | null>(
+    (acc, s) => (!acc || s.updatedAt > acc ? s.updatedAt : acc),
+    null
+  );
+  const etag = generateETag(
+    latestUpdate ?? "",
+    visibility ?? "",
+    query,
+    tagsParam ?? "",
+    includeCode ? "1" : "0",
+    sort,
+    order,
+    String(page)
+  );
+
+  if (isNotModified(request, etag)) {
+    return notModifiedResponse(etag);
+  }
+
+  const response = NextResponse.json({
     snippets: results.map((s) => {
       const sFiles = files.filter(f => f.snippetId === s.id);
       return {
@@ -117,6 +138,8 @@ export async function GET(request: Request) {
     page,
     hasMore: results.length === PAGE_SIZE,
   });
+  setETag(response, etag);
+  return response;
 }
 
 export async function POST(request: Request) {
@@ -228,6 +251,12 @@ export async function POST(request: Request) {
       snippetData!.id,
       `Snippet "${title}" created`
     );
+
+    if (visibility === "PUBLIC") {
+      revalidatePath("/");
+      revalidatePath("/public");
+      revalidatePath("/stats");
+    }
 
     return NextResponse.json({ 
       success: true, 

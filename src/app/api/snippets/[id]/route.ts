@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { snippets, snippetFiles, siteSettings, snippetRevisions } from "@/db/schema";
 import { getSession } from "@/features/auth/utils/session";
@@ -8,6 +9,7 @@ import { eq, desc } from "drizzle-orm";
 import crypto from "crypto";
 import { verifyCsrf } from "@/features/core/utils/security";
 import { logUserAction } from "@/features/admin/utils/audit";
+import { generateETag, isNotModified, notModifiedResponse, setETag } from "@/features/core/utils/etag";
 
 export const dynamic = "force-dynamic";
 
@@ -53,7 +55,13 @@ export async function GET(
   const files = await db.select().from(snippetFiles).where(eq(snippetFiles.snippetId, id)).all();
   const mainFile = files.length > 0 ? files[0] : null;
 
-  return NextResponse.json({
+  const etag = generateETag(snippet.updatedAt, token ?? "");
+
+  if (isNotModified(_request, etag)) {
+    return notModifiedResponse(etag);
+  }
+
+  const response = NextResponse.json({
     id: snippet.id,
     title: snippet.title,
     description: snippet.description,
@@ -73,6 +81,8 @@ export async function GET(
     deletedAt: snippet.deletedAt,
     isOwner: session?.user.id === snippet.authorId,
   });
+  setETag(response, etag);
+  return response;
 }
 
 export async function PUT(
@@ -245,6 +255,13 @@ export async function PUT(
       isRestore ? `Snippet "${snippet.title}" restored` : `Snippet "${parsed.data.title || snippet.title}" updated`
     );
 
+    if (snippet.visibility === "PUBLIC") {
+      revalidatePath("/");
+      revalidatePath("/public");
+      revalidatePath("/stats");
+      revalidatePath(`/snippets/${id}`);
+    }
+
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     console.error("[Snippets API PUT Error]", error);
@@ -281,6 +298,13 @@ export async function DELETE(
     // Hard delete
     await db.delete(snippets).where(eq(snippets.id, id));
     await logUserAction(session.user.id, "DELETE", "SNIPPET", id, `Snippet "${snippet.title}" permanently deleted`);
+  }
+
+  if (snippet.visibility === "PUBLIC") {
+    revalidatePath("/");
+    revalidatePath("/public");
+    revalidatePath("/stats");
+    revalidatePath(`/snippets/${id}`);
   }
 
   return NextResponse.json({ success: true });
