@@ -16,13 +16,17 @@ import type { Metadata } from "next";
 export const revalidate = 120;
 
 export async function generateStaticParams() {
-  const publicSnippets = await db
-    .select({ id: snippets.id })
-    .from(snippets)
-    .where(eq(snippets.visibility, "PUBLIC"))
-    .all();
+  try {
+    const publicSnippets = await db
+      .select({ id: snippets.id })
+      .from(snippets)
+      .where(eq(snippets.visibility, "PUBLIC"))
+      .all();
 
-  return publicSnippets.map((s) => ({ id: s.id }));
+    return publicSnippets.map((s) => ({ id: s.id }));
+  } catch {
+    return [];
+  }
 }
 
 function constantTimeCompare(a: string, b: string): boolean {
