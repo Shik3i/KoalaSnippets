@@ -11,28 +11,29 @@ export async function logUserAction(
   details: string | null
 ) {
   try {
-    await db.insert(auditLogs).values({
-      id: generateId(),
-      userId,
-      action,
-      targetType,
-      targetId,
-      details,
-      createdAt: new Date(),
+    db.transaction((tx) => {
+      tx.insert(auditLogs).values({
+        id: generateId(),
+        userId,
+        action,
+        targetType,
+        targetId,
+        details,
+        createdAt: new Date(),
+      }).run();
+
+      const oldLogs = tx.select({ id: auditLogs.id })
+        .from(auditLogs)
+        .where(eq(auditLogs.userId, userId))
+        .orderBy(desc(auditLogs.createdAt))
+        .offset(20)
+        .all();
+
+      if (oldLogs.length > 0) {
+        const idsToDelete = oldLogs.map((l) => l.id);
+        tx.delete(auditLogs).where(inArray(auditLogs.id, idsToDelete)).run();
+      }
     });
-
-    // Keep only the last 20 actions for this specific user
-    const oldLogs = await db.select({ id: auditLogs.id })
-      .from(auditLogs)
-      .where(eq(auditLogs.userId, userId))
-      .orderBy(desc(auditLogs.createdAt))
-      .offset(20)
-      .all();
-
-    if (oldLogs.length > 0) {
-      const idsToDelete = oldLogs.map((l) => l.id);
-      await db.delete(auditLogs).where(inArray(auditLogs.id, idsToDelete));
-    }
   } catch (err) {
     console.error("[audit] Failed to log user action:", err);
   }

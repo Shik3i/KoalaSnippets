@@ -12,7 +12,7 @@ interface SnippetTableRowProps {
   language: string;
   tags?: string[];
   visibility: "PRIVATE" | "SHARED" | "PUBLIC";
-  createdAt: Date;
+  createdAt: Date | string;
   selected?: boolean;
   onToggleSelect?: (id: string) => void;
 }

@@ -13,7 +13,7 @@ interface SnippetCardProps {
   language: string;
   tags?: string[];
   visibility: "PRIVATE" | "SHARED" | "PUBLIC";
-  createdAt: Date;
+  createdAt: Date | string;
   snippetDensity?: "compact" | "preview" | "full";
   highlightedCode?: string;
   selected?: boolean;

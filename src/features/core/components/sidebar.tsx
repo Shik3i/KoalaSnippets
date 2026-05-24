@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/features/core/utils/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +45,7 @@ const navItems = [
 
 export function Sidebar({ tags = [], languages = [], isAuthenticated = false, isAdmin = false, onTagClick, onLanguageClick }: SidebarProps) {
   const pathname = usePathname();
+  const searchParamsObj = useSearchParams();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collections, setCollections] = useState<{ id: string; name: string }[]>([]);
   const [newCollectionName, setNewCollectionName] = useState("");
@@ -289,7 +290,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
             </h3>
             <div className="space-y-0.5">
               {languages.map((lang) => {
-                const isActive = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get("language") === lang;
+                const isActive = searchParamsObj.get("language") === lang;
                 return (
                   <button
                     key={lang}
@@ -297,7 +298,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                       if (onLanguageClick) {
                         onLanguageClick(lang);
                       } else {
-                        const params = new URLSearchParams(window.location.search);
+                        const params = new URLSearchParams(searchParamsObj.toString());
                         if (isActive) params.delete("language");
                         else params.set("language", lang);
                         const targetPath = ["/", "/dashboard", "/public"].includes(pathname) ? pathname : "/dashboard";
@@ -326,8 +327,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
             </h3>
             <div className="flex flex-wrap gap-1.5 px-1">
               {tags.map((tag) => {
-                const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
-                const activeTags = searchParams.get("tags")?.split(",") || [];
+                const activeTags = searchParamsObj.get("tags")?.split(",") || [];
                 const isActive = activeTags.includes(tag);
                 return (
                   <button
@@ -336,7 +336,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                       if (onTagClick) {
                         onTagClick(tag);
                       } else {
-                        const params = new URLSearchParams(window.location.search);
+                        const params = new URLSearchParams(searchParamsObj.toString());
                         let currentTags = params.get("tags")?.split(",") || [];
                         if (isActive) {
                           currentTags = currentTags.filter(t => t !== tag);

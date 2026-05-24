@@ -41,32 +41,34 @@ export async function POST(request: Request) {
 
     const { username, password } = parsed.data;
 
-    const existing = await db.select().from(users).where(eq(users.username, username)).get();
-    if (existing) {
-      return NextResponse.json({ error: "Username already taken" }, { status: 409 });
-    }
-
     const passwordHash = await hashPassword(password);
 
-    db.transaction((tx) => {
-      tx.insert(users).values({
-        id: generateId(),
-        username,
-        passwordHash,
-        role: "USER",
-        createdAt: new Date(),
-        preferences: {
-          appTheme: "theme-midnight",
-          snippetDensity: "preview",
-          syntaxTheme: "github-dark",
-          bgPattern: "matrix",
-        },
-      }).run();
+    try {
+      db.transaction((tx) => {
+        tx.insert(users).values({
+          id: generateId(),
+          username,
+          passwordHash,
+          role: "USER",
+          createdAt: new Date(),
+          preferences: {
+            appTheme: "theme-midnight",
+            snippetDensity: "preview",
+            syntaxTheme: "github-dark",
+            bgPattern: "matrix",
+          },
+        }).run();
 
-      tx.update(siteStatistics)
-        .set({ totalUsersCreated: sql`total_users_created + 1` })
-        .where(eq(siteStatistics.id, 1)).run();
-    });
+        tx.update(siteStatistics)
+          .set({ totalUsersCreated: sql`total_users_created + 1` })
+          .where(eq(siteStatistics.id, 1)).run();
+      });
+    } catch (dbError: any) {
+      if (dbError.code === "SQLITE_CONSTRAINT_UNIQUE") {
+        return NextResponse.json({ error: "Username already taken" }, { status: 409 });
+      }
+      throw dbError;
+    }
 
     const res = NextResponse.json({ success: true }, { status: 201 });
     return res;

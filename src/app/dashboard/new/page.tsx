@@ -67,12 +67,9 @@ export default function NewSnippetPage({
   const { addToast } = useToast();
   const isImport = searchParams.get("import") === "1";
 
-  const duplicateData = useMemo(() => readDuplicateData(), []);
-  const editData = useMemo(() => readEditData(), []);
-  
-
-  const initialData = propInitialData || editData || duplicateData;
-  const isEditing = isEdit || !!editData;
+  const initialData = propInitialData;
+  const [isEditing, setIsEditing] = useState(isEdit);
+  const [editId, setEditId] = useState<string | null>(null);
 
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
@@ -102,6 +99,24 @@ export default function NewSnippetPage({
   const isLongFile = activeCode.split('\n').length > 50;
 
   useEffect(() => {
+    const dupData = readDuplicateData();
+    const eData = readEditData();
+    
+    if (eData || dupData) {
+      const data = eData || dupData!;
+      if (eData) {
+        setIsEditing(true);
+        setEditId(eData.id);
+        addToast("Editing snippet", "info");
+      } else if (dupData) {
+        addToast("Pre-filled with duplicated snippet", "info");
+      }
+      if (data.title) setTitle(data.title);
+      if (data.description) setDescription(data.description);
+      if (data.files?.length) setFiles(data.files);
+      if (data.tags) setTags(data.tags);
+      if (data.visibility) setVisibility(data.visibility);
+    }
 
     if (isImport) {
       try {
@@ -131,13 +146,7 @@ export default function NewSnippetPage({
       .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    if (duplicateData) {
-      addToast("Pre-filled with duplicated snippet", "info");
-    } else if (editData) {
-      addToast("Editing snippet", "info");
-    }
-  }, [duplicateData, editData, addToast]);
+  // Removed duplicate toast useEffect
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -145,8 +154,8 @@ export default function NewSnippetPage({
     setLoading(true);
 
     try {
-      const url = isEditing && editData ? `/api/snippets/${editData.id}` : "/api/snippets";
-      const method = isEditing && editData ? "PUT" : "POST";
+      const url = isEditing && editId ? `/api/snippets/${editId}` : "/api/snippets";
+      const method = isEditing && editId ? "PUT" : "POST";
 
       const payload: Record<string, unknown> = { title, description, files, tags: tags.map((t) => t.toLowerCase()), visibility };
       if (password) payload.password = password;
@@ -167,7 +176,7 @@ export default function NewSnippetPage({
       addToast(isEditing ? "Snippet updated!" : "Snippet saved!", "success");
       await revalidateDashboard();
       
-      const snippetId = (isEditing && editData) ? editData.id : data.id;
+      const snippetId = (isEditing && editId) ? editId : data.id;
       if (visibility === "SHARED" && data.shareToken) {
         router.push(`/snippets/${snippetId}?token=${data.shareToken}`);
       } else {
@@ -318,7 +327,7 @@ export default function NewSnippetPage({
                       <span className="hidden sm:inline">Map</span>
                     </button>
                   )}
-                  {isEditing && editData?.id && (
+                  {isEditing && editId && (
                     <button
                       type="button"
                       onClick={() => setHistoryOpen(true)}
@@ -533,11 +542,11 @@ export default function NewSnippetPage({
           </CardContent>
         </Card>
       </div>
-      {isEditing && editData?.id && (
+      {isEditing && editId && (
         <HistoryModal 
           open={historyOpen} 
           onClose={() => setHistoryOpen(false)} 
-          snippetId={editData.id} 
+          snippetId={editId}
           onRestore={(restoredFiles) => {
             setFiles(restoredFiles);
             setActiveTab(0);

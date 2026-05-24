@@ -132,11 +132,6 @@ export async function POST(request: Request) {
   const maxSnippets = settings?.maxSnippetsPerUser ?? 1000;
   const maxChars = settings?.maxCharsPerSnippet ?? 250000;
 
-  const currentCount = await db.select({ c: count() }).from(snippets).where(eq(snippets.authorId, session.user.id)).get();
-  if (currentCount && currentCount.c >= maxSnippets) {
-    return NextResponse.json({ error: `Snippet quota exceeded (Max: ${maxSnippets})` }, { status: 403 });
-  }
-
   const contentLength = request.headers.get("content-length");
   if (contentLength && parseInt(contentLength, 10) > 5 * 1024 * 1024) {
     return NextResponse.json({ error: "Payload too large" }, { status: 413 });
@@ -169,23 +164,30 @@ export async function POST(request: Request) {
     }
 
     const normalizedTags = tags?.map((t) => t.toLowerCase()) ?? null;
-
-    const snippetData: typeof snippets.$inferInsert = {
-      id: generateId(),
-      title,
-      description: description ?? null,
-      tags: normalizedTags,
-      authorId: session.user.id,
-      visibility,
-      shareToken: visibility === "SHARED" ? generateShareToken() : null,
-      totalLines,
-      passwordHash: password ? await hashPassword(password) : null,
-      expiresAt: expiresAt ? new Date(expiresAt) : null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    const passwordHash = password ? await hashPassword(password) : null;
+    let snippetData: typeof snippets.$inferInsert;
 
     db.transaction((tx) => {
+      const currentCount = tx.select({ c: count() }).from(snippets).where(eq(snippets.authorId, session.user.id)).get();
+      if (currentCount && currentCount.c >= maxSnippets) {
+        throw new Error(`Snippet quota exceeded (Max: ${maxSnippets})`);
+      }
+
+      snippetData = {
+        id: generateId(),
+        title,
+        description: description ?? null,
+        tags: normalizedTags,
+        authorId: session.user.id,
+        visibility,
+        shareToken: visibility === "SHARED" ? generateShareToken() : null,
+        totalLines,
+        passwordHash,
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
       tx.insert(snippets).values(snippetData).run();
 
       for (const f of filesToInsert) {
@@ -207,18 +209,23 @@ export async function POST(request: Request) {
       session.user.id,
       "CREATE",
       "SNIPPET",
-      snippetData.id,
+      snippetData!.id,
       `Snippet "${title}" created`
     );
 
     return NextResponse.json({ 
       success: true, 
-      id: snippetData.id, 
-      shareToken: snippetData.shareToken ?? undefined 
+      id: snippetData!.id, 
+      shareToken: snippetData!.shareToken ?? undefined 
     }, { status: 201 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("[Snippets API Error]", message, error instanceof Error ? error.stack : undefined);
+    
+    if (message.includes("quota exceeded")) {
+      return NextResponse.json({ error: message }, { status: 403 });
+    }
+
     const isDev = process.env.NODE_ENV === "development";
     return NextResponse.json(
       isDev

@@ -15,8 +15,8 @@ interface SnippetData {
   language: string;
   tags: string[] | null;
   visibility: "PRIVATE" | "SHARED" | "PUBLIC";
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
   highlightedCode?: string;
   authorUsername?: string;
 }
