@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Database, Users, FileCode, BarChart3 } from "lucide-react";
+import { Database, Users, FileCode, BarChart3, Clock, HardDrive, Calendar } from "lucide-react";
 
 interface LanguageStat {
   language: string;
@@ -13,6 +13,8 @@ interface MetricsData {
   totalUsersCreated: number;
   totalSnippetsCreated: number;
   dbSize: number;
+  uptimeSeconds: number;
+  lastBackup: string | null;
   languageBreakdown?: LanguageStat[];
 }
 
@@ -20,6 +22,24 @@ function formatBytes(bytes: number): string {
   if (bytes === 0) return "0 KB";
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function formatUptime(seconds: number): string {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${mins}m`;
+  return `${mins}m`;
+}
+
+function formatRelativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(hours / 24);
+  if (days > 0) return `${days}d ago`;
+  if (hours > 0) return `${hours}h ago`;
+  return `${Math.floor(diff / 60000)}m ago`;
 }
 
 export function AdminMetrics() {
@@ -52,8 +72,11 @@ export function AdminMetrics() {
 
   const cards = [
     { icon: Database, label: "Database Size", value: formatBytes(metrics.dbSize), color: "text-primary" },
-    { icon: Users, label: "Total Users Created", value: mounted ? metrics.totalUsersCreated.toLocaleString() : "", color: "text-success" },
-    { icon: FileCode, label: "Total Snippets Created", value: mounted ? metrics.totalSnippetsCreated.toLocaleString() : "", color: "text-info" },
+    { icon: Users, label: "Total Users", value: mounted ? metrics.totalUsersCreated.toLocaleString() : "", color: "text-success" },
+    { icon: FileCode, label: "Total Snippets", value: mounted ? metrics.totalSnippetsCreated.toLocaleString() : "", color: "text-info" },
+    { icon: Clock, label: "Uptime", value: formatUptime(metrics.uptimeSeconds), color: "text-muted-foreground" },
+    { icon: Calendar, label: "Last Backup", value: metrics.lastBackup ? formatRelativeTime(metrics.lastBackup) : "Never", color: metrics.lastBackup ? "text-emerald-400" : "text-amber-400" },
+    { icon: HardDrive, label: "DB Path", value: process.env.DATABASE_URL?.replace("file:", "") ?? "./data/koalasnippets.db", color: "text-muted-foreground" },
   ];
 
   const languageBreakdown = metrics.languageBreakdown ?? [];
@@ -61,7 +84,7 @@ export function AdminMetrics() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {cards.map((card) => {
           const Icon = card.icon;
           return (
@@ -73,7 +96,7 @@ export function AdminMetrics() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className={`text-3xl font-bold ${card.color}`}>{card.value}</p>
+                <p className={`text-xl font-bold truncate ${card.color}`}>{card.value}</p>
               </CardContent>
             </Card>
           );

@@ -9,6 +9,22 @@ import { generateETagFromData, isNotModified, notModifiedResponse, setETag } fro
 
 export const dynamic = "force-dynamic";
 
+const SERVER_START_TIME = Date.now();
+
+function getLastBackupTime(): string | null {
+  const backupDir = process.env.BACKUP_DIR ?? path.join(process.cwd(), "backups");
+  if (!fs.existsSync(backupDir)) return null;
+  const files = fs.readdirSync(backupDir).filter((f) => f.startsWith("backup-") && f.endsWith(".db"));
+  if (files.length === 0) return null;
+  const sorted = files.sort((a, b) => b.localeCompare(a));
+  const dateStr = sorted[0].replace("backup-", "").replace(".db", "").replace(/T(\d{2})-(\d{2})-(\d{2})-(\d{3})Z$/, "T$1:$2:$3.$4Z");
+  return new Date(dateStr).toISOString();
+}
+
+function getUptimeSeconds(): number {
+  return Math.floor((Date.now() - SERVER_START_TIME) / 1000);
+}
+
 export async function GET(request: Request) {
   const guard = await requireAdmin();
   if ("unauthorized" in guard) return guard.unauthorized;
@@ -33,10 +49,15 @@ export async function GET(request: Request) {
     .limit(10)
     .all();
 
+  const lastBackup = getLastBackupTime();
+  const uptimeSeconds = getUptimeSeconds();
+
   const data = {
     totalUsersCreated: stats?.totalUsersCreated ?? 0,
     totalSnippetsCreated: stats?.totalSnippetsCreated ?? 0,
     dbSize,
+    uptimeSeconds,
+    lastBackup,
     languageBreakdown: languageStats.map((s) => ({
       language: s.language,
       count: Number(s.count),

@@ -24,6 +24,13 @@ export async function register() {
     }
 
     try {
+      const { startDbMaintenanceScheduler } = await import("@/features/admin/utils/db-maintenance-scheduler");
+      startDbMaintenanceScheduler();
+    } catch (err) {
+      console.error("[instrumentation] Failed to start DB maintenance scheduler:", err);
+    }
+
+    try {
       const { seedAdminUser, seedStatistics, seedSiteSettings } = await import("@/features/core/utils/seed");
       await seedSiteSettings();
       await seedAdminUser();

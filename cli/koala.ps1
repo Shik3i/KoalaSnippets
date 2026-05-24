@@ -2,7 +2,7 @@
 .SYNOPSIS
   KoalaSnippets CLI - Manage snippets from PowerShell
 .DESCRIPTION
-  Push, pull, search, and list snippets from your KoalaSnippets server.
+  Push, pull, search, list, and export snippets from your KoalaSnippets server.
   Requires an API key generated in Settings > API Keys.
 .PARAMETER Server
   Your KoalaSnippets server URL (default: $env:KOALA_SERVER or http://localhost:3000)
@@ -13,13 +13,19 @@
   .\koala.ps1 push .\script.ps1
   .\koala.ps1 pull abc123
   .\koala.ps1 search "database"
+  .\koala.ps1 list --tags python
+  .\koala.ps1 new "My Snippet" --file .\code.py
+  .\koala.ps1 export abc123
 #>
 
 param(
-  [ValidateSet("list", "push", "pull", "search")]
+  [ValidateSet("list", "push", "pull", "search", "new", "export")]
   [string]$Command,
 
   [string]$Arg1,
+
+  [string]$Tags,
+  [string]$File,
 
   [string]$Server = $env:KOALA_SERVER,
   [string]$Token = $env:KOALA_TOKEN
@@ -47,7 +53,9 @@ function Invoke-Api {
 
 switch ($Command) {
   "list" {
-    $result = Invoke-Api "/api/snippets"
+    $path = "/api/snippets"
+    if ($Tags) { $path += "?tags=$([uri]::EscapeDataString($Tags))" }
+    $result = Invoke-Api $path
     $result.snippets | ForEach-Object {
       "$($_.id.Substring(0,8))..  $($_.title.PadRight(30)) $($_.language.PadRight(12)) $($_.visibility)"
     }
@@ -86,15 +94,47 @@ switch ($Command) {
       "$($_.id.Substring(0,8))..  $($_.title.PadRight(30)) $($_.language.PadRight(12))"
     }
   }
+  "new" {
+    if (-not $Arg1) { Write-Error "Usage: new <title> --file <path>"; exit 1 }
+    if (-not $File) { Write-Error "Usage: new <title> --file <path>"; exit 1 }
+    $filePath = Resolve-Path $File
+    $content = Get-Content -Raw $filePath
+    $name = Split-Path $filePath -Leaf
+    $ext = $name.Split('.')[-1].ToLower()
+    $langMap = @{ ts="typescript"; tsx="typescript"; js="javascript"; jsx="javascript"; py="python"; rb="ruby"; rs="rust"; go="go"; java="java"; php="php"; sql="sql"; html="html"; css="css"; json="json"; yaml="yaml"; yml="yaml"; xml="xml"; md="markdown"; sh="shell"; ps1="powershell"; txt="plaintext" }
+    $lang = if ($langMap.ContainsKey($ext)) { $langMap[$ext] } else { "plaintext" }
+    $body = @{
+      title = $Arg1
+      visibility = "PRIVATE"
+      files = @(@{ filename = $name; code = $content; language = $lang })
+    }
+    $result = Invoke-Api "/api/snippets" -Method "POST" -Body $body
+    Write-Host "Snippet created: $($result.id)"
+    Write-Host "URL: $Server/snippets/$($result.id)"
+  }
+  "export" {
+    if (-not $Arg1) { Write-Error "Usage: export <snippet-id>"; exit 1 }
+    $result = Invoke-Api "/api/snippets/$Arg1"
+    foreach ($file in $result.files) {
+      $sanitizedTitle = ($result.title -replace '[^a-zA-Z0-9_-]', '_').ToLower()
+      $extMap = @{ typescript="ts"; javascript="js"; python="py"; ruby="rb"; rust="rs"; go="go"; java="java"; php="php"; sql="sql"; html="html"; css="css"; json="json"; yaml="yaml"; xml="xml"; markdown="md"; shell="sh"; powershell="ps1"; plaintext="txt" }
+      $ext = if ($extMap.ContainsKey($file.language)) { $extMap[$file.language] } else { $file.language }
+      $outFile = "${sanitizedTitle}.${ext}"
+      $file.code | Out-File -FilePath $outFile -Encoding utf8
+      Write-Host "Exported: $outFile"
+    }
+  }
   default {
     Write-Host "KoalaSnippets CLI"
     Write-Host "  Usage: .\koala.ps1 <command> [arg]"
     Write-Host ""
     Write-Host "Commands:"
-    Write-Host "  list              List your snippets"
+    Write-Host "  list [--tags X]   List your snippets (optionally filter by tags)"
     Write-Host "  push <file>       Push a file as a new snippet"
     Write-Host "  pull <id>         Pull a snippet by ID"
     Write-Host "  search <query>    Search snippets"
+    Write-Host "  new <title>       Create snippet with --file <path>"
+    Write-Host "  export <id>       Export snippet code to file(s)"
     Write-Host ""
     Write-Host "Environment:"
     Write-Host "  KOALA_SERVER      Server URL (default: http://localhost:3000)"
