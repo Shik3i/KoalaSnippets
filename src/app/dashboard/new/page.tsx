@@ -14,7 +14,8 @@ import { useToast } from "@/components/ui/toast";
 import { useKeyboardShortcuts } from "@/features/snippets/utils/keyboard-shortcuts";
 import { SUPPORTED_LANGUAGES } from "@/features/snippets/utils/shiki";
 import { revalidateDashboard } from "@/features/core/actions/revalidate";
-import { X, Plus, ChevronDown, Wand2 } from "lucide-react";
+import { X, Plus, ChevronDown, Wand2, History, Map as MapIcon } from "lucide-react";
+import { HistoryModal } from "@/features/snippets/components/history-modal";
 
 interface DuplicateData {
   title: string;
@@ -92,6 +93,11 @@ export default function NewSnippetPage({
   const [expiresAt, setExpiresAt] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [showMinimap, setShowMinimap] = useState(false);
+
+  const activeCode = files[activeTab]?.code ?? "";
+  const isLongFile = activeCode.split('\n').length > 50;
 
   useEffect(() => {
 
@@ -298,6 +304,28 @@ export default function NewSnippetPage({
                     <Plus size={16} />
                   </button>
                   <div className="flex-1" />
+                  {isLongFile && (
+                    <button
+                      type="button"
+                      onClick={() => setShowMinimap(!showMinimap)}
+                      className={`px-3 py-2 transition-colors flex items-center justify-center gap-1.5 border-l border-border text-sm ${showMinimap ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"}`}
+                      title="Toggle Minimap"
+                    >
+                      <MapIcon size={14} />
+                      <span className="hidden sm:inline">Map</span>
+                    </button>
+                  )}
+                  {isEditing && editData?.id && (
+                    <button
+                      type="button"
+                      onClick={() => setHistoryOpen(true)}
+                      className="px-3 py-2 text-muted-foreground hover:bg-muted transition-colors flex items-center justify-center gap-1.5 border-l border-border text-sm"
+                      title="View History"
+                    >
+                      <History size={14} />
+                      <span className="hidden sm:inline">History</span>
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={handleFormat}
@@ -309,10 +337,10 @@ export default function NewSnippetPage({
                   </button>
                 </div>
 
-                <div className="p-2">
+                <div className="p-2 relative">
                   <CodeEditor
                     id="code"
-                    value={files[activeTab]?.code ?? ""}
+                    value={activeCode}
                     onChange={(newCode) => {
                       const newFiles = [...files];
                       newFiles[activeTab].code = newCode;
@@ -320,8 +348,9 @@ export default function NewSnippetPage({
                     }}
                     placeholder="Paste your code here..."
                     rows={12}
-                    className="font-mono text-sm border-0 focus-visible:ring-0 rounded-none shadow-none resize-y"
+                    className="font-mono text-sm border-0 focus-visible:ring-0 rounded-none shadow-none resize-y min-h-[300px]"
                     required
+                    showMinimap={showMinimap && isLongFile}
                   />
                 </div>
               </div>
@@ -490,6 +519,18 @@ export default function NewSnippetPage({
           </CardContent>
         </Card>
       </div>
+      {isEditing && editData?.id && (
+        <HistoryModal 
+          open={historyOpen} 
+          onClose={() => setHistoryOpen(false)} 
+          snippetId={editData.id} 
+          onRestore={(restoredFiles) => {
+            setFiles(restoredFiles);
+            setActiveTab(0);
+            addToast("Restored from history!", "success");
+          }} 
+        />
+      )}
     </div>
   );
 }

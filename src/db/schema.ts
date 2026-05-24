@@ -76,6 +76,13 @@ export const snippetFiles = sqliteTable("snippet_files", {
   language: text("language").notNull(),
 });
 
+export const snippetRevisions = sqliteTable("snippet_revisions", {
+  id: text("id").primaryKey(),
+  snippetId: text("snippet_id").notNull().references(() => snippets.id, { onDelete: "cascade" }),
+  content: text("content").notNull(), // JSON stringified array of files
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
 export const siteStatistics = sqliteTable("site_statistics", {
   id: integer("id").primaryKey(),
   totalUsersCreated: integer("total_users_created").notNull().default(0),
@@ -107,12 +114,20 @@ export const snippetsRelations = relations(snippets, ({ one, many }) => ({
     references: [collections.id],
   }),
   files: many(snippetFiles),
+  revisions: many(snippetRevisions),
   favoritedBy: many(userFavorites),
 }));
 
 export const snippetFilesRelations = relations(snippetFiles, ({ one }) => ({
   snippet: one(snippets, {
     fields: [snippetFiles.snippetId],
+    references: [snippets.id],
+  }),
+}));
+
+export const snippetRevisionsRelations = relations(snippetRevisions, ({ one }) => ({
+  snippet: one(snippets, {
+    fields: [snippetRevisions.snippetId],
     references: [snippets.id],
   }),
 }));

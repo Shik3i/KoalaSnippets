@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { snippets, snippetFiles, siteSettings } from "@/db/schema";
+import { snippets, snippetFiles, siteSettings, snippetRevisions } from "@/db/schema";
 import { getSession } from "@/features/auth/utils/session";
 import { updateSnippetSchema } from "@/features/core/utils/validations";
 import { generateShareToken, generateId, hashPassword } from "@/features/auth/utils/auth";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import crypto from "crypto";
 import { verifyCsrf } from "@/features/core/utils/security";
 
@@ -140,6 +140,25 @@ export async function PUT(
         }
         newTotalLines = linesCount;
 
+        // Save History
+        const currentFiles = tx.select().from(snippetFiles).where(eq(snippetFiles.snippetId, id)).all();
+        if (currentFiles.length > 0) {
+          tx.insert(snippetRevisions).values({
+            id: generateId(),
+            snippetId: id,
+            content: JSON.stringify(currentFiles.map(f => ({ filename: f.filename, code: f.code, language: f.language }))),
+            createdAt: new Date(),
+          }).run();
+
+          const allRevisions = tx.select().from(snippetRevisions).where(eq(snippetRevisions.snippetId, id)).orderBy(desc(snippetRevisions.createdAt)).all();
+          if (allRevisions.length > 5) {
+            const toDelete = allRevisions.slice(5).map(r => r.id);
+            for (const revId of toDelete) {
+              tx.delete(snippetRevisions).where(eq(snippetRevisions.id, revId)).run();
+            }
+          }
+        }
+
         tx.delete(snippetFiles).where(eq(snippetFiles.snippetId, id)).run();
         for (const f of files) {
           tx.insert(snippetFiles).values({
@@ -162,6 +181,21 @@ export async function PUT(
         // We assume there's at least one file. We update the first one or 'index'
         const existingFiles = tx.select().from(snippetFiles).where(eq(snippetFiles.snippetId, id)).all();
         if (existingFiles.length > 0) {
+          tx.insert(snippetRevisions).values({
+            id: generateId(),
+            snippetId: id,
+            content: JSON.stringify(existingFiles.map(f => ({ filename: f.filename, code: f.code, language: f.language }))),
+            createdAt: new Date(),
+          }).run();
+
+          const allRevisions = tx.select().from(snippetRevisions).where(eq(snippetRevisions.snippetId, id)).orderBy(desc(snippetRevisions.createdAt)).all();
+          if (allRevisions.length > 5) {
+            const toDelete = allRevisions.slice(5).map(r => r.id);
+            for (const revId of toDelete) {
+              tx.delete(snippetRevisions).where(eq(snippetRevisions.id, revId)).run();
+            }
+          }
+
           const fileUpdate: Record<string, unknown> = {};
           if (code !== undefined) fileUpdate.code = code;
           if (language !== undefined) fileUpdate.language = language;

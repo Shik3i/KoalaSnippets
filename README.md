@@ -34,6 +34,7 @@ KoalaSnippets is a self-hosted web application for storing, organizing, and shar
 - [🐳 Docker Deployment](#-docker-deployment)
 - [📁 Project Structure](#-project-structure)
 - [🔐 Security](#-security)
+- [🗺️ Roadmap](#-roadmap)
 - [📄 License](#-license)
 
 <br/>
@@ -270,6 +271,10 @@ KoalaSnippets/
 - Role-based access control (RBAC) — admin routes return 403 for non-admins
 
 See [docs/SECURITY.md](docs/SECURITY.md) for the full security specification.
+
+## 🗺️ Roadmap
+
+We are constantly improving KoalaSnippets. Check out our [Roadmap](docs/ROADMAP.md) to see what planned features (like CLI integration and API Keys) are coming next!
 
 ## 📄 License
 

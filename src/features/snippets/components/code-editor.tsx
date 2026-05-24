@@ -6,10 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 interface CodeEditorProps extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, "onChange"> {
   value: string;
   onChange: (value: string) => void;
+  showMinimap?: boolean;
 }
 
 export const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>(
-  ({ value, onChange, onKeyDown, className, ...props }, forwardedRef) => {
+  ({ value, onChange, onKeyDown, className, showMinimap, ...props }, forwardedRef) => {
     const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
 
     // Sync unified ref handler to support both callback refs and ref objects from parents
@@ -140,14 +141,23 @@ export const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>
     };
 
     return (
-      <Textarea
-        ref={setRef}
-        value={localValue}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        className={className}
-        {...props}
-      />
+      <div className="relative w-full h-full">
+        <Textarea
+          ref={setRef}
+          value={localValue}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          className={className}
+          {...props}
+        />
+        {showMinimap && (
+          <div className="absolute top-0 right-4 w-20 h-full overflow-hidden pointer-events-none opacity-40 bg-muted/10 border-l border-border select-none hide-scrollbar mask-image-bottom">
+            <pre className="text-[2px] leading-[3px] font-mono text-muted-foreground p-2 whitespace-pre overflow-hidden">
+              {localValue}
+            </pre>
+          </div>
+        )}
+      </div>
     );
   }
 );
