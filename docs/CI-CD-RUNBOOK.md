@@ -111,7 +111,15 @@ RUN mkdir -p /app/data /app/backups
 
 **Lösung:** Im Dockerfile `npm install` verwenden statt `npm ci`.
 
-### 3.4 Doppelte Workflow-Trigger
+### 3.5 Migration Journal Korruption (⚠️ Silent Runtime Crash)
+Wenn eine Migration gelöscht oder umbenannt wird, aber der Eintrag im `_journal.json` bestehen bleibt, crasht der Drizzle-Migrator beim Start **lautlos** (der Fehler wird in `instrumentation.ts` gecatcht). Die Folge: alle nachfolgenden Migrationen werden nie ausgeführt.
+
+**Symptom:** "Server Components render" Fehler auf Seiten die neue DB-Spalten/Tabellen verwenden, obwohl der Build erfolgreich war.
+
+**Lösung:**
+1. `npm run db:generate` immer ausführen, NIE manuell Migration-Dateien löschen/umbenennen
+2. Falls eine Migration gelöscht werden muss: `_journal.json` bereinigen UND `drizzle-kit generate` neu ausführen
+3. Vor jedem Push: `npm test` ausführen — `migration-integrity.test.ts` prüft ob alle Journal-Einträge gültige SQL-Dateien haben
 Wenn der Workflow auf `push: branches: [main]` UND `push: tags: ['v*']` hört, erzeugt ein Tag-Push auf `main` **zwei parallele Builds**.
 
 **Lösung:** Nur `push: tags: ['v*']` verwenden.
