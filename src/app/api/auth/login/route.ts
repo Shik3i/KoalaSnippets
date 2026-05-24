@@ -8,6 +8,8 @@ import { checkRateLimit } from "@/features/core/utils/rate-limit";
 import { eq } from "drizzle-orm";
 import { verifyCsrf } from "@/features/core/utils/security";
 
+import { logUserAction } from "@/features/admin/utils/audit";
+
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
@@ -50,6 +52,7 @@ export async function POST(request: Request) {
     const token = await createSession(user.id);
 
     await setSessionCookie(token);
+    await logUserAction(user.id, "LOGIN", "USER", user.id, `User "${user.username}" logged in`);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[Login API Error]", error);

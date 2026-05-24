@@ -7,6 +7,7 @@ import { generateShareToken, generateId, hashPassword } from "@/features/auth/ut
 import { eq, desc } from "drizzle-orm";
 import crypto from "crypto";
 import { verifyCsrf } from "@/features/core/utils/security";
+import { logUserAction } from "@/features/admin/utils/audit";
 
 export const dynamic = "force-dynamic";
 
@@ -225,6 +226,14 @@ export async function PUT(
       }
     });
 
+    await logUserAction(
+      session.user.id,
+      isRestore ? "RESTORE" : "UPDATE",
+      "SNIPPET",
+      id,
+      isRestore ? `Snippet "${snippet.title}" restored` : `Snippet "${parsed.data.title || snippet.title}" updated`
+    );
+
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     console.error("[Snippets API PUT Error]", error);
@@ -256,9 +265,11 @@ export async function DELETE(
   if (!snippet.deletedAt) {
     // Soft delete
     await db.update(snippets).set({ deletedAt: new Date() }).where(eq(snippets.id, id));
+    await logUserAction(session.user.id, "DELETE", "SNIPPET", id, `Snippet "${snippet.title}" moved to trash`);
   } else {
     // Hard delete
     await db.delete(snippets).where(eq(snippets.id, id));
+    await logUserAction(session.user.id, "DELETE", "SNIPPET", id, `Snippet "${snippet.title}" permanently deleted`);
   }
 
   return NextResponse.json({ success: true });

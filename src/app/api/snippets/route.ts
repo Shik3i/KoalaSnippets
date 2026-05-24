@@ -7,6 +7,7 @@ import { generateId, generateShareToken, hashPassword } from "@/features/auth/ut
 import { eq, desc, like, or, and, sql, count, inArray, isNull, gt } from "drizzle-orm";
 import { getSafePage, verifyCsrf } from "@/features/core/utils/security";
 import { escapeLike } from "@/features/core/utils/sql";
+import { logUserAction } from "@/features/admin/utils/audit";
 
 export const dynamic = "force-dynamic";
 
@@ -201,6 +202,14 @@ export async function POST(request: Request) {
         .set({ totalSnippetsCreated: sql`total_snippets_created + 1` })
         .where(eq(siteStatistics.id, 1)).run();
     });
+
+    await logUserAction(
+      session.user.id,
+      "CREATE",
+      "SNIPPET",
+      snippetData.id,
+      `Snippet "${title}" created`
+    );
 
     return NextResponse.json({ 
       success: true, 

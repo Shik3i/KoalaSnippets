@@ -150,3 +150,21 @@ export const userFavoritesRelations = relations(userFavorites, ({ one }) => ({
     references: [snippets.id],
   }),
 }));
+
+export const auditLogs = sqliteTable("audit_logs", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  action: text("action", { enum: ["CREATE", "UPDATE", "DELETE", "RESTORE", "LOGIN", "LOGOUT"] }).notNull(),
+  targetType: text("target_type", { enum: ["SNIPPET", "COLLECTION", "USER", "SETTINGS"] }).notNull(),
+  targetId: text("target_id"),
+  details: text("details"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [auditLogs.userId],
+    references: [users.id],
+  }),
+}));
+
