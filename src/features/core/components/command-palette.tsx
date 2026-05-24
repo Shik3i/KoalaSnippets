@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Search, Plus, Settings, Shield, Home, FileCode, Command, ArrowRight, Moon, Copy, Pencil } from "lucide-react";
+import { Search, Plus, Settings, Shield, Home, FileCode, Command, ArrowRight, Moon, Copy, Pencil, Wrench, Upload, LayoutGrid } from "lucide-react";
 import { cn } from "@/features/core/utils/utils";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/toast";
 
 interface CommandPaletteProps {
   isAdmin?: boolean;
@@ -24,6 +25,11 @@ interface SnippetResult {
 const commands = [
   { label: "Create New Snippet", value: "/new", href: "/dashboard/new", description: "Create a new snippet", icon: Plus },
   { label: "Toggle Dark Mode", value: "/theme", action: "toggleTheme", description: "Switch between light and dark mode", icon: Moon },
+  { label: "Open Developer Tools", value: "/tools", href: "/tools", description: "Regex, Timestamp, URL, Color tools", icon: Wrench },
+  { label: "Import Snippets", value: "/import", action: "openImport", description: "Import snippets from file or URL", icon: Upload },
+  { label: "Set Density: Compact", value: "/density compact", action: "density-compact", description: "Minimal metadata-only view", icon: LayoutGrid },
+  { label: "Set Density: Preview", value: "/density preview", action: "density-preview", description: "5-line code preview view", icon: LayoutGrid },
+  { label: "Set Density: Full", value: "/density full", action: "density-full", description: "Full code card view", icon: LayoutGrid },
   { label: "Account Settings", value: "/settings", href: "/settings", description: "Manage your account settings", icon: Settings },
   { label: "Admin Dashboard", value: "/admin", href: "/admin", description: "Admin tools and database backups", icon: Shield },
   { label: "Go to Home", value: "/home", href: "/", description: "Back to home page", icon: Home },
@@ -33,6 +39,7 @@ const commands = [
 export function CommandPalette({ isAdmin = false }: CommandPaletteProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { addToast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [snippets, setSnippets] = useState<SnippetResult[]>([]);
@@ -147,6 +154,12 @@ export function CommandPalette({ isAdmin = false }: CommandPaletteProps) {
     const q = query.toLowerCase().trim();
     if (!q) return true;
     return cmd.value.startsWith(q) || cmd.label.toLowerCase().includes(q);
+  }).sort((a, b) => {
+    const q = query.toLowerCase().trim();
+    if (!q) return 0;
+    const aStarts = a.value.startsWith(q) ? 1 : 0;
+    const bStarts = b.value.startsWith(q) ? 1 : 0;
+    return bStarts - aStarts;
   });
 
   const totalItems = [...filteredCommands, ...snippets];
@@ -176,6 +189,22 @@ export function CommandPalette({ isAdmin = false }: CommandPaletteProps) {
         return;
       } else if (item.action === "copyShareLink") {
         navigator.clipboard.writeText(window.location.href).catch(console.error);
+        return;
+      } else if (item.action?.startsWith("density-")) {
+        const density = item.action.replace("density-", "");
+        setTimeout(() => {
+          document.cookie = `snippet_density=${density}; path=/; max-age=31536000; SameSite=Lax`;
+        }, 0);
+        fetch("/api/settings/appearance", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ snippetDensity: density }),
+        }).catch(console.error);
+        addToast(`Density set to ${density}`, "success");
+        setTimeout(() => router.refresh(), 100);
+        return;
+      } else if (item.action === "openImport") {
+        router.push("/dashboard/new?import=1");
         return;
       }
     }

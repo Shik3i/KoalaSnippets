@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import { ToastProvider } from "@/components/ui/toast";
 import { CommandPalette } from "@/features/core/components/command-palette";
 import { GlobalDropzone } from "@/features/core/components/global-dropzone";
+import { ShortcutHelpOverlay } from "@/features/core/components/shortcut-help-overlay";
 import { getSession } from "@/features/auth/utils/session";
 import { db } from "@/db";
 import { siteSettings } from "@/db/schema";
@@ -69,6 +70,7 @@ export default async function RootLayout({
           )}
           {children}
           <CommandPalette isAdmin={isAdmin} />
+          <ShortcutHelpOverlay />
           <GlobalDropzone />
         </ToastProvider>
       </body>

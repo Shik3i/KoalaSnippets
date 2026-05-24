@@ -34,6 +34,16 @@ export function useKeyboardShortcuts({ searchInputRef, onSave }: UseKeyboardShor
         e.preventDefault();
         router.push("/dashboard/new");
       }
+
+      if (modifier && e.shiftKey && e.key.toLowerCase() === "t") {
+        e.preventDefault();
+        router.push("/dashboard/trash");
+      }
+
+      if (modifier && e.shiftKey && e.key.toLowerCase() === "d") {
+        e.preventDefault();
+        router.push("/dashboard");
+      }
     },
     [searchInputRef, onSave, router]
   );
