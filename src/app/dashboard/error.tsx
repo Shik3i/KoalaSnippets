@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
+import { logCrashFromClient } from "@/features/core/utils/crash-reporter-client";
 
 export default function DashboardError({
   error,
@@ -13,9 +14,13 @@ export default function DashboardError({
 }) {
   useEffect(() => {
     console.error("[Dashboard Error]", error);
+    logCrashFromClient(
+      error.message || "Unknown error",
+      error.stack,
+      window.location.pathname,
+      error.digest
+    );
   }, [error]);
-
-  const isDev = process.env.NODE_ENV === "development";
 
   return (
     <div className="flex-1 flex items-center justify-center p-6">
@@ -31,18 +36,16 @@ export default function DashboardError({
             Something went wrong while loading your snippets. This could be a temporary database issue.
           </p>
         </div>
-        {isDev && (
-          <div className="bg-muted/50 rounded-lg p-3 text-left">
-            <p className="text-xs font-mono text-muted-foreground break-all mb-1">
-              {error.message || "Unknown error"}
+        <div className="bg-muted/50 rounded-lg p-3 text-left">
+          <p className="text-xs font-mono text-muted-foreground break-all mb-1">
+            {error.message || "Unknown error"}
+          </p>
+          {error.digest && (
+            <p className="text-[10px] font-mono text-muted-foreground/60">
+              Digest: {error.digest}
             </p>
-            {error.digest && (
-              <p className="text-[10px] font-mono text-muted-foreground/60">
-                Digest: {error.digest}
-              </p>
-            )}
-          </div>
-        )}
+          )}
+        </div>
         <div className="flex gap-2 justify-center">
           <Button onClick={reset} size="sm">
             Try Again

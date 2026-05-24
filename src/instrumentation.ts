@@ -10,6 +10,10 @@ export async function register() {
       console.log("[db] Database migrations applied successfully.");
     } catch (err) {
       console.error("[db] Migration failed:", err);
+      try {
+        const { logCrash } = await import("@/features/core/utils/crash-reporter");
+        await logCrash(err instanceof Error ? err : new Error(String(err)), "/migrations");
+      } catch { /* ignore secondary crash */ }
     }
 
     try {
@@ -26,6 +30,10 @@ export async function register() {
       await seedStatistics();
     } catch (err) {
       console.error("[instrumentation] Failed to seed admin user or statistics:", err);
+      try {
+        const { logCrash } = await import("@/features/core/utils/crash-reporter");
+        await logCrash(err instanceof Error ? err : new Error(String(err)), "/seed");
+      } catch { /* ignore secondary crash */ }
     }
   }
 }

@@ -21,7 +21,7 @@ CREATE TABLE `__new_snippets` (
 	FOREIGN KEY (`collection_id`) REFERENCES `collections`(`id`) ON UPDATE no action ON DELETE set null
 );
 --> statement-breakpoint
-INSERT INTO `__new_snippets`("id", "title", "description", "tags", "author_id", "visibility", "share_token", "is_pinned", "expires_at", "collection_id", "total_lines", "content_hash", "password_hash", "created_at", "updated_at", "deleted_at", "forked_from_id") SELECT "id", "title", "description", "tags", "author_id", "visibility", "share_token", "is_pinned", "expires_at", "collection_id", "total_lines", "content_hash", "password_hash", "created_at", "updated_at", "deleted_at", "forked_from_id" FROM `snippets`;--> statement-breakpoint
+INSERT INTO `__new_snippets`("id", "title", "description", "tags", "author_id", "visibility", "share_token", "is_pinned", "expires_at", "collection_id", "total_lines", "content_hash", "password_hash", "created_at", "updated_at", "deleted_at", "forked_from_id") SELECT "id", "title", "description", "tags", "author_id", "visibility", "share_token", "is_pinned", "expires_at", "collection_id", "total_lines", "content_hash", "password_hash", "created_at", "updated_at", "deleted_at", NULL as "forked_from_id" FROM `snippets`;--> statement-breakpoint
 DROP TABLE `snippets`;--> statement-breakpoint
 ALTER TABLE `__new_snippets` RENAME TO `snippets`;--> statement-breakpoint
 PRAGMA foreign_keys=ON;--> statement-breakpoint

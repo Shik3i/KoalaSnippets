@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getSession } from "@/features/auth/utils/session";
 import { Sidebar } from "@/features/core/components/sidebar";
@@ -114,12 +115,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   return (
     <div className="flex h-screen">
       <GlobalDropzone />
-      <Sidebar
-        tags={sidebarTags}
-        languages={sidebarLanguages}
-        isAuthenticated={true}
-        isAdmin={session.user.role === "ADMIN"}
-      />
+      <Suspense fallback={<div className="w-[240px] shrink-0 bg-card border-r border-border" />}>
+        <Sidebar
+          tags={sidebarTags}
+          languages={sidebarLanguages}
+          isAuthenticated={true}
+          isAdmin={session.user.role === "ADMIN"}
+        />
+      </Suspense>
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <SnippetSearchHeader availableTags={sidebarTags} availableLanguages={sidebarLanguages} sort={sortMode} viewMode={viewMode} resultCount={highlightedSnippets.length} />

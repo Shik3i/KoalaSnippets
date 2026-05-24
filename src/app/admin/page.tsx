@@ -7,6 +7,7 @@ import { AdminSettings } from "@/features/admin/components/admin-settings";
 import { AdminUserList } from "@/features/admin/components/admin-user-list";
 import { AdminBackupList } from "@/features/admin/components/admin-backup-list";
 import { AdminAuditLog } from "@/features/admin/components/admin-audit-log";
+import { AdminCrashReports } from "@/features/admin/components/admin-crash-reports";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,7 @@ export default async function AdminPage() {
 
           <AdminMetrics />
           <AdminAuditLog />
+          <AdminCrashReports />
           <AdminSettings />
           <AdminPublicSnippets />
           <AdminUserList />

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getSession } from "@/features/auth/utils/session";
@@ -115,12 +116,14 @@ export default async function TrashPage({ searchParams }: { searchParams: Promis
   return (
     <div className="flex h-screen">
       <GlobalDropzone />
-      <Sidebar
-        tags={sidebarTags}
-        languages={sidebarLanguages}
-        isAuthenticated={true}
-        isAdmin={session.user.role === "ADMIN"}
-      />
+      <Suspense fallback={<div className="w-[240px] shrink-0 bg-card border-r border-border" />}>
+        <Sidebar
+          tags={sidebarTags}
+          languages={sidebarLanguages}
+          isAuthenticated={true}
+          isAdmin={session.user.role === "ADMIN"}
+        />
+      </Suspense>
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="p-4 bg-destructive/10 border-b border-destructive/20">
