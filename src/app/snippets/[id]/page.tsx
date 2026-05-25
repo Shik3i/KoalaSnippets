@@ -16,20 +16,6 @@ import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
-export async function generateStaticParams() {
-  try {
-    const publicSnippets = await db
-      .select({ id: snippets.id })
-      .from(snippets)
-      .where(eq(snippets.visibility, "PUBLIC"))
-      .all();
-
-    return publicSnippets.map((s) => ({ id: s.id }));
-  } catch {
-    return [];
-  }
-}
-
 function constantTimeCompare(a: string, b: string): boolean {
   const hashA = crypto.createHash('sha256').update(a).digest();
   const hashB = crypto.createHash('sha256').update(b).digest();
