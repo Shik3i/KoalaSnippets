@@ -50,33 +50,36 @@ export async function onRequestError(
   request: { url?: string; method?: string; headers?: Record<string, string> },
   context: { routerKind?: string; routerPath?: string; routePath?: string }
 ) {
-  const digest = error.digest || "";
+  const digest = error?.digest || "";
+  const errorMessage = error?.message || String(error);
   
   // Ignore Next.js internal bailout errors
   if (
     digest === "DYNAMIC_SERVER_USAGE" || 
     digest === "NEXT_REDIRECT" || 
     digest === "NEXT_NOT_FOUND" ||
-    error.message.includes("DYNAMIC_SERVER_USAGE")
+    errorMessage.includes("DYNAMIC_SERVER_USAGE")
   ) {
     return;
   }
 
   // Log unstripped error to standard error
-  console.error(`[Server Error] ${context?.routerKind} (${context?.routerPath || request?.url}):`, error.message);
+  console.error(`[Server Error] ${context?.routerKind} (${context?.routerPath || request?.url}):`, errorMessage);
   if (error.stack) {
     console.error(error.stack);
   }
 
-  try {
-    const { logCrash } = await import("@/features/core/utils/crash-reporter");
-    await logCrash(
-      error,
-      context?.routerPath || request?.url || "unknown",
-      undefined,
-      { context, requestUrl: request?.url, requestMethod: request?.method }
-    );
-  } catch (err) {
-    console.error("[onRequestError] Failed to log crash to DB:", err);
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    try {
+      const { logCrash } = await import("@/features/core/utils/crash-reporter");
+      await logCrash(
+        error,
+        context?.routerPath || request?.url || "unknown",
+        undefined,
+        { context, requestUrl: request?.url, requestMethod: request?.method }
+      );
+    } catch (err) {
+      console.error("[onRequestError] Failed to log crash to DB:", err);
+    }
   }
 }

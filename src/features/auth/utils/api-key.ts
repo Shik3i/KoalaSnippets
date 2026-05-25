@@ -16,13 +16,13 @@ export function hashApiToken(token: string): string {
 }
 
 function constantTimeCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.byteLength !== bufB.byteLength) {
     const hashA = crypto.createHash("sha256").update(a).digest();
     const hashB = crypto.createHash("sha256").update(b).digest();
     return crypto.timingSafeEqual(hashA, hashB);
   }
-  const bufA = Buffer.from(a);
-  const bufB = Buffer.from(b);
   return crypto.timingSafeEqual(bufA, bufB);
 }
 

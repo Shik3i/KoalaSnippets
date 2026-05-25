@@ -7,10 +7,16 @@ export function getSafePage(pageStr: string | null): number {
   return Math.min(parsed, 1000);
 }
 
+import crypto from "crypto";
+
 export function verifyCsrf(request: Request): boolean {
   const apiKey = request.headers.get("x-api-key");
-  if (apiKey && process.env.API_KEY && apiKey === process.env.API_KEY) {
-    return true;
+  if (apiKey && process.env.API_KEY) {
+    const bufA = Buffer.from(apiKey);
+    const bufB = Buffer.from(process.env.API_KEY);
+    if (bufA.byteLength === bufB.byteLength && crypto.timingSafeEqual(bufA, bufB)) {
+      return true;
+    }
   }
 
   // Simple CSRF check against Origin/Referer headers
@@ -41,6 +47,7 @@ const htmlEntities: Record<string, string> = {
   "'": '&#39;'
 };
 
-export function escapeHtml(str: string): string {
-  return str.replace(/[&<>"']/g, match => htmlEntities[match]);
+export function escapeHtml(str: string | null | undefined): string {
+  if (!str) return "";
+  return String(str).replace(/[&<>"']/g, match => htmlEntities[match]);
 }

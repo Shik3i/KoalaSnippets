@@ -15,7 +15,7 @@ const pepper = PEPPER ?? "dev-pepper-not-for-production";
 export async function hashPassword(password: string): Promise<string> {
   const pepperedPassword = `${password}${pepper}`;
 
-  return hash(pepperedPassword, {
+  return await hash(pepperedPassword, {
     type: 2,
     memoryCost: 65536,
     timeCost: 3,
@@ -25,7 +25,7 @@ export async function hashPassword(password: string): Promise<string> {
 
 export async function verifyPassword(password: string, hashStr: string): Promise<boolean> {
   const pepperedPassword = `${password}${pepper}`;
-  return verify(hashStr, pepperedPassword);
+  return await verify(hashStr, pepperedPassword);
 }
 
 export function generateSessionToken(): string {

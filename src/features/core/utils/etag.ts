@@ -17,7 +17,7 @@ export function generateETag(...sources: ETagSource[]): string {
 }
 
 export function generateETagFromData(data: unknown): string {
-  const serialized = JSON.stringify(data);
+  const serialized = JSON.stringify(data) || "";
   const hash = crypto.createHash("sha256").update(serialized).digest("hex");
   return `"${hash}"`;
 }

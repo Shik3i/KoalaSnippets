@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { cookies } from "next/headers";
 import { db } from "@/db";
 import { sessions, users } from "@/db/schema";
@@ -41,12 +42,12 @@ export async function getSession() {
   }
 
   // Gracefully normalize user preferences to ensure robust fallbacks for existing profiles
-  if (session.user && session.user.preferences) {
+  if (session.user) {
     session.user.preferences = {
-      appTheme: session.user.preferences.appTheme ?? "theme-midnight",
-      snippetDensity: session.user.preferences.snippetDensity ?? "preview",
-      syntaxTheme: session.user.preferences.syntaxTheme ?? "github-dark",
-      bgPattern: session.user.preferences.bgPattern ?? "matrix",
+      appTheme: session.user.preferences?.appTheme ?? "theme-midnight",
+      snippetDensity: session.user.preferences?.snippetDensity ?? "preview",
+      syntaxTheme: session.user.preferences?.syntaxTheme ?? "github-dark",
+      bgPattern: session.user.preferences?.bgPattern ?? "matrix",
     };
   }
 
@@ -60,6 +61,13 @@ export async function getSession() {
   if (expiresAtMs - now < SESSION_REFRESH_WINDOW_MS) {
     const newExpiresAt = new Date(now + SESSION_DURATION_DAYS * 24 * 60 * 60 * 1000);
     await db.update(sessions).set({ expiresAt: newExpiresAt }).where(eq(sessions.id, session.id));
+    cookieStore.set(SESSION_COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: SESSION_DURATION_DAYS * 24 * 60 * 60,
+    });
   }
 
   return session;
