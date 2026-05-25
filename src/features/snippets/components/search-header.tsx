@@ -176,13 +176,17 @@ export function SnippetSearchHeader({
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const searchParamsString = searchParams.toString();
+
   const activeTags = useMemo(
     () => searchParams.get("tags")?.split(",").filter(Boolean) || [],
-    [searchParams]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [searchParamsString]
   );
   const activeLanguages = useMemo(
     () => searchParams.get("language")?.split(",").filter(Boolean) || [],
-    [searchParams]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [searchParamsString]
   );
   const activeCollection = searchParams.get("collection");
 

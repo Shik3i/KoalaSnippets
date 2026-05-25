@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useSyncExternalStore, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import * as htmlToImage from "html-to-image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -108,11 +108,7 @@ export function DetailView({
   onToggleVisibility,
   onFork,
 }: DetailViewProps) {
-  const mounted = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false
-  );
+  const mounted = typeof window !== "undefined";
   const [copied, setCopied] = useState(false);
   const [copyOpen, setCopyOpen] = useState(false);
   const [zenMode, setZenMode] = useState(false);
@@ -122,6 +118,7 @@ export function DetailView({
   const { addRecentSnippet } = useRecentSnippets();
   const normalRef = useRef<HTMLDivElement>(null);
   const zenRef = useRef<HTMLDivElement>(null);
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (id && title) {
@@ -644,11 +641,10 @@ export function DetailView({
                 variant="outline"
                 className="flex-1 gap-1.5"
                 onClick={() => {
-                  const canvas = document.querySelector("#qr-canvas-download canvas") as HTMLCanvasElement | null;
-                  if (canvas) {
+                  if (qrCanvasRef.current) {
                     const link = document.createElement("a");
                     link.download = `koalasnippet-${title.replace(/\s+/g, "_")}.png`;
-                    link.href = canvas.toDataURL();
+                    link.href = qrCanvasRef.current.toDataURL();
                     link.click();
                     addToast("QR code downloaded!", "success");
                   }
@@ -672,7 +668,7 @@ export function DetailView({
       )}
 
       <div id="qr-canvas-download" className="hidden">
-        <QrCode value={getShareUrl()} size={300} />
+        <QrCode ref={qrCanvasRef} value={getShareUrl()} size={300} />
       </div>
     </div>
   );

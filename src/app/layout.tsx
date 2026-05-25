@@ -34,7 +34,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await getSession();
-  const isAdmin = session?.user?.role === "ADMIN";
   
   let theme = "theme-midnight";
   let bgPattern = "matrix";
@@ -69,7 +68,7 @@ export default async function RootLayout({
             </div>
           )}
           {children}
-          <CommandPalette isAdmin={isAdmin} />
+          <CommandPalette />
           <ShortcutHelpOverlay />
           <GlobalDropzone />
         </ToastProvider>

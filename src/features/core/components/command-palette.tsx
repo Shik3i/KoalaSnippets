@@ -7,10 +7,6 @@ import { cn } from "@/features/core/utils/utils";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
 
-interface CommandPaletteProps {
-  isAdmin?: boolean;
-}
-
 interface SnippetResult {
   id: string;
   title: string;
@@ -36,7 +32,7 @@ const commands = [
   { label: "My Snippets Dashboard", value: "/dashboard", href: "/dashboard", description: "View your personal snippets", icon: FileCode },
 ];
 
-export function CommandPalette({ isAdmin = false }: CommandPaletteProps) {
+export function CommandPalette() {
   const router = useRouter();
   const pathname = usePathname();
   const { addToast } = useToast();
@@ -150,7 +146,6 @@ export function CommandPalette({ isAdmin = false }: CommandPaletteProps) {
   }
 
   const filteredCommands = currentCommands.filter((cmd) => {
-    if (cmd.value === "/backups" && !isAdmin) return false;
     const q = query.toLowerCase().trim();
     if (!q) return true;
     return cmd.value.startsWith(q) || cmd.label.toLowerCase().includes(q);

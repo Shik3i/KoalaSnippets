@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, forwardRef } from "react";
 
 interface QrCodeProps {
   value: string;
@@ -287,7 +287,7 @@ function isFunctionModule(r: number, c: number, size: number): boolean {
   return false;
 }
 
-export function QrCode({ value, size = 200, className }: QrCodeProps) {
+export const QrCode = forwardRef<HTMLCanvasElement, QrCodeProps>(({ value, size = 200, className }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -322,13 +322,22 @@ export function QrCode({ value, size = 200, className }: QrCodeProps) {
         }
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, size]);
 
   return (
     <canvas
-      ref={canvasRef}
+      ref={(node) => {
+        canvasRef.current = node;
+        if (typeof ref === "function") {
+          ref(node);
+        } else if (ref) {
+          ref.current = node;
+        }
+      }}
       className={className}
       style={{ width: size, height: size }}
     />
   );
-}
+});
+QrCode.displayName = "QrCode";
