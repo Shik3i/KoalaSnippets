@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { logCrash } from "@/features/core/utils/crash-reporter";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();

@@ -196,7 +196,6 @@ export function CommandPalette() {
           body: JSON.stringify({ snippetDensity: density }),
         }).catch(console.error);
         addToast(`Density set to ${density}`, "success");
-        setTimeout(() => router.refresh(), 100);
         return;
       } else if (item.action === "openImport") {
         router.push("/dashboard/new?import=1");

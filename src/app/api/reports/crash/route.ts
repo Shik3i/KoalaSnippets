@@ -4,6 +4,8 @@ import { crashReports } from "@/db/schema";
 import crypto from "crypto";
 import { getSession } from "@/features/auth/utils/session";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   let userId: string | null = null;
   const session = await getSession();

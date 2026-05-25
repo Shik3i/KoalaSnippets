@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import * as htmlToImage from "html-to-image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -130,15 +130,16 @@ export function DetailView({
   const activeFile = files[activeTab] || files[0];
   const [envVars, setEnvVars] = useState<Record<string, string>>({});
   const [statsOpen, setStatsOpen] = useState(false);
-  const stats = computeSnippetStats(files);
+  const stats = useMemo(() => computeSnippetStats(files), [files]);
 
   const VAR_REGEX = /\{\{([A-Z0-9_]+)\}\}/g;
-  const detectedVars = Array.from(new Set(
+  const detectedVars = useMemo(() => Array.from(new Set(
     files.flatMap(f => {
       const matches = f.code.match(VAR_REGEX) || [];
       return matches.map(m => m.slice(2, -2));
     })
-  ));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  )), [files]);
 
   const handleEnvChange = (key: string, value: string) => {
     setEnvVars(prev => ({ ...prev, [key]: value }));
@@ -317,7 +318,7 @@ export function DetailView({
                 {VISIBILITY_CONFIG[visibility].label}
               </span>
               <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                {files.reduce((acc, f) => acc + f.code.split('\n').length, 0)} LOC • ~{Math.max(1, Math.ceil(files.reduce((acc, f) => acc + f.code.split('\n').length, 0) / 50))} min read
+                {stats.lines.toLocaleString()} LOC • ~{stats.estimatedReadTime} min read
               </span>
               <span className="text-xs text-muted-foreground">
                 Updated {mounted ? new Date(updatedAt).toLocaleDateString() : new Date(updatedAt).toISOString().split('T')[0]}

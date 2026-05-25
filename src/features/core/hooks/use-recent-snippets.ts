@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export interface RecentSnippet {
   id: string;
@@ -26,7 +26,7 @@ export function useRecentSnippets() {
     }
   }, []);
 
-  const addRecentSnippet = (id: string, title: string) => {
+  const addRecentSnippet = useCallback((id: string, title: string) => {
     setRecentSnippets((prev) => {
       const filtered = prev.filter((s) => s.id !== id);
       const newRecent = [{ id, title, timestamp: Date.now() }, ...filtered].slice(0, MAX_RECENT);
@@ -37,16 +37,16 @@ export function useRecentSnippets() {
       }
       return newRecent;
     });
-  };
+  }, []);
 
-  const clearRecentSnippets = () => {
+  const clearRecentSnippets = useCallback(() => {
     setRecentSnippets([]);
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (err) {
       console.error("Failed to clear recent snippets", err);
     }
-  };
+  }, []);
 
   return { recentSnippets, addRecentSnippet, clearRecentSnippets };
 }

@@ -54,6 +54,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
   }, [snippets, hasMoreInitial]);
 
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const loadMoreFnRef = useRef<(() => void) | null>(null);
 
   const loadMore = useCallback(async () => {
     if (isLoadingMore || !hasMore) return;
@@ -81,13 +82,15 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
     }
   }, [hasMore, isLoadingMore, isTrashView, page]);
 
+  loadMoreFnRef.current = loadMore;
+
   useEffect(() => {
     if (!hasMore || isLoadingMore) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
-          loadMore();
+        if (entries[0].isIntersecting && loadMoreFnRef.current) {
+          loadMoreFnRef.current();
         }
       },
       { threshold: 0.5 }
@@ -98,7 +101,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
     }
 
     return () => observer.disconnect();
-  }, [hasMore, isLoadingMore, loadMore]);
+  }, [hasMore, isLoadingMore]);
 
   const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {

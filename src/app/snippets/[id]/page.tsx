@@ -27,15 +27,14 @@ interface PageProps {
   searchParams: Promise<{ token?: string }>;
 }
 
-async function getSnippet(id: string, token?: string): Promise<Record<string, unknown> | null> {
+async function getSnippet(id: string, token?: string, session?: Awaited<ReturnType<typeof getSession>>): Promise<Record<string, unknown> | null> {
   const snippet = await db.select().from(snippets).where(eq(snippets.id, id)).get();
 
   if (!snippet) {
     return null;
   }
 
-  const session = await getSession();
-  const isOwner = session && snippet.authorId === session.user.id;
+  const isOwner = !!(session && snippet.authorId === session.user.id);
 
   const files = await db.select().from(snippetFiles).where(eq(snippetFiles.snippetId, snippet.id)).all();
   
@@ -116,7 +115,7 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
   const { token } = await searchParams;
   const session = await getSession();
 
-  const snippet = await getSnippet(id, token);
+  const snippet = await getSnippet(id, token, session);
 
   if (!snippet) {
     notFound();

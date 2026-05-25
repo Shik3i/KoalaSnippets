@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/features/core/utils/utils";
@@ -67,6 +67,12 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
     }
   }, []);
 
+  const widthRef = useRef(width);
+
+  useEffect(() => {
+    widthRef.current = width;
+  });
+
   useEffect(() => {
     if (!isResizing) {
       if (width !== 240) {
@@ -79,7 +85,9 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
       let newWidth = e.clientX;
       if (newWidth < 200) newWidth = 200;
       if (newWidth > 400) newWidth = 400;
-      setWidth(newWidth);
+      if (newWidth !== widthRef.current) {
+        setWidth(newWidth);
+      }
     };
 
     const handleMouseUp = () => {
@@ -93,7 +101,8 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isResizing, width]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isResizing]);
 
   useEffect(() => {
     if (isAuthenticated) {

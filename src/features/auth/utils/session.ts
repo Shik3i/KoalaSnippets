@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { db } from "@/db";
 import { sessions, users } from "@/db/schema";
@@ -10,7 +11,7 @@ const SESSION_COOKIE_NAME = "ks_session";
 const SESSION_DURATION_DAYS = 30;
 const SESSION_REFRESH_WINDOW_MS = 24 * 60 * 60 * 1000;
 
-export async function getSession() {
+async function _getSession() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
@@ -72,6 +73,8 @@ export async function getSession() {
 
   return session;
 }
+
+export const getSession = cache(_getSession);
 
 export async function createSession(userId: string): Promise<string> {
   const token = generateSessionToken();
