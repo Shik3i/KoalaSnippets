@@ -26,7 +26,7 @@ function getUptimeSeconds(): number {
 }
 
 export async function GET(request: Request) {
-  const guard = await requireAdmin();
+  const guard = await requireAdmin(request);
   if ("unauthorized" in guard) return guard.unauthorized;
   if ("forbidden" in guard) return guard.forbidden;
 

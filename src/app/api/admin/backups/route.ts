@@ -16,7 +16,7 @@ interface BackupEntry {
 }
 
 export async function GET(request: Request) {
-  const guard = await requireAdmin();
+  const guard = await requireAdmin(request);
   if ("unauthorized" in guard) return guard.unauthorized;
   if ("forbidden" in guard) return guard.forbidden;
 
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
   }
 
-  const guard = await requireAdmin();
+  const guard = await requireAdmin(request);
   if ("unauthorized" in guard) return guard.unauthorized;
   if ("forbidden" in guard) return guard.forbidden;
 

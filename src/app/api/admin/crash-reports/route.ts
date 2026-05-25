@@ -6,8 +6,8 @@ import { eq, desc } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const guard = await requireAdmin();
+export async function GET(request: Request) {
+  const guard = await requireAdmin(request);
   if ("unauthorized" in guard) return guard.unauthorized;
   if ("forbidden" in guard) return guard.forbidden;
 
@@ -36,8 +36,8 @@ export async function GET() {
   }
 }
 
-export async function DELETE() {
-  const guard = await requireAdmin();
+export async function DELETE(request: Request) {
+  const guard = await requireAdmin(request);
   if ("unauthorized" in guard) return guard.unauthorized;
   if ("forbidden" in guard) return guard.forbidden;
 
