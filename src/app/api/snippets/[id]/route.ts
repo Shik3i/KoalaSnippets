@@ -102,12 +102,11 @@ export async function PUT(
 
   const { id } = await params;
 
-  const snippet = await db.select().from(snippets).where(eq(snippets.id, id)).get();
-  if (!snippet || snippet.authorId !== session.user.id) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-
   try {
+    const snippet = await db.select().from(snippets).where(eq(snippets.id, id)).get();
+    if (!snippet || snippet.authorId !== session.user.id) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     const body = await request.json();
     const parsed = updateSnippetSchema.safeParse(body);
 

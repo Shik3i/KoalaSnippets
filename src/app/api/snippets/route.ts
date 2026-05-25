@@ -154,16 +154,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const settings = await db.select().from(siteSettings).where(eq(siteSettings.id, 1)).get();
-  const maxSnippets = settings?.maxSnippetsPerUser ?? 1000;
-  const maxChars = settings?.maxCharsPerSnippet ?? 250000;
-
   const contentLength = request.headers.get("content-length");
   if (contentLength && parseInt(contentLength, 10) > 5 * 1024 * 1024) {
     return NextResponse.json({ error: "Payload too large" }, { status: 413 });
   }
 
   try {
+    const settings = await db.select().from(siteSettings).where(eq(siteSettings.id, 1)).get();
+    const maxSnippets = settings?.maxSnippetsPerUser ?? 1000;
+    const maxChars = settings?.maxCharsPerSnippet ?? 250000;
     const body = await request.json();
     const parsed = snippetSchema.safeParse(body);
 

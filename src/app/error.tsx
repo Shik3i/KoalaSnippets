@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
+import { logCrashFromClient } from "@/features/core/utils/crash-reporter-client";
 
 export default function ErrorPage({
   error,
@@ -13,6 +14,12 @@ export default function ErrorPage({
 }) {
   useEffect(() => {
     console.error("[App Error Boundary]", error);
+    logCrashFromClient(
+      error.message || "Unknown error",
+      error.stack,
+      window.location.pathname,
+      error.digest
+    );
   }, [error]);
 
   const isDev = process.env.NODE_ENV === "development";

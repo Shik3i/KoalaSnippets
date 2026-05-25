@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { logCrashFromClient } from "@/features/core/utils/crash-reporter-client";
 
 export default function GlobalErrorPage({
   error,
@@ -12,6 +13,12 @@ export default function GlobalErrorPage({
 }) {
   useEffect(() => {
     console.error("[Global Error Boundary]", error);
+    logCrashFromClient(
+      error.message || "Unknown error",
+      error.stack,
+      typeof window !== "undefined" ? window.location.pathname : undefined,
+      error.digest
+    );
   }, [error]);
 
   return (
