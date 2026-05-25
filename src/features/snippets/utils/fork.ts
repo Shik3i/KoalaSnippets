@@ -57,7 +57,7 @@ export async function forkSnippet(
   try {
     db.transaction((tx) => {
       const currentCount = tx.select({ c: count() }).from(snippets).where(
-        eq(snippets.authorId, userId)
+        and(eq(snippets.authorId, userId), isNull(snippets.deletedAt))
       ).get();
 
       if (currentCount && currentCount.c >= maxSnippets) {

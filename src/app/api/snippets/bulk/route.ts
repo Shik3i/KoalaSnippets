@@ -5,6 +5,7 @@ import { getSession } from "@/features/auth/utils/session";
 import { verifyCsrf } from "@/features/core/utils/security";
 import { eq, inArray, and } from "drizzle-orm";
 import { z } from "zod";
+import { logUserAction } from "@/features/admin/utils/audit";
 
 export const dynamic = "force-dynamic";
 
@@ -44,32 +45,62 @@ export async function POST(request: Request) {
 
   try {
     const userId = session.user.id;
-    db.transaction((tx) => {
-      const ownedSnippets = tx
-        .select({ id: snippets.id })
-        .from(snippets)
-        .where(and(inArray(snippets.id, ids), eq(snippets.authorId, userId)))
-        .all();
+    const ownedSnippets = await db
+      .select({ id: snippets.id, title: snippets.title, deletedAt: snippets.deletedAt })
+      .from(snippets)
+      .where(and(inArray(snippets.id, ids), eq(snippets.authorId, userId)))
+      .all();
 
-      const actionableIds = ownedSnippets.map((s) => s.id);
+    if (ownedSnippets.length === 0) {
+      return NextResponse.json({ error: "No matching snippets found" }, { status: 404 });
+    }
 
-      if (actionableIds.length === 0) {
-        throw new Error("No matching snippets found");
+    const actionableIds = ownedSnippets.map((s) => s.id);
+
+    if (action === "delete") {
+      const softDeleteIds = ownedSnippets.filter((s) => !s.deletedAt).map((s) => s.id);
+      const hardDeleteIds = ownedSnippets.filter((s) => s.deletedAt).map((s) => s.id);
+
+      if (softDeleteIds.length > 0) {
+        await db.update(snippets)
+          .set({ deletedAt: new Date() })
+          .where(and(inArray(snippets.id, softDeleteIds), eq(snippets.authorId, userId)));
       }
 
-      if (action === "delete") {
-        tx.delete(snippets).where(
-          and(inArray(snippets.id, actionableIds), eq(snippets.authorId, userId))
-        ).run();
-      } else if (action === "set-visibility") {
-        tx.update(snippets)
-          .set({ visibility: visibility!, updatedAt: new Date() })
-          .where(and(inArray(snippets.id, actionableIds), eq(snippets.authorId, userId))).run();
+      if (hardDeleteIds.length > 0) {
+        await db.delete(snippets)
+          .where(and(inArray(snippets.id, hardDeleteIds), eq(snippets.authorId, userId)));
       }
-    });
 
-    const actionLabel = action === "delete" ? "deleted" : `set to ${visibility}`;
-    return NextResponse.json({ message: `${ids.length} snippet${ids.length !== 1 ? "s" : ""} ${actionLabel}` });
+      for (const s of ownedSnippets) {
+        await logUserAction(
+          userId,
+          "DELETE",
+          "SNIPPET",
+          s.id,
+          s.deletedAt
+            ? `Snippet "${s.title}" permanently deleted (bulk)`
+            : `Snippet "${s.title}" moved to trash (bulk)`
+        );
+      }
+    } else if (action === "set-visibility") {
+      await db.update(snippets)
+        .set({ visibility: visibility!, updatedAt: new Date() })
+        .where(and(inArray(snippets.id, actionableIds), eq(snippets.authorId, userId)));
+
+      for (const s of ownedSnippets) {
+        await logUserAction(
+          userId,
+          "UPDATE",
+          "SNIPPET",
+          s.id,
+          `Snippet "${s.title}" visibility set to ${visibility} (bulk)`
+        );
+      }
+    }
+
+    const actionLabel = action === "delete" ? "moved to trash or deleted" : `set to ${visibility}`;
+    return NextResponse.json({ message: `${ownedSnippets.length} snippet${ownedSnippets.length !== 1 ? "s" : ""} ${actionLabel}` });
   } catch (error) {
     console.error("[Bulk API Error]", error);
     return NextResponse.json({ error: "Operation failed" }, { status: 500 });
