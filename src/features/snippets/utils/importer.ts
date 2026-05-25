@@ -23,6 +23,17 @@ function checkImportRateLimit(userId: string): boolean {
   return true;
 }
 
+function cleanupExpiredImportCounts() {
+  const now = Date.now();
+  for (const [key, entry] of userImportCounts.entries()) {
+    if (now > entry.resetAt) {
+      userImportCounts.delete(key);
+    }
+  }
+}
+
+setInterval(cleanupExpiredImportCounts, 5 * 60 * 1000).unref();
+
 function sanitizeFilename(name: string): string {
   return name.replace(/[<>:"/\\|?*\x00-\x1f]/g, "_").slice(0, 200) || "imported";
 }
@@ -56,20 +67,20 @@ function isPrivateIP(ip: string): boolean {
   return false;
 }
 
-async function resolveAndValidateHost(hostname: string): Promise<boolean> {
+async function resolveAndValidateHost(hostname: string): Promise<{ ip: string; valid: boolean }> {
   const lower = hostname.toLowerCase();
   if (lower === "localhost" || lower === "127.0.0.1" || lower === "::1" || lower === "[::1]") {
-    return false;
+    return { ip: "", valid: false };
   }
   try {
     const { resolve4 } = await import("dns/promises");
     const addresses = await resolve4(hostname);
     for (const addr of addresses) {
-      if (isPrivateIP(addr)) return false;
+      if (isPrivateIP(addr)) return { ip: "", valid: false };
     }
-    return true;
+    return { ip: addresses[0], valid: true };
   } catch {
-    return false;
+    return { ip: "", valid: false };
   }
 }
 
@@ -110,7 +121,8 @@ export async function importFromUrl(
     return { success: false, error: "Cannot import from private or internal addresses" };
   }
 
-  if (!(await resolveAndValidateHost(hostname))) {
+  const dnsResult = await resolveAndValidateHost(hostname);
+  if (!dnsResult.valid) {
     return { success: false, error: "Cannot import from private or internal addresses" };
   }
 
@@ -118,9 +130,14 @@ export async function importFromUrl(
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-    response = await fetch(parsedUrl.toString(), {
+    const fetchUrl = new URL(parsedUrl.toString());
+    fetchUrl.hostname = dnsResult.ip;
+    response = await fetch(fetchUrl.toString(), {
       signal: controller.signal,
-      headers: { "Accept": "text/*, application/json, application/xml" },
+      headers: {
+        "Accept": "text/*, application/json, application/xml",
+        "Host": hostname,
+      },
     });
     clearTimeout(timer);
   } catch (err) {

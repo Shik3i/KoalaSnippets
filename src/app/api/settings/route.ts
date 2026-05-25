@@ -4,7 +4,7 @@ import { users, sessions } from "@/db/schema";
 import { getSession } from "@/features/auth/utils/session";
 import { verifyPassword, hashPassword } from "@/features/auth/utils/auth";
 import { passwordChangeSchema } from "@/features/core/utils/validations";
-import { eq } from "drizzle-orm";
+import { eq, ne, and } from "drizzle-orm";
 import { verifyCsrf } from "@/features/core/utils/security";
 
 export const dynamic = "force-dynamic";
@@ -42,7 +42,9 @@ export async function PUT(request: Request) {
     const newHash = await hashPassword(newPassword);
     await db.update(users).set({ passwordHash: newHash }).where(eq(users.id, session.user.id));
 
-    await db.delete(sessions).where(eq(sessions.userId, session.user.id));
+    await db.delete(sessions).where(
+      and(eq(sessions.userId, session.user.id), ne(sessions.id, session.id))
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {
