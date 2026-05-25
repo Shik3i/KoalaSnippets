@@ -1,8 +1,6 @@
 import { getSession } from "@/features/auth/utils/session";
 import { Sidebar } from "@/features/core/components/sidebar";
 
-export const dynamic = "force-dynamic";
-
 export default async function ToolsLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
 
