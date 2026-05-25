@@ -5,7 +5,7 @@ import { DashboardContent } from "@/features/snippets/components/dashboard-conte
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { db } from "@/db";
 import { snippets, snippetFiles, users } from "@/db/schema";
-import { eq, desc, asc, and, inArray } from "drizzle-orm";
+import { eq, desc, asc, and, inArray, or, isNull, ne } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { buildSnippetConditions } from "@/features/snippets/utils/filters";
 
@@ -26,14 +26,25 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     totalLines: snippets.totalLines,
     authorUsername: users.username
   }).from(snippets).innerJoin(users, eq(snippets.authorId, users.id));
-  
-  const conditions = await buildSnippetConditions({
+
+  const conditions: (ReturnType<typeof eq>)[] = [];
+  conditions.push(isNull(snippets.deletedAt));
+
+  if (session) {
+    conditions.push(or(
+      eq(snippets.authorId, session.user.id),
+      and(eq(snippets.visibility, "PUBLIC"), ne(snippets.authorId, session.user.id))
+    )!);
+  } else {
+    conditions.push(eq(snippets.visibility, "PUBLIC"));
+  }
+
+  const textConditions = await buildSnippetConditions({
     q,
     includeCode,
     tags,
     language,
     filterMode,
-    visibility: "PUBLIC",
   });
 
   const sortMode = (["newest", "oldest", "alphabetical", "size-asc", "size-desc"].includes(sort ?? "") ? sort : "newest") as "newest" | "oldest" | "alphabetical" | "size-asc" | "size-desc";
@@ -49,23 +60,19 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             ? desc(snippets.totalLines)
             : desc(snippets.createdAt);
 
-  const whereClause = and(...conditions);
-  const publicSnippets = await (whereClause
-    ? baseQuery.where(whereClause).orderBy(orderBy).limit(50).all()
-    : baseQuery.orderBy(orderBy).limit(50).all()
-  );
+  const allConditions = [...conditions, ...textConditions];
+  const whereClause = and(...allConditions);
+  const homeSnippets = await baseQuery.where(whereClause).orderBy(orderBy).limit(50).all();
 
-  const snippetIds = publicSnippets.map(s => s.id);
+  const snippetIds = homeSnippets.map(s => s.id);
   const files = snippetIds.length > 0 
     ? await db.select().from(snippetFiles).where(inArray(snippetFiles.snippetId, snippetIds)).all()
     : [];
 
-  const publicSnippetsWithFiles = publicSnippets.map(s => {
-    return {
-      ...s,
-      files: files.filter(f => f.snippetId === s.id)
-    };
-  });
+  const homeSnippetsWithFiles = homeSnippets.map(s => ({
+    ...s,
+    files: files.filter(f => f.snippetId === s.id)
+  }));
 
   const allPublicSnippets = await db.select({ tags: snippets.tags }).from(snippets).where(eq(snippets.visibility, "PUBLIC")).all();
   const allPublicFiles = await db.select({ language: snippetFiles.language }).from(snippetFiles).where(
@@ -78,7 +85,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const syntaxTheme = session?.user?.preferences?.syntaxTheme ?? "github-dark";
 
   const highlightedSnippets = await Promise.all(
-    publicSnippetsWithFiles.map(async (s) => {
+    homeSnippetsWithFiles.map(async (s) => {
       const mainFile = s.files[0];
       if (!mainFile) return { ...s, highlightedCode: undefined, language: "plaintext" };
 
