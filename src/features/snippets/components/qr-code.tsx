@@ -322,7 +322,6 @@ export const QrCode = forwardRef<HTMLCanvasElement, QrCodeProps>(({ value, size 
         }
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, size]);
 
   return (
