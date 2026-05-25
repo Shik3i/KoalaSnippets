@@ -53,7 +53,8 @@ export function AdminMetrics() {
   useEffect(() => {
     fetch("/api/admin/stats")
       .then((res) => res.json())
-      .then(setMetrics);
+      .then(setMetrics)
+      .catch(console.error);
   }, []);
 
   if (!metrics) {

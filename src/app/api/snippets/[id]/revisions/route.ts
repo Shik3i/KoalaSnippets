@@ -49,19 +49,19 @@ export async function POST(
   }
 
   const { id } = await params;
-  const { revisionId } = await request.json();
-
-  const snippet = await db.select().from(snippets).where(eq(snippets.id, id)).get();
-  if (!snippet || snippet.authorId !== session.user.id) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-
-  const revision = await db.select().from(snippetRevisions).where(eq(snippetRevisions.id, revisionId)).get();
-  if (!revision || revision.snippetId !== id) {
-    return NextResponse.json({ error: "Revision not found" }, { status: 404 });
-  }
-
   try {
+    const { revisionId } = await request.json();
+
+    const snippet = await db.select().from(snippets).where(eq(snippets.id, id)).get();
+    if (!snippet || snippet.authorId !== session.user.id) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    const revision = await db.select().from(snippetRevisions).where(eq(snippetRevisions.id, revisionId)).get();
+    if (!revision || revision.snippetId !== id) {
+      return NextResponse.json({ error: "Revision not found" }, { status: 404 });
+    }
+
     const filesSnapshot = JSON.parse(revision.content) as Array<{ filename: string, code: string, language: string }>;
 
     db.transaction((tx) => {

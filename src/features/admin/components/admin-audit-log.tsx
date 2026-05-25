@@ -27,27 +27,33 @@ export function AdminAuditLog() {
     setTimeout(() => setMounted(true), 0);
   }, []);
 
-  const fetchLogs = useCallback((userId: string | null = null) => {
+  const fetchLogs = useCallback((userId: string | null = null, signal?: AbortSignal) => {
     setLoading(true);
     const url = userId 
       ? `/api/admin/audit-logs?userId=${encodeURIComponent(userId)}` 
       : "/api/admin/audit-logs";
 
-    fetch(url)
-      .then((res) => res.json())
+    fetch(url, { signal })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch");
+        return res.json();
+      })
       .then((data) => {
         setLogs(data);
         setLoading(false);
       })
       .catch((err) => {
+        if (err.name === "AbortError") return;
         console.error("Failed to fetch audit logs:", err);
+        setLogs([]);
         setLoading(false);
       });
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchLogs(selectedUserId);
+    const abortController = new AbortController();
+    fetchLogs(selectedUserId, abortController.signal);
+    return () => abortController.abort();
   }, [selectedUserId, fetchLogs]);
 
   const handleSelectUser = (userId: string | null) => {

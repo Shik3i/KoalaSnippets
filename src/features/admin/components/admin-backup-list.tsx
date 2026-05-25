@@ -30,6 +30,10 @@ export function AdminBackupList() {
       .then((data) => {
         setBackups(data.backups);
         setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch backups", err);
+        setLoading(false);
       });
   }, []);
 
@@ -39,11 +43,16 @@ export function AdminBackupList() {
 
   const handleTriggerBackup = async () => {
     setTriggering(true);
-    const res = await fetch("/api/admin/backups", { method: "POST" });
-    if (res.ok) {
-      fetchBackups();
+    try {
+      const res = await fetch("/api/admin/backups", { method: "POST" });
+      if (res.ok) {
+        fetchBackups();
+      }
+    } catch (err) {
+      console.error("Failed to trigger backup", err);
+    } finally {
+      setTriggering(false);
     }
-    setTriggering(false);
   };
 
   const handleDownload = (filename: string) => {

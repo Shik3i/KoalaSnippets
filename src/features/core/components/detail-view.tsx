@@ -226,6 +226,7 @@ export function DetailView({
   };
 
   const handleDownloadMarkdown = () => {
+    if (!activeFile) return;
     const frontmatter = [
       "---",
       `title: "${title.replace(/"/g, '\\"')}"`,

@@ -26,6 +26,10 @@ export function AdminUserList() {
       .then((data) => {
         setUsers(data.users);
         setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch users", err);
+        setLoading(false);
       });
   }, []);
 
@@ -36,14 +40,18 @@ export function AdminUserList() {
   const handleDelete = async (userId: string, username: string) => {
     if (!confirm(`Delete user "${username}" and all their snippets?`)) return;
 
-    const res = await fetch("/api/admin/users", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId }),
-    });
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
 
-    if (res.ok) {
-      fetchUsers();
+      if (res.ok) {
+        fetchUsers();
+      }
+    } catch (err) {
+      console.error("Failed to delete user", err);
     }
   };
 

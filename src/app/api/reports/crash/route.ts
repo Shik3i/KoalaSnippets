@@ -5,6 +5,12 @@ import crypto from "crypto";
 import { getSession } from "@/features/auth/utils/session";
 
 export async function POST(request: Request) {
+  let userId: string | null = null;
+  const session = await getSession();
+  if (session) {
+    userId = session.userId;
+  }
+
   try {
     const body = await request.json();
     const { errorMessage, stackTrace, route, metadata } = body;
@@ -13,11 +19,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing errorMessage" }, { status: 400 });
     }
 
-    let userId: string | null = null;
-    const session = await getSession();
-    if (session) {
-      userId = session.userId;
-    }
 
     const id = crypto.randomUUID();
     

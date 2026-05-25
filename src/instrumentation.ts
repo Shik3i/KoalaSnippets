@@ -44,3 +44,39 @@ export async function register() {
     }
   }
 }
+
+export async function onRequestError(
+  error: Error & { digest?: string },
+  request: { url?: string; method?: string; headers?: Record<string, string> },
+  context: { routerKind?: string; routerPath?: string; routePath?: string }
+) {
+  const digest = error.digest || "";
+  
+  // Ignore Next.js internal bailout errors
+  if (
+    digest === "DYNAMIC_SERVER_USAGE" || 
+    digest === "NEXT_REDIRECT" || 
+    digest === "NEXT_NOT_FOUND" ||
+    error.message.includes("DYNAMIC_SERVER_USAGE")
+  ) {
+    return;
+  }
+
+  // Log unstripped error to standard error
+  console.error(`[Server Error] ${context?.routerKind} (${context?.routerPath || request?.url}):`, error.message);
+  if (error.stack) {
+    console.error(error.stack);
+  }
+
+  try {
+    const { logCrash } = await import("@/features/core/utils/crash-reporter");
+    await logCrash(
+      error,
+      context?.routerPath || request?.url || "unknown",
+      undefined,
+      { context, requestUrl: request?.url, requestMethod: request?.method }
+    );
+  } catch (err) {
+    console.error("[onRequestError] Failed to log crash to DB:", err);
+  }
+}

@@ -45,17 +45,22 @@ export function AdminPublicSnippets() {
   const handleDelete = async (id: string, title: string) => {
     if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
 
-    const res = await fetch("/api/admin/public-snippets", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
+    try {
+      const res = await fetch("/api/admin/public-snippets", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
 
-    if (res.ok) {
-      addToast(`"${title}" deleted`, "success");
-      setRefreshKey((k) => k + 1);
-    } else {
-      addToast("Failed to delete snippet", "error");
+      if (res.ok) {
+        addToast(`"${title}" deleted`, "success");
+        setRefreshKey((k) => k + 1);
+      } else {
+        addToast("Failed to delete snippet", "error");
+      }
+    } catch (err) {
+      console.error("Failed to delete snippet:", err);
+      addToast("Network error while deleting snippet", "error");
     }
   };
 

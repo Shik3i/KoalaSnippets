@@ -101,7 +101,8 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
         .then((res) => res.json())
         .then((data) => {
           if (data.collections) setCollections(data.collections);
-        });
+        })
+        .catch(console.error);
     }
   }, [isAuthenticated]);
 
@@ -464,8 +465,13 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                 </Link>
                 <button
                   onClick={async () => {
-                    await fetch("/api/auth/logout", { method: "POST" });
-                    window.location.href = "/login";
+                    try {
+                      await fetch("/api/auth/logout", { method: "POST" });
+                    } catch (error) {
+                      console.error("Logout failed", error);
+                    } finally {
+                      window.location.href = "/login";
+                    }
                   }}
                   className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
                 >

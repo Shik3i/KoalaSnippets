@@ -29,6 +29,7 @@ export function AdminSettings() {
           setSettings(data.settings);
         }
       })
+      .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
 

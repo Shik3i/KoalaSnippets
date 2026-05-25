@@ -32,24 +32,32 @@ export function AutocompleteSearch({ onSelectUser }: AutocompleteSearchProps) {
       return;
     }
 
+    const abortController = new AbortController();
+
     const delayDebounceFn = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/admin/users/autocomplete?q=${encodeURIComponent(query)}`);
+        const res = await fetch(`/api/admin/users/autocomplete?q=${encodeURIComponent(query)}`, { signal: abortController.signal });
         if (res.ok) {
           const data = await res.json();
           setSuggestions(data);
           setIsOpen(data.length > 0);
           setHighlightedIndex(-1);
         }
-      } catch (err) {
+      } catch (err: any) {
+        if (err.name === "AbortError") return;
         console.error("Failed to fetch suggestions:", err);
       } finally {
-        setLoading(false);
+        if (!abortController.signal.aborted) {
+          setLoading(false);
+        }
       }
     }, 300);
 
-    return () => clearTimeout(delayDebounceFn);
+    return () => {
+      clearTimeout(delayDebounceFn);
+      abortController.abort();
+    };
   }, [query]);
 
   // Click outside listener to close dropdown
