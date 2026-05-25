@@ -4,7 +4,7 @@ import { PublicStatsCards } from "@/features/core/components/public-stats-cards"
 import { getPublicStats } from "@/features/core/utils/stats";
 import type { Metadata } from "next";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Statistics | KoalaSnippets",

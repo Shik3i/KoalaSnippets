@@ -54,10 +54,8 @@ export async function onRequestError(
   const errorMessage = error?.message || String(error);
   
   if (
-    digest === "DYNAMIC_SERVER_USAGE" || 
     digest === "NEXT_REDIRECT" || 
-    digest === "NEXT_NOT_FOUND" ||
-    errorMessage.includes("DYNAMIC_SERVER_USAGE")
+    digest === "NEXT_NOT_FOUND"
   ) {
     return;
   }
