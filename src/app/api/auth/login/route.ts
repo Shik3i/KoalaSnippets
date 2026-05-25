@@ -9,6 +9,8 @@ import { eq } from "drizzle-orm";
 import { verifyCsrf } from "@/features/core/utils/security";
 
 import { logUserAction } from "@/features/admin/utils/audit";
+import { logCrash } from "@/features/core/utils/crash-reporter";
+import { logErrorToFile } from "@/features/core/utils/file-logger";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +58,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[Login API Error]", error);
+    await logCrash(error instanceof Error ? error : new Error(String(error)), request.url);
+    logErrorToFile(error, "POST /api/auth/login");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

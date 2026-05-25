@@ -7,6 +7,8 @@ import * as parserMarkdown from "prettier/plugins/markdown";
 import * as parserEstree from "prettier/plugins/estree";
 import { getSession } from "@/features/auth/utils/session";
 import { verifyCsrf } from "@/features/core/utils/security";
+import { logCrash } from "@/features/core/utils/crash-reporter";
+import { logErrorToFile } from "@/features/core/utils/file-logger";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +57,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ code: formatted });
   } catch (error) {
     console.error("Format error:", error);
+    await logCrash(error instanceof Error ? error : new Error(String(error)), request.url);
+    logErrorToFile(error, "POST /api/format");
     return NextResponse.json({ error: "Failed to format code" }, { status: 500 });
   }
 }

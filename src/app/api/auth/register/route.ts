@@ -6,6 +6,8 @@ import { registerSchema } from "@/features/core/utils/validations";
 import { checkRateLimit } from "@/features/core/utils/rate-limit";
 import { eq, sql } from "drizzle-orm";
 import { verifyCsrf } from "@/features/core/utils/security";
+import { logCrash } from "@/features/core/utils/crash-reporter";
+import { logErrorToFile } from "@/features/core/utils/file-logger";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +76,8 @@ export async function POST(request: Request) {
     return res;
   } catch (error) {
     console.error("[Register API Error]", error);
+    await logCrash(error instanceof Error ? error : new Error(String(error)), request.url);
+    logErrorToFile(error, "POST /api/auth/register");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

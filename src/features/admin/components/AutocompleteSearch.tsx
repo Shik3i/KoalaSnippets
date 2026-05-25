@@ -44,8 +44,8 @@ export function AutocompleteSearch({ onSelectUser }: AutocompleteSearchProps) {
           setIsOpen(data.length > 0);
           setHighlightedIndex(-1);
         }
-      } catch (err: any) {
-        if (err.name === "AbortError") return;
+      } catch (err: unknown) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
         console.error("Failed to fetch suggestions:", err);
       } finally {
         if (!abortController.signal.aborted) {

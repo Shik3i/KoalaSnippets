@@ -10,6 +10,8 @@ import crypto from "crypto";
 import { verifyCsrf } from "@/features/core/utils/security";
 import { logUserAction } from "@/features/admin/utils/audit";
 import { generateETag, isNotModified, notModifiedResponse, setETag } from "@/features/core/utils/etag";
+import { logCrash } from "@/features/core/utils/crash-reporter";
+import { logErrorToFile } from "@/features/core/utils/file-logger";
 
 export const dynamic = "force-dynamic";
 
@@ -265,6 +267,8 @@ export async function PUT(
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     console.error("[Snippets API PUT Error]", error);
+    await logCrash(error instanceof Error ? error : new Error(String(error)), request.url);
+    logErrorToFile(error, "PUT /api/snippets/[id]");
     const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: message.includes("too long") ? 400 : 500 });
   }

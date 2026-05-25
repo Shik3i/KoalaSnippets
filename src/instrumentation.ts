@@ -53,7 +53,6 @@ export async function onRequestError(
   const digest = error?.digest || "";
   const errorMessage = error?.message || String(error);
   
-  // Ignore Next.js internal bailout errors
   if (
     digest === "DYNAMIC_SERVER_USAGE" || 
     digest === "NEXT_REDIRECT" || 
@@ -63,20 +62,32 @@ export async function onRequestError(
     return;
   }
 
-  // Log unstripped error to standard error
-  console.error(`[Server Error] ${context?.routerKind} (${context?.routerPath || request?.url}):`, errorMessage);
+  const route = context?.routerPath || request?.url || "unknown";
+  const routerKind = context?.routerKind || "unknown";
+
+  console.error(`[Server Error] ${routerKind} (${route}):`, errorMessage);
   if (error.stack) {
     console.error(error.stack);
   }
 
   if (process.env.NEXT_RUNTIME === "nodejs") {
     try {
+      const { logErrorToFile } = await import("@/features/core/utils/file-logger");
+      logErrorToFile(error, `onRequestError:${routerKind}`, {
+        route,
+        digest,
+        requestMethod: request?.method,
+        requestUrl: request?.url,
+      });
+    } catch { /* ignore file logger errors */ }
+
+    try {
       const { logCrash } = await import("@/features/core/utils/crash-reporter");
       await logCrash(
         error,
-        context?.routerPath || request?.url || "unknown",
+        route,
         undefined,
-        { context, requestUrl: request?.url, requestMethod: request?.method }
+        { context, requestUrl: request?.url, requestMethod: request?.method, digest }
       );
     } catch (err) {
       console.error("[onRequestError] Failed to log crash to DB:", err);

@@ -5,6 +5,8 @@ import { requireAdmin } from "@/features/admin/utils/admin-guard";
 import { eq } from "drizzle-orm";
 import { verifyCsrf } from "@/features/core/utils/security";
 import { z } from "zod";
+import { logCrash } from "@/features/core/utils/crash-reporter";
+import { logErrorToFile } from "@/features/core/utils/file-logger";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +27,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ settings });
   } catch (error) {
     console.error("[Admin Settings API GET Error]", error);
+    await logCrash(error instanceof Error ? error : new Error(String(error)), request.url);
+    logErrorToFile(error, "GET /api/admin/settings");
     return NextResponse.json({ error: "Failed to load settings" }, { status: 500 });
   }
 }
@@ -51,6 +55,8 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[Admin Settings API PUT Error]", error);
+    await logCrash(error instanceof Error ? error : new Error(String(error)), request.url);
+    logErrorToFile(error, "PUT /api/admin/settings");
     return NextResponse.json({ error: "Failed to update settings" }, { status: 500 });
   }
 }

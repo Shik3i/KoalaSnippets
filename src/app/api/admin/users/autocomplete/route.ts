@@ -4,6 +4,8 @@ import { users } from "@/db/schema";
 import { requireAdmin } from "@/features/admin/utils/admin-guard";
 import { like } from "drizzle-orm";
 import { escapeLike } from "@/features/core/utils/sql";
+import { logCrash } from "@/features/core/utils/crash-reporter";
+import { logErrorToFile } from "@/features/core/utils/file-logger";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +36,8 @@ export async function GET(request: Request) {
     return NextResponse.json(matchedUsers);
   } catch (error) {
     console.error("[Autocomplete API Error]", error);
+    await logCrash(error instanceof Error ? error : new Error(String(error)), request.url);
+    logErrorToFile(error, "GET /api/admin/users/autocomplete");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

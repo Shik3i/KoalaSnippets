@@ -5,6 +5,8 @@ import { getSession } from "@/features/auth/utils/session";
 import { verifyCsrf } from "@/features/core/utils/security";
 import { eq, desc } from "drizzle-orm";
 import { generateId } from "@/features/auth/utils/auth";
+import { logCrash } from "@/features/core/utils/crash-reporter";
+import { logErrorToFile } from "@/features/core/utils/file-logger";
 
 export const dynamic = "force-dynamic";
 
@@ -105,6 +107,8 @@ export async function POST(
     return NextResponse.json({ success: true, files: filesSnapshot });
   } catch (error) {
     console.error("Restore failed:", error);
+    await logCrash(error instanceof Error ? error : new Error(String(error)), request.url);
+    logErrorToFile(error, "POST /api/snippets/[id]/revisions");
     return NextResponse.json({ error: "Failed to restore revision" }, { status: 500 });
   }
 }

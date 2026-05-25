@@ -4,6 +4,8 @@ import { users, snippets } from "@/db/schema";
 import { requireAdmin } from "@/features/admin/utils/admin-guard";
 import { eq, desc, count } from "drizzle-orm";
 import { verifyCsrf } from "@/features/core/utils/security";
+import { logCrash } from "@/features/core/utils/crash-reporter";
+import { logErrorToFile } from "@/features/core/utils/file-logger";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +76,8 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[Admin Users API Error]", error);
+    await logCrash(error instanceof Error ? error : new Error(String(error)), request.url);
+    logErrorToFile(error, "DELETE /api/admin/users");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

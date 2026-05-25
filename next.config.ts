@@ -40,6 +40,12 @@ securityHeaders.push({
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  serverExternalPackages: ["better-sqlite3", "argon2"],
+  logging: {
+    fetches: {
+      fullUrl: process.env.NODE_ENV === "production",
+    },
+  },
   experimental: {
     viewTransition: true,
   },

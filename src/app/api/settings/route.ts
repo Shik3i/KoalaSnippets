@@ -6,6 +6,8 @@ import { verifyPassword, hashPassword } from "@/features/auth/utils/auth";
 import { passwordChangeSchema } from "@/features/core/utils/validations";
 import { eq, ne, and } from "drizzle-orm";
 import { verifyCsrf } from "@/features/core/utils/security";
+import { logCrash } from "@/features/core/utils/crash-reporter";
+import { logErrorToFile } from "@/features/core/utils/file-logger";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +51,8 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[Settings API PUT Error]", error);
+    await logCrash(error instanceof Error ? error : new Error(String(error)), request.url);
+    logErrorToFile(error, "PUT /api/settings");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

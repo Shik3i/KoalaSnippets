@@ -5,6 +5,8 @@ import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { verifyCsrf } from "@/features/core/utils/security";
+import { logCrash } from "@/features/core/utils/crash-reporter";
+import { logErrorToFile } from "@/features/core/utils/file-logger";
 
 export const dynamic = "force-dynamic";
 
@@ -76,6 +78,8 @@ export async function PUT(request: Request) {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Failed to update settings";
     console.error("Failed to update appearance settings:", error);
+    await logCrash(error instanceof Error ? error : new Error(message), request.url);
+    logErrorToFile(error, "PUT /api/settings/appearance");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

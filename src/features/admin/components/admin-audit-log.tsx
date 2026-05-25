@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AutocompleteSearch } from "./AutocompleteSearch";
@@ -27,34 +27,35 @@ export function AdminAuditLog() {
     setTimeout(() => setMounted(true), 0);
   }, []);
 
-  const fetchLogs = useCallback((userId: string | null = null, signal?: AbortSignal) => {
-    setLoading(true);
-    const url = userId 
-      ? `/api/admin/audit-logs?userId=${encodeURIComponent(userId)}` 
+  useEffect(() => {
+    const abortController = new AbortController();
+    queueMicrotask(() => setLoading(true));
+
+    const userId = selectedUserId;
+    const url = userId
+      ? `/api/admin/audit-logs?userId=${encodeURIComponent(userId)}`
       : "/api/admin/audit-logs";
 
-    fetch(url, { signal })
+    fetch(url, { signal: abortController.signal })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json();
       })
       .then((data) => {
-        setLogs(data);
-        setLoading(false);
+        if (!abortController.signal.aborted) {
+          setLogs(data);
+          setLoading(false);
+        }
       })
-      .catch((err) => {
-        if (err.name === "AbortError") return;
+      .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
         console.error("Failed to fetch audit logs:", err);
         setLogs([]);
         setLoading(false);
       });
-  }, []);
 
-  useEffect(() => {
-    const abortController = new AbortController();
-    fetchLogs(selectedUserId, abortController.signal);
     return () => abortController.abort();
-  }, [selectedUserId, fetchLogs]);
+  }, [selectedUserId]);
 
   const handleSelectUser = (userId: string | null) => {
     setSelectedUserId(userId);

@@ -6,6 +6,8 @@ import { verifyPassword } from "@/features/auth/utils/auth";
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { escapeHtml } from "@/features/core/utils/security";
 import { checkRateLimit } from "@/features/core/utils/rate-limit";
+import { logCrash } from "@/features/core/utils/crash-reporter";
+import { logErrorToFile } from "@/features/core/utils/file-logger";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +76,8 @@ export async function POST(
     return NextResponse.json({ success: true, files: highlightedFiles });
   } catch (error: unknown) {
     console.error("[Snippets Unlock API Error]", error);
+    await logCrash(error instanceof Error ? error : new Error(String(error)), request.url);
+    logErrorToFile(error, "POST /api/snippets/[id]/unlock");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

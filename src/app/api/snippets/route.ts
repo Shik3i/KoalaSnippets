@@ -11,6 +11,8 @@ import { getSafePage, verifyCsrf } from "@/features/core/utils/security";
 import { escapeLike } from "@/features/core/utils/sql";
 import { logUserAction } from "@/features/admin/utils/audit";
 import { generateETag, isNotModified, notModifiedResponse, setETag } from "@/features/core/utils/etag";
+import { logCrash } from "@/features/core/utils/crash-reporter";
+import { logErrorToFile } from "@/features/core/utils/file-logger";
 
 export const dynamic = "force-dynamic";
 
@@ -267,6 +269,9 @@ export async function POST(request: Request) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("[Snippets API Error]", message, error instanceof Error ? error.stack : undefined);
     
+    await logCrash(error instanceof Error ? error : new Error(message), request.url);
+    logErrorToFile(error, "POST /api/snippets");
+
     if (message.includes("quota exceeded")) {
       return NextResponse.json({ error: message }, { status: 403 });
     }
