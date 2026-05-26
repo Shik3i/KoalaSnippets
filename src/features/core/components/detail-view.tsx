@@ -133,6 +133,7 @@ export function DetailView({
   const [statsOpen, setStatsOpen] = useState(false);
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
   const headerSentinelRef = useRef<HTMLDivElement>(null);
+  const manualCollapseRef = useRef(false);
   const stats = useMemo(() => computeSnippetStats(files), [files]);
 
   const VAR_REGEX = /\{\{([A-Z0-9_]+)\}\}/g;
@@ -178,7 +179,11 @@ export function DetailView({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setHeaderCollapsed(!entry.isIntersecting);
+        if (!entry.isIntersecting) {
+          setHeaderCollapsed(true);
+        } else if (!manualCollapseRef.current) {
+          setHeaderCollapsed(false);
+        }
       },
       { threshold: 0, rootMargin: "-4px 0px 0px 0px" }
     );
@@ -334,7 +339,15 @@ export function DetailView({
                 variant="ghost"
                 size="icon"
                 className="shrink-0 h-7 w-7"
-                onClick={() => setHeaderCollapsed(!headerCollapsed)}
+                onClick={() => {
+                  if (headerCollapsed) {
+                    manualCollapseRef.current = false;
+                    setHeaderCollapsed(false);
+                  } else {
+                    manualCollapseRef.current = true;
+                    setHeaderCollapsed(true);
+                  }
+                }}
                 aria-label={headerCollapsed ? "Expand header" : "Collapse header"}
               >
                 <ChevronUp
