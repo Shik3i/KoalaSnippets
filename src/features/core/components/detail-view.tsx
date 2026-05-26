@@ -24,6 +24,7 @@ import {
   FileText,
   BarChart3,
   ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 interface DetailViewProps {
@@ -130,6 +131,8 @@ export function DetailView({
   const activeFile = files[activeTab] || files[0];
   const [envVars, setEnvVars] = useState<Record<string, string>>({});
   const [statsOpen, setStatsOpen] = useState(false);
+  const [headerCollapsed, setHeaderCollapsed] = useState(false);
+  const headerSentinelRef = useRef<HTMLDivElement>(null);
   const stats = useMemo(() => computeSnippetStats(files), [files]);
 
   const VAR_REGEX = /\{\{([A-Z0-9_]+)\}\}/g;
@@ -168,6 +171,21 @@ export function DetailView({
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [zenMode]);
+
+  useEffect(() => {
+    const sentinel = headerSentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setHeaderCollapsed(!entry.isIntersecting);
+      },
+      { threshold: 0, rootMargin: "-4px 0px 0px 0px" }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -304,13 +322,28 @@ export function DetailView({
     >
       <div className="p-4 border-b border-border space-y-3">
         <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1">
-            <h1 
-              className="text-xl font-semibold"
-              style={{ viewTransitionName: `snippet-title-${id}` }}
-            >
-              {title}
-            </h1>
+          <div className="space-y-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h1 
+                className="text-xl font-semibold truncate"
+                style={{ viewTransitionName: `snippet-title-${id}` }}
+              >
+                {title}
+              </h1>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 h-7 w-7"
+                onClick={() => setHeaderCollapsed(!headerCollapsed)}
+                aria-label={headerCollapsed ? "Expand header" : "Collapse header"}
+              >
+                <ChevronUp
+                  size={16}
+                  className={cn("transition-transform duration-300", headerCollapsed && "rotate-180")}
+                  suppressHydrationWarning
+                />
+              </Button>
+            </div>
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="secondary">{files.length} {files.length === 1 ? 'file' : 'files'}</Badge>
               <span className={cn("flex items-center gap-1 text-xs", VISIBILITY_CONFIG[visibility].color)}>
@@ -326,7 +359,7 @@ export function DetailView({
             </div>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             {deletedAt ? (
               isOwner && (
                 <>
@@ -373,32 +406,45 @@ export function DetailView({
           </div>
         </div>
 
-        {description && (
-          <p className="text-sm text-muted-foreground">{description}</p>
-        )}
+        <div
+          className={cn(
+            "grid transition-all duration-300 ease-in-out",
+            headerCollapsed ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"
+          )}
+        >
+          <div className="overflow-hidden">
+            <div className="space-y-3">
+              {description && (
+                <p className="text-sm text-muted-foreground max-h-40 overflow-y-auto pr-1">{description}</p>
+              )}
 
-        {tags && tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {tags.map((tag) => (
-              <Badge key={tag} variant="outline" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
+              {tags && tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {tags.map((tag) => (
+                    <Badge key={tag} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
 
-        {forkedFromId && forkedFromTitle && (
-          <div className="flex items-center gap-1.5">
-            <GitFork size={12} className="text-muted-foreground" suppressHydrationWarning />
-            <span className="text-xs text-muted-foreground">
-              Forked from{" "}
-              <a href={`/snippets/${forkedFromId}`} className="text-primary hover:underline">
-                {forkedFromTitle}
-              </a>
-            </span>
+              {forkedFromId && forkedFromTitle && (
+                <div className="flex items-center gap-1.5">
+                  <GitFork size={12} className="text-muted-foreground" suppressHydrationWarning />
+                  <span className="text-xs text-muted-foreground">
+                    Forked from{" "}
+                    <a href={`/snippets/${forkedFromId}`} className="text-primary hover:underline">
+                      {forkedFromTitle}
+                    </a>
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
+
+      <div ref={headerSentinelRef} className="h-px shrink-0" />{/* sentinel for auto-collapse */}
 
       <div className="flex-1 flex flex-col overflow-hidden relative">
         {files.length > 1 && (
