@@ -8,7 +8,7 @@ import type { NextRequest } from "next/server";
  * and potentially ignore it in future versions.
  */
 
-const publicPaths = ["/login", "/register", "/public", "/impressum", "/privacy", "/stats", "/tools"];
+const publicPaths = ["/login", "/register", "/public", "/snippets", "/impressum", "/privacy", "/stats", "/tools"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -44,6 +44,9 @@ export async function proxy(request: NextRequest) {
     }
 
     if (pathname.startsWith("/api/")) {
+      if (request.method === "GET" && pathname.startsWith("/api/snippets/")) {
+        return NextResponse.next();
+      }
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

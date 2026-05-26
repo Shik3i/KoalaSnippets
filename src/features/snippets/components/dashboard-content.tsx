@@ -82,7 +82,9 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
     }
   }, [hasMore, isLoadingMore, isTrashView, page]);
 
-  loadMoreFnRef.current = loadMore;
+  useEffect(() => {
+    loadMoreFnRef.current = loadMore;
+  });
 
   useEffect(() => {
     if (!hasMore || isLoadingMore) return;
