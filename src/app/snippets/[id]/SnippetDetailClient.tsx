@@ -21,6 +21,7 @@ interface SnippetDetailClientProps {
   isOwner: boolean;
   forkedFromId?: string;
   forkedFromTitle?: string;
+  backUrl?: string;
 }
 
 export function SnippetDetailClient(props: SnippetDetailClientProps) {

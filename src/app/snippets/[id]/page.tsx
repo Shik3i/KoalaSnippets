@@ -1,6 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { db } from "@/db";
 import { snippets, snippetFiles } from "@/db/schema";
 import { getSession } from "@/features/auth/utils/session";
@@ -153,15 +151,6 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
         <BreadcrumbWithCollection
           snippetTitle={snippet.title as string}
         />
-        <div className="px-4 py-2">
-          <Link
-            href={backUrl}
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft size={14} suppressHydrationWarning />
-            Back to list
-          </Link>
-        </div>
 
         <div className="flex-1 overflow-hidden flex flex-col">
           {(snippet.isPasswordProtected as boolean) ? (
@@ -194,6 +183,7 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
               isOwner={isOwner}
               forkedFromId={snippet.forkedFromId as string | undefined}
               forkedFromTitle={snippet.forkedFromTitle as string | undefined}
+              backUrl={backUrl}
             />
           )}
         </div>

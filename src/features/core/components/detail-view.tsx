@@ -24,7 +24,7 @@ import {
   FileText,
   BarChart3,
   ChevronDown,
-  ChevronUp,
+  ArrowLeft,
 } from "lucide-react";
 
 interface DetailViewProps {
@@ -47,6 +47,7 @@ interface DetailViewProps {
   onDuplicate?: () => void;
   onToggleVisibility?: () => void;
   onFork?: () => void;
+  backUrl?: string;
 }
 
 const LANGUAGE_EXTENSIONS: Record<string, string> = {
@@ -95,7 +96,6 @@ export function DetailView({
   tags,
   visibility,
   shareToken,
-  updatedAt,
   files,
   isOwner,
   isSubmitting,
@@ -108,8 +108,8 @@ export function DetailView({
   onDuplicate,
   onToggleVisibility,
   onFork,
+  backUrl,
 }: DetailViewProps) {
-  const mounted = typeof window !== "undefined";
   const [copied, setCopied] = useState(false);
   const [copyOpen, setCopyOpen] = useState(false);
   const [zenMode, setZenMode] = useState(false);
@@ -325,62 +325,40 @@ export function DetailView({
       className="flex flex-col h-full overflow-hidden"
       style={{ viewTransitionName: `snippet-card-${id}` }}
     >
-      <div className="p-4 border-b border-border space-y-3">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h1 
-                className="text-xl font-semibold truncate"
-                style={{ viewTransitionName: `snippet-title-${id}` }}
-              >
-                {title}
-              </h1>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0 h-7 w-7"
-                onClick={() => {
-                  if (headerCollapsed) {
-                    manualCollapseRef.current = false;
-                    setHeaderCollapsed(false);
-                  } else {
-                    manualCollapseRef.current = true;
-                    setHeaderCollapsed(true);
-                  }
-                }}
-                aria-label={headerCollapsed ? "Expand header" : "Collapse header"}
-              >
-                <ChevronUp
-                  size={16}
-                  className={cn("transition-transform duration-300", headerCollapsed && "rotate-180")}
-                  suppressHydrationWarning
-                />
-              </Button>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="secondary">{files.length} {files.length === 1 ? 'file' : 'files'}</Badge>
-              <span className={cn("flex items-center gap-1 text-xs", VISIBILITY_CONFIG[visibility].color)}>
-                <VisIcon size={12} suppressHydrationWarning />
-                {VISIBILITY_CONFIG[visibility].label}
-              </span>
-              <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                {stats.lines.toLocaleString()} LOC • ~{stats.estimatedReadTime} min read
-              </span>
-              <span className="text-xs text-muted-foreground">
-                Updated {mounted ? new Date(updatedAt).toLocaleDateString() : new Date(updatedAt).toISOString().split('T')[0]}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1 shrink-0">
+      <div className="border-b border-border">
+        <div className="flex items-center gap-2 px-4 py-2">
+          {backUrl && (
+            <a
+              href={backUrl}
+              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors shrink-0"
+              aria-label="Back to list"
+            >
+              <ArrowLeft size={14} suppressHydrationWarning />
+            </a>
+          )}
+          <h1
+            className="text-sm font-semibold truncate min-w-0"
+            style={{ viewTransitionName: `snippet-title-${id}` }}
+          >
+            {title}
+          </h1>
+          <span className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
+            <Badge variant="secondary" className="text-[10px] px-1 py-0">{files.length}f</Badge>
+            <span className={cn("flex items-center gap-0.5", VISIBILITY_CONFIG[visibility].color)}>
+              <VisIcon size={10} suppressHydrationWarning />
+            </span>
+            <span className="tabular-nums">{stats.lines.toLocaleString()} LOC</span>
+          </span>
+          <div className="flex-1" />
+          <div className="flex items-center gap-0.5 shrink-0">
             {deletedAt ? (
               isOwner && (
                 <>
-                  <Button variant="ghost" size="icon" onClick={onRestore} aria-label="Restore snippet" className="text-primary hover:text-primary/80 hover:bg-primary/10" disabled={isSubmitting}>
-                    <RotateCcw size={16} suppressHydrationWarning />
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onRestore} aria-label="Restore snippet" disabled={isSubmitting}>
+                    <RotateCcw size={14} suppressHydrationWarning />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={onDelete} aria-label="Permanently delete snippet" className="text-destructive hover:text-destructive hover:bg-destructive/10" disabled={isSubmitting}>
-                    <Trash2 size={16} suppressHydrationWarning />
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={onDelete} aria-label="Permanently delete snippet" disabled={isSubmitting}>
+                    <Trash2 size={14} suppressHydrationWarning />
                   </Button>
                 </>
               )
@@ -388,73 +366,96 @@ export function DetailView({
               <>
                 {isOwner && (
                   <>
-                    <Button variant="ghost" size="icon" onClick={onEdit} aria-label="Edit snippet" disabled={isSubmitting}>
-                      <Pencil size={16} suppressHydrationWarning />
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit} aria-label="Edit snippet" disabled={isSubmitting}>
+                      <Pencil size={14} suppressHydrationWarning />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={onDuplicate} aria-label="Duplicate snippet" disabled={isSubmitting}>
-                      <CopyPlus size={16} suppressHydrationWarning />
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onDuplicate} aria-label="Duplicate snippet" disabled={isSubmitting}>
+                      <CopyPlus size={14} suppressHydrationWarning />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={onToggleVisibility} aria-label="Toggle visibility" disabled={isSubmitting}>
-                      <VisIcon size={16} suppressHydrationWarning />
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onToggleVisibility} aria-label="Toggle visibility" disabled={isSubmitting}>
+                      <VisIcon size={14} suppressHydrationWarning />
                     </Button>
                   </>
                 )}
                 {!isOwner && onFork && (visibility === "PUBLIC" || visibility === "SHARED") && (
-                  <Button variant="ghost" size="icon" onClick={onFork} aria-label="Fork snippet" className="text-primary hover:text-primary/80 hover:bg-primary/10" disabled={isSubmitting}>
-                    <GitFork size={16} suppressHydrationWarning />
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-primary" onClick={onFork} aria-label="Fork snippet" disabled={isSubmitting}>
+                    <GitFork size={14} suppressHydrationWarning />
                   </Button>
                 )}
                 {(visibility === "SHARED" || visibility === "PUBLIC") && (
-                  <Button variant="ghost" size="icon" onClick={handleShare} aria-label="Share snippet" disabled={isSubmitting}>
-                    <Share2 size={16} suppressHydrationWarning />
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleShare} aria-label="Share snippet" disabled={isSubmitting}>
+                    <Share2 size={14} suppressHydrationWarning />
                   </Button>
                 )}
                 {isOwner && (
-                  <Button variant="ghost" size="icon" onClick={onDelete} aria-label="Delete snippet" className="text-destructive hover:text-destructive" disabled={isSubmitting}>
-                    <Trash2 size={16} suppressHydrationWarning />
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={onDelete} aria-label="Delete snippet" disabled={isSubmitting}>
+                    <Trash2 size={14} suppressHydrationWarning />
                   </Button>
                 )}
               </>
             )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 shrink-0"
+              onClick={() => {
+                if (headerCollapsed) {
+                  manualCollapseRef.current = false;
+                  setHeaderCollapsed(false);
+                } else {
+                  manualCollapseRef.current = true;
+                  setHeaderCollapsed(true);
+                }
+              }}
+              aria-label={headerCollapsed ? "Expand header" : "Collapse header"}
+            >
+              <ChevronDown
+                size={14}
+                className={cn("transition-transform duration-300", !headerCollapsed && "rotate-180")}
+                suppressHydrationWarning
+              />
+            </Button>
           </div>
         </div>
 
-        <div
-          className={cn(
-            "grid transition-all duration-300 ease-in-out",
-            headerCollapsed ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"
-          )}
-        >
-          <div className="overflow-hidden">
-            <div className="space-y-3">
-              {description && (
-                <p className="text-sm text-muted-foreground max-h-40 overflow-y-auto pr-1">{description}</p>
-              )}
+        {(description || (tags && tags.length > 0) || (forkedFromId && forkedFromTitle)) && (
+          <div
+            className={cn(
+              "grid transition-all duration-300 ease-in-out",
+              headerCollapsed ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"
+            )}
+          >
+            <div className="overflow-hidden">
+              <div className="px-4 pb-3 space-y-2">
+                {description && (
+                  <p className="text-sm text-muted-foreground max-h-32 overflow-y-auto pr-1">{description}</p>
+                )}
 
-              {tags && tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {tags.map((tag) => (
-                    <Badge key={tag} variant="outline" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              )}
+                {tags && tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {tags.map((tag) => (
+                      <Badge key={tag} variant="outline" className="text-[11px] px-1.5 py-0">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
 
-              {forkedFromId && forkedFromTitle && (
-                <div className="flex items-center gap-1.5">
-                  <GitFork size={12} className="text-muted-foreground" suppressHydrationWarning />
-                  <span className="text-xs text-muted-foreground">
-                    Forked from{" "}
-                    <a href={`/snippets/${forkedFromId}`} className="text-primary hover:underline">
-                      {forkedFromTitle}
-                    </a>
-                  </span>
-                </div>
-              )}
+                {forkedFromId && forkedFromTitle && (
+                  <div className="flex items-center gap-1">
+                    <GitFork size={11} className="text-muted-foreground" suppressHydrationWarning />
+                    <span className="text-xs text-muted-foreground">
+                      Forked from{" "}
+                      <a href={`/snippets/${forkedFromId}`} className="text-primary hover:underline">
+                        {forkedFromTitle}
+                      </a>
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div ref={headerSentinelRef} className="h-px shrink-0" />{/* sentinel for auto-collapse */}
