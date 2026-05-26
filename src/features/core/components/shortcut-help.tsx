@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -22,9 +22,10 @@ function Kbd({ children }: { children: React.ReactNode }) {
 }
 
 function ShortcutRow({ shortcut }: { shortcut: (typeof shortcuts)[number] }) {
-  const isMac = useMemo(
-    () => typeof navigator !== "undefined" && /Mac|iPod|iPhone|iPad/.test(navigator.platform),
-    []
+  const isMac = useSyncExternalStore(
+    () => () => {},
+    () => /Mac|iPod|iPhone|iPad/.test(navigator.platform),
+    () => false
   );
 
   return (
@@ -91,23 +92,4 @@ export function ShortcutHelp({ open, onClose }: { open: boolean; onClose: () => 
       </div>
     </div>
   );
-}
-
-export function useShortcutHelp() {
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      const tag = document.activeElement?.tagName;
-      const isEditable = tag === "INPUT" || tag === "TEXTAREA" || (document.activeElement as HTMLElement)?.isContentEditable;
-      if (e.key === "?" && !isEditable) {
-        e.preventDefault();
-        setOpen((prev) => !prev);
-      }
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  return { open, setOpen, ShortcutHelpOverlay: () => <ShortcutHelp open={open} onClose={() => setOpen(false)} /> };
 }

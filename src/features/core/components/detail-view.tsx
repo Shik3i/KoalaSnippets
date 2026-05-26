@@ -110,6 +110,7 @@ export function DetailView({
   onToggleVisibility,
   onFork,
   backUrl,
+  showLineNumbers = true,
 }: DetailViewProps) {
   const [copied, setCopied] = useState(false);
   const [copyOpen, setCopyOpen] = useState(false);
@@ -121,12 +122,17 @@ export function DetailView({
   const normalRef = useRef<HTMLDivElement>(null);
   const zenRef = useRef<HTMLDivElement>(null);
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     if (id && title) {
       addRecentSnippet(id, title);
     }
   }, [id, title, addRecentSnippet]);
+
+  useEffect(() => {
+    return () => clearTimeout(copyTimeoutRef.current);
+  }, []);
 
   const [activeTab, setActiveTab] = useState(0);
   const activeFile = files[activeTab] || files[0];
@@ -250,7 +256,8 @@ export function DetailView({
     await navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     addToast(`Copied as ${format === "raw" ? "Raw code" : "Markdown"}!`, "success");
-    setTimeout(() => setCopied(false), 2000);
+    clearTimeout(copyTimeoutRef.current);
+    copyTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
     setCopyOpen(false);
   };
 
@@ -341,7 +348,11 @@ export function DetailView({
   };
 
   return (
-    <div 
+    <>
+      {showLineNumbers && (
+        <style>{`.detail-view-code code{counter-reset:line}.detail-view-code .line{counter-increment:line}.detail-view-code .line::before{content:counter(line);display:inline-block;width:2.5rem;margin-right:1rem;text-align:right;color:#6e7681;user-select:none;flex-shrink:0}`}</style>
+      )}
+      <div 
       className="flex flex-col h-full overflow-hidden"
       style={{ viewTransitionName: `snippet-card-${id}` }}
     >
@@ -804,5 +815,6 @@ export function DetailView({
         <QrCode ref={qrCanvasRef} value={getShareUrl()} size={300} />
       </div>
     </div>
+    </>
   );
 }

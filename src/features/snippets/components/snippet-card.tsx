@@ -58,14 +58,17 @@ export function SnippetCard({
     if (savingRef.current) return;
     savingRef.current = true;
     setSavingTags(true);
-    await fetch(`/api/snippets/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tags: localTags }),
-    });
-    savingRef.current = false;
-    setSavingTags(false);
-    setEditingTags(false);
+    try {
+      await fetch(`/api/snippets/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tags: localTags }),
+      });
+      setEditingTags(false);
+    } finally {
+      savingRef.current = false;
+      setSavingTags(false);
+    }
   }, [id, localTags]);
 
   const dateStr = mounted
