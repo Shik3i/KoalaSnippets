@@ -1,16 +1,16 @@
 import { hash, verify } from "argon2";
 import crypto from "crypto";
 
-const PEPPER = process.env.AUTH_PEPPER;
-
-if (!PEPPER) {
-  throw new Error("AUTH_PEPPER environment variable is required. Generate one with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"");
+function getPepper(): string {
+  const pepper = process.env.AUTH_PEPPER;
+  if (!pepper) {
+    throw new Error("AUTH_PEPPER environment variable is required. Generate one with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"");
+  }
+  return pepper;
 }
 
-const pepper = PEPPER;
-
 export async function hashPassword(password: string): Promise<string> {
-  const pepperedPassword = `${password}${pepper}`;
+  const pepperedPassword = `${password}${getPepper()}`;
 
   return await hash(pepperedPassword, {
     type: 2,
@@ -21,7 +21,7 @@ export async function hashPassword(password: string): Promise<string> {
 }
 
 export async function verifyPassword(password: string, hashStr: string): Promise<boolean> {
-  const pepperedPassword = `${password}${pepper}`;
+  const pepperedPassword = `${password}${getPepper()}`;
   return await verify(hashStr, pepperedPassword);
 }
 
