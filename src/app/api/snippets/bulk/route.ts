@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { snippets } from "@/db/schema";
-import { getSession } from "@/features/auth/utils/session";
+import { getAuth } from "@/features/auth/utils/session";
 import { verifyCsrf } from "@/features/core/utils/security";
 import { eq, inArray, and } from "drizzle-orm";
 import { z } from "zod";
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
   }
 
-  const session = await getSession();
+  const session = await getAuth(request);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

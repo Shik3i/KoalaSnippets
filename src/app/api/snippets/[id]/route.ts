@@ -48,7 +48,7 @@ export async function GET(
     }
 
     if (snippet.visibility === "SHARED") {
-      if (!token || !constantTimeCompare(snippet.shareToken!, token)) {
+      if (!token || !snippet.shareToken || !constantTimeCompare(snippet.shareToken, token)) {
         return NextResponse.json({ error: "Not found" }, { status: 404 });
       }
     }

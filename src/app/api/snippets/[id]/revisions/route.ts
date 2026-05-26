@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { snippets, snippetRevisions, snippetFiles } from "@/db/schema";
-import { getSession } from "@/features/auth/utils/session";
+import { getAuth } from "@/features/auth/utils/session";
 import { verifyCsrf } from "@/features/core/utils/security";
 import { eq, desc } from "drizzle-orm";
 import { generateId } from "@/features/auth/utils/auth";
@@ -15,7 +15,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const session = await getSession();
+  const session = await getAuth(_request);
   
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -45,7 +45,7 @@ export async function POST(
     return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
   }
 
-  const session = await getSession();
+  const session = await getAuth(request);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

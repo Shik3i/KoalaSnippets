@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { logCrash } from "@/features/core/utils/crash-reporter";
+import { getSession } from "@/features/auth/utils/session";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { errorMessage, stackTrace, route, digest } = body;
+    const { errorMessage, stackTrace, route, digest, metadata } = body;
 
     if (!errorMessage) {
       return NextResponse.json({ error: "errorMessage is required" }, { status: 400 });
@@ -16,7 +17,10 @@ export async function POST(request: Request) {
     fakeError.stack = stackTrace || fakeError.stack;
     if (digest) fakeError.digest = digest;
 
-    await logCrash(fakeError, route);
+    const session = await getSession();
+    const userId = session?.userId;
+
+    await logCrash(fakeError, route, userId, metadata);
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (err) {

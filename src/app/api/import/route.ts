@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/features/auth/utils/session";
+import { getAuth } from "@/features/auth/utils/session";
 import { verifyCsrf } from "@/features/core/utils/security";
 import { importFromUrl, createImportedSnippet } from "@/features/snippets/utils/importer";
 import { revalidatePath } from "next/cache";
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
   }
 
-  const session = await getSession();
+  const session = await getAuth(request);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

@@ -29,7 +29,7 @@ export class SafeZone extends Component<SafeZoneProps, SafeZoneState> {
     console.error(`[SafeZone${this.props.name ? `:${this.props.name}` : ""}] caught error:`, error, errorInfo);
     
     try {
-      fetch("/api/reports/crash", {
+      fetch("/api/crash-reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -4,13 +4,10 @@ import crypto from "crypto";
 const PEPPER = process.env.AUTH_PEPPER;
 
 if (!PEPPER) {
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("AUTH_PEPPER environment variable is required in production. Generate one with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"");
-  }
-  console.warn("[auth] AUTH_PEPPER not set. Using development-only fallback pepper.");
+  throw new Error("AUTH_PEPPER environment variable is required. Generate one with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"");
 }
 
-const pepper = PEPPER ?? "dev-pepper-not-for-production";
+const pepper = PEPPER;
 
 export async function hashPassword(password: string): Promise<string> {
   const pepperedPassword = `${password}${pepper}`;

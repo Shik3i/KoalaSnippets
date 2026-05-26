@@ -4,7 +4,7 @@ import { snippets, snippetFiles } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { verifyPassword } from "@/features/auth/utils/auth";
 import { highlightCode } from "@/features/snippets/utils/shiki";
-import { escapeHtml } from "@/features/core/utils/security";
+import { escapeHtml, verifyCsrf } from "@/features/core/utils/security";
 import { checkRateLimit } from "@/features/core/utils/rate-limit";
 import { logCrash } from "@/features/core/utils/crash-reporter";
 import { logErrorToFile } from "@/features/core/utils/file-logger";
@@ -17,6 +17,11 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+
+    if (!verifyCsrf(request)) {
+      return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
+    }
+
     const body = await request.json();
     const { password, syntaxTheme = "github-dark" } = body;
 
@@ -40,6 +45,14 @@ export async function POST(
 
     if (!snippet) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    if (snippet.deletedAt) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    if (snippet.expiresAt && new Date() > snippet.expiresAt) {
+      return NextResponse.json({ error: "Snippet has expired" }, { status: 410 });
     }
 
     if (!snippet.passwordHash) {

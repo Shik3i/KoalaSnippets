@@ -47,6 +47,12 @@ export async function proxy(request: NextRequest) {
       if (request.method === "GET" && pathname.startsWith("/api/snippets/")) {
         return NextResponse.next();
       }
+      if (pathname.startsWith("/api/public/")) {
+        return NextResponse.next();
+      }
+      if (pathname === "/api/crash-reports") {
+        return NextResponse.next();
+      }
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { snippets, users, snippetFiles } from "@/db/schema";
 import { requireAdmin } from "@/features/admin/utils/admin-guard";
 import { verifyCsrf } from "@/features/core/utils/security";
+import { logUserAction } from "@/features/admin/utils/audit";
 import { eq, desc, inArray, and } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
@@ -63,12 +64,33 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Snippet ID is required" }, { status: 400 });
   }
 
-  await db.delete(snippets).where(
+  const snippet = await db.select().from(snippets).where(
     and(
       eq(snippets.id, body.id),
       eq(snippets.visibility, "PUBLIC")
     )
-  );
+  ).get();
+  if (!snippet) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  if (!snippet.deletedAt) {
+    await db.update(snippets).set({ deletedAt: new Date() }).where(
+      and(
+        eq(snippets.id, body.id),
+        eq(snippets.visibility, "PUBLIC")
+      )
+    );
+    await logUserAction(guard.session.user.id, "DELETE", "SNIPPET", body.id, `Public snippet "${snippet.title}" moved to trash`);
+  } else {
+    await db.delete(snippets).where(
+      and(
+        eq(snippets.id, body.id),
+        eq(snippets.visibility, "PUBLIC")
+      )
+    );
+    await logUserAction(guard.session.user.id, "DELETE", "SNIPPET", body.id, `Public snippet "${snippet.title}" permanently deleted`);
+  }
 
   return NextResponse.json({ message: "Snippet deleted" });
 }

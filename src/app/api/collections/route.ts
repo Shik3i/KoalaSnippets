@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { collections } from "@/db/schema";
-import { getSession } from "@/features/auth/utils/session";
+import { getSession, getAuth } from "@/features/auth/utils/session";
 import { generateId } from "@/features/auth/utils/auth";
 import { eq } from "drizzle-orm";
 import { verifyCsrf } from "@/features/core/utils/security";
@@ -15,6 +15,8 @@ const collectionSchema = z.object({
   name: z.string().trim().min(1).max(50),
 });
 
+// GET handler intentionally uses getSession() — no request object available to pass to getAuth().
+// API key auth is not supported for listing collections; cookie session is sufficient.
 export async function GET() {
   const session = await getSession();
   if (!session) {
@@ -37,7 +39,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
   }
 
-  const session = await getSession();
+  const session = await getAuth(request);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
