@@ -49,6 +49,7 @@ async function _getSession() {
       snippetDensity: session.user.preferences?.snippetDensity ?? "preview",
       syntaxTheme: session.user.preferences?.syntaxTheme ?? "github-dark",
       bgPattern: session.user.preferences?.bgPattern ?? "matrix",
+      showLineNumbers: session.user.preferences?.showLineNumbers ?? true,
     };
   }
 

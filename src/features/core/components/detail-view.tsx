@@ -48,6 +48,7 @@ interface DetailViewProps {
   onToggleVisibility?: () => void;
   onFork?: () => void;
   backUrl?: string;
+  showLineNumbers?: boolean;
 }
 
 const LANGUAGE_EXTENSIONS: Record<string, string> = {
@@ -132,6 +133,8 @@ export function DetailView({
   const [envVars, setEnvVars] = useState<Record<string, string>>({});
   const [statsOpen, setStatsOpen] = useState(false);
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
+  const [goToLineOpen, setGoToLineOpen] = useState(false);
+  const [goToLineValue, setGoToLineValue] = useState("");
   const headerSentinelRef = useRef<HTMLDivElement>(null);
   const manualCollapseRef = useRef(false);
   const stats = useMemo(() => computeSnippetStats(files), [files]);
@@ -165,13 +168,30 @@ export function DetailView({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+
+      if ((e.ctrlKey || e.metaKey) && e.key === "g") {
+        e.preventDefault();
+        setGoToLineOpen(true);
+        setGoToLineValue("");
+        return;
+      }
+
+      if (e.key === "Escape" && goToLineOpen) {
+        setGoToLineOpen(false);
+        setGoToLineValue("");
+        return;
+      }
+
       if (e.key === "Escape" && zenMode) {
         setZenMode(false);
+        return;
       }
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [zenMode]);
+  }, [zenMode, goToLineOpen]);
 
   useEffect(() => {
     const sentinel = headerSentinelRef.current;
@@ -585,6 +605,31 @@ export function DetailView({
                 <div 
                   className="w-full rounded-xl border border-border bg-[#0d1117] shadow-2xl overflow-hidden relative"
                 >
+                {goToLineOpen && (
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-1.5 shadow-lg">
+                    <input
+                      type="number"
+                      min={1}
+                      max={stats.lines}
+                      placeholder={`Go to line (1-${stats.lines})`}
+                      value={goToLineValue}
+                      onChange={(e) => setGoToLineValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") { setGoToLineOpen(false); setGoToLineValue(""); }
+                        if (e.key === "Enter") {
+                          const line = parseInt(goToLineValue, 10);
+                          if (line >= 1 && line <= stats.lines) {
+                            window.location.hash = `#L${line}`;
+                            setGoToLineOpen(false);
+                            setGoToLineValue("");
+                          }
+                        }
+                      }}
+                      className="w-24 text-sm bg-transparent border-none outline-none font-mono"
+                      autoFocus
+                    />
+                  </div>
+                )}
                 <div className="flex items-center px-4 py-3 border-b border-white/10 bg-white/5">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-[#ff5f56]" />
@@ -653,7 +698,32 @@ export function DetailView({
       )}
       
       {zenMode && activeFile && (
-        <div className="fixed inset-0 z-[100] bg-[#0d1117] flex flex-col p-4 overflow-hidden animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] bg-[#0d1117] flex flex-col p-4 overflow-hidden animate-in fade-in duration-200 relative">
+          {goToLineOpen && (
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-1.5 shadow-lg">
+              <input
+                type="number"
+                min={1}
+                max={stats.lines}
+                placeholder={`Go to line (1-${stats.lines})`}
+                value={goToLineValue}
+                onChange={(e) => setGoToLineValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") { setGoToLineOpen(false); setGoToLineValue(""); }
+                  if (e.key === "Enter") {
+                    const line = parseInt(goToLineValue, 10);
+                    if (line >= 1 && line <= stats.lines) {
+                      window.location.hash = `#L${line}`;
+                      setGoToLineOpen(false);
+                      setGoToLineValue("");
+                    }
+                  }
+                }}
+                className="w-24 text-sm bg-transparent border-none outline-none font-mono"
+                autoFocus
+              />
+            </div>
+          )}
           <div className="flex items-center justify-between mb-4 bg-white/5 p-3 rounded-lg border border-white/10 shrink-0">
             <div className="text-white/80 font-mono text-sm">{activeFile.filename}</div>
             <div className="flex gap-2">

@@ -22,6 +22,7 @@ interface UserPreferences {
   snippetDensity: "compact" | "preview" | "full";
   syntaxTheme: string;
   bgPattern: string;
+  showLineNumbers: boolean;
 }
 
 interface AppearanceSettingsFormProps {
@@ -249,6 +250,7 @@ export function AppearanceSettingsForm({ initialPreferences, isAuthenticated = f
   const [snippetDensity, setSnippetDensity] = useState<"compact" | "preview" | "full">(initialPreferences.snippetDensity);
   const [syntaxTheme, setSyntaxTheme] = useState(initialPreferences.syntaxTheme);
   const [bgPattern, setBgPattern] = useState(initialPreferences.bgPattern ?? "flat");
+  const [showLineNumbers, setShowLineNumbers] = useState(initialPreferences.showLineNumbers ?? true);
   const [isSaving, setIsSaving] = useState(false);
   const isSavedRef = useRef(false);
 
@@ -271,6 +273,7 @@ export function AppearanceSettingsForm({ initialPreferences, isAuthenticated = f
     setSnippetDensity(initialPreferences.snippetDensity);
     setSyntaxTheme(initialPreferences.syntaxTheme);
     setBgPattern(initialPreferences.bgPattern ?? "flat");
+    setShowLineNumbers(initialPreferences.showLineNumbers ?? true);
     addToast("Settings reverted to saved values", "info");
   };
 
@@ -278,7 +281,7 @@ export function AppearanceSettingsForm({ initialPreferences, isAuthenticated = f
     e.preventDefault();
     setIsSaving(true);
     try {
-      const prefs = { appTheme, snippetDensity, syntaxTheme, bgPattern };
+      const prefs = { appTheme, snippetDensity, syntaxTheme, bgPattern, showLineNumbers };
       document.cookie = `koala_appearance=${encodeURIComponent(JSON.stringify(prefs))}; path=/; max-age=31536000`;
 
       if (isAuthenticated) {
@@ -496,6 +499,36 @@ export function AppearanceSettingsForm({ initialPreferences, isAuthenticated = f
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        {/* LINE NUMBERS SECTION */}
+        <div className="rounded-xl border border-border bg-card/40 p-6 backdrop-blur-md shadow-xl space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                <Code className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold tracking-tight">Line Numbers</h2>
+                <p className="text-xs text-muted-foreground">Show line numbers in code blocks</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={showLineNumbers}
+              onClick={() => setShowLineNumbers(!showLineNumbers)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+                showLineNumbers ? "bg-primary" : "bg-muted border border-border"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  showLineNumbers ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
           </div>
         </div>
 

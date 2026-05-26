@@ -58,6 +58,7 @@ export async function POST(request: Request) {
             snippetDensity: "preview",
             syntaxTheme: "github-dark",
             bgPattern: "matrix",
+            showLineNumbers: true,
           },
         }).run();
 

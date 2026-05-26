@@ -13,6 +13,7 @@ export default async function AppearanceSettingsPage() {
     snippetDensity: "preview" as "compact" | "preview" | "full",
     syntaxTheme: "github-dark",
     bgPattern: "matrix",
+    showLineNumbers: true,
   };
 
   if (session?.user?.preferences) {
@@ -22,6 +23,7 @@ export default async function AppearanceSettingsPage() {
       snippetDensity: (prefs.snippetDensity ?? "preview") as "compact" | "preview" | "full",
       syntaxTheme: prefs.syntaxTheme ?? "github-dark",
       bgPattern: prefs.bgPattern ?? "matrix",
+      showLineNumbers: prefs.showLineNumbers ?? true,
     };
   } else {
     const cookieStore = await cookies();
@@ -33,6 +35,7 @@ export default async function AppearanceSettingsPage() {
         if (prefs.snippetDensity) initialPreferences.snippetDensity = prefs.snippetDensity;
         if (prefs.syntaxTheme) initialPreferences.syntaxTheme = prefs.syntaxTheme;
         if (prefs.bgPattern) initialPreferences.bgPattern = prefs.bgPattern;
+        if (prefs.showLineNumbers !== undefined) initialPreferences.showLineNumbers = prefs.showLineNumbers;
       } catch {
         // ignore parse error
       }

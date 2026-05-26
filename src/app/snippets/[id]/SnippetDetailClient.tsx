@@ -22,6 +22,7 @@ interface SnippetDetailClientProps {
   forkedFromId?: string;
   forkedFromTitle?: string;
   backUrl?: string;
+  showLineNumbers?: boolean;
 }
 
 export function SnippetDetailClient(props: SnippetDetailClientProps) {
@@ -144,6 +145,7 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
       <DetailView
         {...props}
         isSubmitting={isSubmitting}
+        showLineNumbers={props.showLineNumbers}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onRestore={handleRestore}

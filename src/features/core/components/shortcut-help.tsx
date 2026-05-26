@@ -1,39 +1,53 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, Command } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const shortcuts = [
-  { category: "Navigation", items: [
-    { keys: ["Ctrl", "K"], description: "Open Command Palette" },
-    { keys: ["Ctrl", "N"], description: "New Snippet" },
-    { keys: ["Ctrl", "Shift", "T"], description: "Open Trash" },
-    { keys: ["Ctrl", "Shift", "D"], description: "Go to Dashboard" },
-    { keys: ["Alt", "N"], description: "New Snippet (alt)" },
-  ]},
-  { category: "Editing", items: [
-    { keys: ["Ctrl", "S"], description: "Save Snippet" },
-    { keys: ["Ctrl", "Enter"], description: "Save Snippet" },
-  ]},
-  { category: "Search & Filters", items: [
-    { keys: ["/"], description: "Focus Search (when not in input)" },
-    { keys: ["Escape"], description: "Clear Search / Close Toast" },
-    { keys: ["↑", "↓"], description: "Navigate Filter Dropdowns" },
-    { keys: ["Enter"], description: "Toggle Filter Option" },
-  ]},
-  { category: "Modals", items: [
-    { keys: ["Escape"], description: "Close Modal / Overlay" },
-    { keys: ["Enter"], description: "Confirm Action" },
-    { keys: ["?"], description: "Toggle this Help" },
-  ]},
+  { keys: ["⌘K", "CtrlK"], description: "Command Palette" },
+  { keys: ["⌘G", "CtrlG"], description: "Go to Line (in snippet view)" },
+  { keys: ["⌘S", "CtrlS"], description: "Save (in editor)" },
+  { keys: ["/"], description: "Focus search" },
+  { keys: ["Escape"], description: "Close modals, clear search, dismiss toasts" },
+  { keys: ["?"], description: "Show this help" },
 ];
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="inline-flex items-center justify-center min-w-[24px] h-6 px-1.5 text-[11px] font-mono bg-muted border border-border rounded-md shadow-sm">
+    <kbd className="inline-flex items-center justify-center min-w-[24px] h-6 px-1.5 text-[11px] font-mono bg-muted/60 border border-border rounded shadow-sm">
       {children}
     </kbd>
+  );
+}
+
+function ShortcutRow({ shortcut }: { shortcut: (typeof shortcuts)[number] }) {
+  const isMac = useMemo(
+    () => typeof navigator !== "undefined" && /Mac|iPod|iPhone|iPad/.test(navigator.platform),
+    []
+  );
+
+  return (
+    <div className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/[0.03] transition-colors">
+      <span className="text-sm text-muted-foreground">{shortcut.description}</span>
+      <div className="flex items-center gap-1.5 shrink-0 ml-4">
+        {shortcut.keys.map((key, i) => {
+          const displayKey = key === "⌘K" || key === "CtrlK"
+            ? (isMac ? "⌘K" : "Ctrl+K")
+            : key === "⌘G" || key === "CtrlG"
+              ? (isMac ? "⌘G" : "Ctrl+G")
+              : key === "⌘S" || key === "CtrlS"
+                ? (isMac ? "⌘S" : "Ctrl+S")
+                : key;
+          return (
+            <span key={key} className="flex items-center gap-1.5">
+              {i > 0 && <span className="text-muted-foreground/50 text-xs">or</span>}
+              <Kbd>{displayKey}</Kbd>
+            </span>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -50,39 +64,29 @@ export function ShortcutHelp({ open, onClose }: { open: boolean; onClose: () => 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="relative w-full max-w-lg mx-4 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 className="text-lg font-semibold">Keyboard Shortcuts</h2>
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="relative w-full max-w-sm mx-4 backdrop-blur-xl bg-card/95 border border-border/50 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+          <h2 className="text-sm font-semibold text-foreground">Keyboard Shortcuts</h2>
           <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close shortcuts">
-            <X size={18} />
+            <X size={14} />
           </Button>
         </div>
-        <div className="p-6 space-y-5 max-h-[60vh] overflow-y-auto">
-          {shortcuts.map((group) => (
-            <div key={group.category}>
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{group.category}</h3>
-              <div className="space-y-2">
-                {group.items.map((item) => (
-                  <div key={item.description} className="flex items-center justify-between">
-                    <span className="text-sm text-foreground">{item.description}</span>
-                    <div className="flex items-center gap-1">
-                      {item.keys.map((key, i) => (
-                        <span key={key} className="flex items-center gap-1">
-                          {i > 0 && <span className="text-muted-foreground text-xs">+</span>}
-                          <Kbd>{key}</Kbd>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+
+        <div className="py-2">
+          {shortcuts.map((shortcut) => (
+            <ShortcutRow key={shortcut.description} shortcut={shortcut} />
           ))}
         </div>
-        <div className="flex items-center justify-between px-6 py-3 bg-muted/30 border-t border-border text-[10px] text-muted-foreground">
-          <div className="flex items-center gap-1"><Command className="w-3 h-3" /> + K to launch palette</div>
-          <div>Press ? to toggle this overlay</div>
+
+        <div className="flex items-center justify-between px-4 py-2 bg-white/[0.02] border-t border-border/50 text-[10px] text-muted-foreground">
+          <span>Press ? to toggle</span>
+          <span>Esc to close</span>
         </div>
       </div>
     </div>
@@ -94,7 +98,9 @@ export function useShortcutHelp() {
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "?" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+      const tag = document.activeElement?.tagName;
+      const isEditable = tag === "INPUT" || tag === "TEXTAREA" || (document.activeElement as HTMLElement)?.isContentEditable;
+      if (e.key === "?" && !isEditable) {
         e.preventDefault();
         setOpen((prev) => !prev);
       }

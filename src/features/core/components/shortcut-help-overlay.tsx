@@ -8,7 +8,9 @@ export function ShortcutHelpOverlay() {
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "?" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+      const tag = document.activeElement?.tagName;
+      const isEditable = tag === "INPUT" || tag === "TEXTAREA" || (document.activeElement as HTMLElement)?.isContentEditable;
+      if (e.key === "?" && !isEditable) {
         e.preventDefault();
         setOpen((prev) => !prev);
       }

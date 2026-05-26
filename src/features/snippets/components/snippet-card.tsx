@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/features/core/utils/utils";
@@ -8,7 +8,7 @@ import { VISIBILITY_CONFIG } from "@/features/snippets/utils/constants";
 import { SafeZone } from "@/components/ui/safe-zone";
 import { ContextMenu } from "@/components/ui/context-menu";
 import { useToast } from "@/components/ui/toast";
-import { LinkIcon, Pencil, Trash2 } from "lucide-react";
+import { LinkIcon, Loader2, Pencil, Trash2, X } from "lucide-react";
 
 interface SnippetCardProps {
   id: string;
@@ -48,6 +48,25 @@ export function SnippetCard({
   );
   const VisIcon = VISIBILITY_CONFIG[visibility].icon;
   const { addToast } = useToast();
+
+  const [editingTags, setEditingTags] = useState(false);
+  const [localTags, setLocalTags] = useState<string[]>([]);
+  const [savingTags, setSavingTags] = useState(false);
+  const savingRef = useRef(false);
+
+  const handleSaveTags = useCallback(async () => {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setSavingTags(true);
+    await fetch(`/api/snippets/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tags: localTags }),
+    });
+    savingRef.current = false;
+    setSavingTags(false);
+    setEditingTags(false);
+  }, [id, localTags]);
 
   const dateStr = mounted
     ? new Date(createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'numeric', year: 'numeric' })
@@ -105,6 +124,11 @@ export function SnippetCard({
       onDragStart={(e) => {
         e.dataTransfer.setData("application/json", JSON.stringify({ type: "snippet", id }));
       }}
+      onClick={(e) => {
+        if (editingTags) {
+          e.preventDefault();
+        }
+      }}
       className={cn(
         "group block rounded-xl border border-border bg-card transition-all hover:border-primary/50 hover:shadow-lg relative cursor-grab active:cursor-grabbing overflow-hidden",
         selected && "border-primary/50 ring-1 ring-primary/30 bg-primary/5"
@@ -156,7 +180,7 @@ export function SnippetCard({
         </p>
       )}
 
-      {tags && tags.length > 0 && (
+      {!editingTags && tags && tags.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {tags.slice(0, 3).map((tag) => (
             <Badge
@@ -166,13 +190,18 @@ export function SnippetCard({
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                const params = new URLSearchParams(window.location.search);
-                params.set("tags", tag);
-                let targetPath = window.location.pathname;
-                if (targetPath.startsWith("/snippets")) {
-                  targetPath = visibility === "PUBLIC" ? "/public" : "/dashboard";
+                if (onToggleSelect) {
+                  const params = new URLSearchParams(window.location.search);
+                  params.set("tags", tag);
+                  let targetPath = window.location.pathname;
+                  if (targetPath.startsWith("/snippets")) {
+                    targetPath = visibility === "PUBLIC" ? "/public" : "/dashboard";
+                  }
+                  window.location.href = `${targetPath}?${params.toString()}`;
+                } else {
+                  setLocalTags([...tags]);
+                  setEditingTags(true);
                 }
-                window.location.href = `${targetPath}?${params.toString()}`;
               }}
             >
               {tag}
@@ -180,6 +209,59 @@ export function SnippetCard({
           ))}
           {tags.length > 3 && (
             <span className="text-[10px] text-muted-foreground">+{tags.length - 3}</span>
+          )}
+        </div>
+      )}
+
+      {editingTags && (
+        <div
+          className="flex flex-wrap gap-1 items-center"
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+              handleSaveTags();
+            }
+          }}
+        >
+          {localTags.map((tag) => (
+            <Badge
+              key={tag}
+              variant="outline"
+              className="text-[10px] h-4 px-1 gap-0.5 cursor-default"
+            >
+              {tag}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setLocalTags((prev) => prev.filter((t) => t !== tag));
+                }}
+                className="ml-0.5 hover:text-destructive"
+                aria-label={`Remove tag ${tag}`}
+              >
+                <X size={10} />
+              </button>
+            </Badge>
+          ))}
+          <input
+            className="w-20 h-5 px-1.5 text-[10px] bg-muted/50 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+            placeholder="+ tag"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && e.currentTarget.value.trim()) {
+                const newTag = e.currentTarget.value.trim();
+                if (!localTags.includes(newTag)) {
+                  setLocalTags((prev) => [...prev, newTag]);
+                }
+                e.currentTarget.value = "";
+              }
+              if (e.key === "Escape") {
+                setEditingTags(false);
+                handleSaveTags();
+              }
+            }}
+          />
+          {savingTags && (
+            <Loader2 size={12} className="animate-spin text-muted-foreground" />
           )}
         </div>
       )}

@@ -30,6 +30,7 @@ const appearanceSettingsSchema = z.object({
     "monokai",
   ]).optional(),
   bgPattern: z.enum(["flat", "dots", "grid", "gradient", "drift", "aurora", "silk", "topo", "nodes", "hex", "matrix", "circuit"]).optional(),
+  showLineNumbers: z.boolean().optional(),
 });
 
 export async function PUT(request: Request) {
@@ -50,7 +51,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Invalid appearance settings payload" }, { status: 400 });
     }
 
-    const { appTheme, snippetDensity, syntaxTheme, bgPattern } = parsed.data;
+    const { appTheme, snippetDensity, syntaxTheme, bgPattern, showLineNumbers } = parsed.data;
 
     // Merge with existing preferences or fallback to defaults
     const currentPrefs = session.user.preferences || {
@@ -58,6 +59,7 @@ export async function PUT(request: Request) {
       snippetDensity: "preview",
       syntaxTheme: "github-dark",
       bgPattern: "matrix",
+      showLineNumbers: true,
     };
 
     const updatedPrefs = {
@@ -65,6 +67,7 @@ export async function PUT(request: Request) {
       snippetDensity: snippetDensity ?? currentPrefs.snippetDensity ?? "preview",
       syntaxTheme: syntaxTheme ?? currentPrefs.syntaxTheme ?? "github-dark",
       bgPattern: bgPattern ?? currentPrefs.bgPattern ?? "matrix",
+      showLineNumbers: showLineNumbers ?? currentPrefs.showLineNumbers ?? true,
     };
 
     // Update in database

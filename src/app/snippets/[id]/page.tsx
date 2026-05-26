@@ -120,6 +120,7 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
   }
 
   const syntaxTheme = session?.user?.preferences?.syntaxTheme ?? "github-dark";
+  const showLineNumbers = session?.user?.preferences?.showLineNumbers ?? true;
   
   const highlightedFiles = await Promise.all(
     ((snippet.files || []) as Array<{ id: string; filename: string; code: string; language: string }>).map(async (file) => {
@@ -184,6 +185,7 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
               forkedFromId={snippet.forkedFromId as string | undefined}
               forkedFromTitle={snippet.forkedFromTitle as string | undefined}
               backUrl={backUrl}
+              showLineNumbers={showLineNumbers}
             />
           )}
         </div>

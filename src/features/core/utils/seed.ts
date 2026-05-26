@@ -30,6 +30,7 @@ export async function seedAdminUser() {
       snippetDensity: "preview",
       syntaxTheme: "github-dark",
       bgPattern: "matrix",
+      showLineNumbers: true,
     },
   });
 

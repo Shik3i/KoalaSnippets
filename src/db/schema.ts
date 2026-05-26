@@ -6,6 +6,7 @@ export interface UserPreferences {
   snippetDensity: "compact" | "preview" | "full";
   syntaxTheme: string;
   bgPattern: string;
+  showLineNumbers: boolean;
 }
 
 export const users = sqliteTable("users", {
@@ -19,6 +20,7 @@ export const users = sqliteTable("users", {
     snippetDensity: "preview",
     syntaxTheme: "github-dark",
     bgPattern: "matrix",
+    showLineNumbers: true,
   }),
 });
 
