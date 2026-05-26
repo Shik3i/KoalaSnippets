@@ -28,6 +28,8 @@ import {
   Trash2,
   Clock,
   Wrench,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -59,6 +61,12 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
   const [creatingCollection, setCreatingCollection] = useState(false);
   const [width, setWidth] = useState(240);
   const [isResizing, setIsResizing] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("koalasnippets_sidebar_collapsed") === "true";
+    }
+    return false;
+  });
 
   useEffect(() => {
     const saved = localStorage.getItem("koalasnippets_sidebar_width");
@@ -137,12 +145,12 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 bg-card border-r border-border flex flex-col transform transition-transform duration-200 md:translate-x-0 md:relative md:z-auto md:shrink-0",
+          "fixed inset-y-0 left-0 z-40 bg-card border-r border-border flex flex-col transform transition-[width] duration-300 ease-in-out md:translate-x-0 md:relative md:z-auto md:shrink-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
-        style={{ width: mobileOpen ? 280 : `${width}px` }}
+        style={{ width: collapsed ? 52 : (mobileOpen ? 280 : `${width}px`) }}
       >
-        {!mobileOpen && (
+        {!mobileOpen && !collapsed && (
           <div className="absolute right-[-2px] top-0 bottom-0 w-4 cursor-col-resize z-50 hidden md:flex justify-center group"
             onMouseDown={(e) => {
               e.preventDefault();
@@ -152,17 +160,36 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
             <div className="w-[2px] h-full bg-transparent group-hover:bg-primary/50 transition-colors" />
           </div>
         )}
-        <div className="p-4 border-b border-border">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
+        <div className={cn("flex items-center border-b border-border", collapsed ? "p-2 justify-center" : "p-4 justify-between")}>
+          {collapsed ? (
+            <Link href="/" className="flex items-center justify-center w-8 h-8 rounded-md bg-primary" aria-label="Home">
               <span className="text-primary-foreground font-bold text-sm">K</span>
-            </div>
-            <span className="font-semibold text-lg">KoalaSnippets</span>
-          </Link>
+            </Link>
+          ) : (
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-sm">K</span>
+              </div>
+              <span className="font-semibold text-lg">KoalaSnippets</span>
+            </Link>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 hidden md:flex shrink-0"
+            onClick={() => {
+              const next = !collapsed;
+              setCollapsed(next);
+              localStorage.setItem("koalasnippets_sidebar_collapsed", String(next));
+            }}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? <PanelLeftOpen size={16} suppressHydrationWarning /> : <PanelLeftClose size={16} suppressHydrationWarning />}
+          </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto">
-        <nav className="p-3 space-y-1">
+        <nav className={cn("space-y-1", collapsed ? "p-1.5" : "p-3")}>
           {navItems.map((item) => {
             if ((item.href === "/dashboard" || item.href === "/dashboard/trash") && !isAuthenticated) {
               return null;
@@ -173,8 +200,10 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
               <Link
                 key={item.href}
                 href={item.href}
+                title={collapsed ? item.label : undefined}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                  "flex items-center gap-3 rounded-md text-sm transition-colors",
+                  collapsed ? "justify-center px-2 py-2" : "px-3 py-2",
                   isActive
                     ? "bg-accent text-accent-foreground"
                     : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
@@ -182,24 +211,35 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                 onClick={() => setMobileOpen(false)}
               >
                 <Icon size={16} suppressHydrationWarning />
-                {item.label}
+                {!collapsed && item.label}
               </Link>
             );
           })}
         </nav>
 
         {isAuthenticated && (
-          <div className="px-3 py-2">
-            <Button className="w-full gap-2" size="sm" asChild>
-              <Link href="/dashboard/new" onClick={() => setMobileOpen(false)}>
-                <Plus size={14} suppressHydrationWarning />
-                New Snippet
+          <div className={cn(collapsed ? "px-1.5 py-1" : "px-3 py-2")}>
+            {collapsed ? (
+              <Link
+                href="/dashboard/new"
+                onClick={() => setMobileOpen(false)}
+                title="New Snippet"
+                className="flex items-center justify-center w-full py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                <Plus size={16} suppressHydrationWarning />
               </Link>
-            </Button>
+            ) : (
+              <Button className="w-full gap-2" size="sm" asChild>
+                <Link href="/dashboard/new" onClick={() => setMobileOpen(false)}>
+                  <Plus size={14} suppressHydrationWarning />
+                  New Snippet
+                </Link>
+              </Button>
+            )}
           </div>
         )}
 
-        {isAuthenticated && (
+        {isAuthenticated && !collapsed && (
           <div className="px-3 py-2 border-t border-border overflow-y-auto max-h-48">
             <div className="flex items-center justify-between mb-2 px-1">
               <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -311,7 +351,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
           </div>
         )}
 
-        {languages.length > 0 && (
+        {languages.length > 0 && !collapsed && (
           <div className="px-3 py-2 border-t border-border overflow-y-auto max-h-48">
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">
               Languages
@@ -348,7 +388,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
           </div>
         )}
 
-        {tags.length > 0 && (
+        {tags.length > 0 && !collapsed && (
           <div className="px-3 py-2 border-t border-border overflow-y-auto max-h-48">
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">
               Tags
@@ -393,7 +433,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
           </div>
         )}
 
-        {recentSnippets.length > 0 && (
+        {recentSnippets.length > 0 && !collapsed && (
           <div className="px-3 py-2 border-t border-border overflow-y-auto max-h-48">
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
@@ -428,12 +468,14 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
         </div>
 
         <div className="mt-auto border-t border-border">
-          <div className="p-3 space-y-1">
+          <div className={cn("space-y-1", collapsed ? "p-1.5" : "p-3")}>
             {isAdmin && (
               <Link
                 href="/admin"
+                title={collapsed ? "Admin Dashboard" : undefined}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                  "flex items-center gap-3 rounded-md text-sm transition-colors",
+                  collapsed ? "justify-center px-2 py-2" : "px-3 py-2",
                   pathname === "/admin"
                     ? "bg-accent text-accent-foreground"
                     : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
@@ -441,13 +483,15 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                 onClick={() => setMobileOpen(false)}
               >
                 <Shield size={16} suppressHydrationWarning />
-                Admin Dashboard
+                {!collapsed && "Admin Dashboard"}
               </Link>
             )}
             <Link
               href="/settings/appearance"
+              title={collapsed ? "Appearance Settings" : undefined}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                "flex items-center gap-3 rounded-md text-sm transition-colors",
+                collapsed ? "justify-center px-2 py-2" : "px-3 py-2",
                 pathname === "/settings/appearance"
                   ? "bg-accent text-accent-foreground"
                   : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
@@ -455,14 +499,16 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
               onClick={() => setMobileOpen(false)}
             >
               <Palette size={16} suppressHydrationWarning />
-              Appearance Settings
+              {!collapsed && "Appearance Settings"}
             </Link>
             {isAuthenticated ? (
               <>
                 <Link
                   href="/settings"
+                  title={collapsed ? "Security Settings" : undefined}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                    "flex items-center gap-3 rounded-md text-sm transition-colors",
+                    collapsed ? "justify-center px-2 py-2" : "px-3 py-2",
                     pathname === "/settings"
                       ? "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
@@ -470,7 +516,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                   onClick={() => setMobileOpen(false)}
                 >
                   <Settings size={16} suppressHydrationWarning />
-                  Security Settings
+                  {!collapsed && "Security Settings"}
                 </Link>
                 <button
                   onClick={async () => {
@@ -482,20 +528,36 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                       window.location.href = "/login";
                     }
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                  title="Sign Out"
+                  className={cn(
+                    "flex items-center gap-3 rounded-md text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors",
+                    collapsed ? "justify-center w-full px-2 py-2" : "w-full px-3 py-2"
+                  )}
                 >
                   <LogOut size={16} suppressHydrationWarning />
-                  Sign Out
+                  {!collapsed && "Sign Out"}
                 </button>
               </>
             ) : (
-              <Button variant="outline" className="w-full gap-2 mt-2" asChild>
-                <Link href="/login" onClick={() => setMobileOpen(false)}>
-                  Sign In
+              collapsed ? (
+                <Link
+                  href="/login"
+                  onClick={() => setMobileOpen(false)}
+                  title="Sign In"
+                  className="flex items-center justify-center w-full py-2 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+                >
+                  <LogOut size={16} suppressHydrationWarning />
                 </Link>
-              </Button>
+              ) : (
+                <Button variant="outline" className="w-full gap-2 mt-2" asChild>
+                  <Link href="/login" onClick={() => setMobileOpen(false)}>
+                    Sign In
+                  </Link>
+                </Button>
+              )
             )}
           </div>
+          {!collapsed && (
           <div className="px-3 pb-3">
             <div className="flex gap-3 text-xs text-muted-foreground px-2 mb-1">
               <Link href="/impressum" className="hover:text-foreground transition-colors">
@@ -517,6 +579,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
               </a>
             </div>
           </div>
+          )}
         </div>
       </aside>
 

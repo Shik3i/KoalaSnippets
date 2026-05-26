@@ -343,7 +343,8 @@ export function DetailView({
             {title}
           </h1>
           <span className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
-            <Badge variant="secondary" className="text-[10px] px-1 py-0">{files.length}f</Badge>
+            <FileText size={10} className="opacity-50" suppressHydrationWarning />
+            <span className="tabular-nums">{files.length}</span>
             <span className={cn("flex items-center gap-0.5", VISIBILITY_CONFIG[visibility].color)}>
               <VisIcon size={10} suppressHydrationWarning />
             </span>
