@@ -265,13 +265,13 @@ export function SnippetSearchHeader({
     <div className="sticky top-0 z-10 p-4 space-y-2">
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[160px]">
-          <Image src={KoalaSuche} alt="Search" width={22} height={18} className="absolute left-3 top-1/2 -translate-y-1/2 opacity-50 z-10" />
+          <Image src={KoalaSuche} alt="Search" width={28} height={22} className="absolute left-2.5 top-1/2 -translate-y-1/2 opacity-50 z-10" />
           <Input
             ref={inputRef}
             placeholder={placeholder}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="pl-9 h-9 pr-14 w-full border-0 shadow-none focus-visible:ring-0 bg-muted/40 backdrop-blur-sm"
+            className="pl-10 h-9 pr-14 w-full border-0 shadow-none focus-visible:ring-0 bg-muted/40 backdrop-blur-sm"
             aria-label="Search snippets"
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2">
