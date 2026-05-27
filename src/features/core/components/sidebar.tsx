@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import MainLogo from "../../../../public/MainLogo.png";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/features/core/utils/utils";
 import { useRecentSnippets } from "@/features/core/hooks/use-recent-snippets";
@@ -173,7 +174,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
             className={cn("flex items-center gap-3 transition-opacity duration-200", collapsed && "group-hover:opacity-0")}
           >
             <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0">
-              <Image src="/MainLogo.png" alt="KoalaSnippets Logo" width={32} height={32} className="object-contain" unoptimized />
+              <Image src={MainLogo} alt="KoalaSnippets Logo" width={32} height={32} className="object-contain" unoptimized />
             </div>
             {!collapsed && <span className="font-semibold text-lg truncate">KoalaSnippets</span>}
           </Link>
