@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import MainLogo from "../../../../public/MainLogo.png";
+import KoalaFile from "../../../../public/KoalaFile.png";
+import KoalaFolder from "../../../../public/KoalaFolder.png";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/features/core/utils/utils";
 import { useRecentSnippets } from "@/features/core/hooks/use-recent-snippets";
@@ -14,7 +16,6 @@ import {
   Home,
   FileCode,
   Globe,
-  Plus,
   ChevronRight,
   Menu,
   X,
@@ -24,7 +25,6 @@ import {
   Shield,
   Palette,
   Search,
-  Folder,
   PlusCircle,
   Github,
   Trash2,
@@ -237,12 +237,12 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                 title="New Snippet"
                 className="flex items-center justify-center w-full py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               >
-                <Image src="/KoalaFile.png" alt="New Snippet" width={16} height={16} className="brightness-0 invert" />
+                <Image src={KoalaFile} alt="New Snippet" width={16} height={16} className="brightness-0 invert" />
               </Link>
             ) : (
               <Button className="w-full gap-2" size="sm" asChild>
                 <Link href="/dashboard/new" onClick={() => setMobileOpen(false)}>
-                  <Image src="/KoalaFile.png" alt="New Snippet" width={16} height={16} className="brightness-0 invert" />
+                  <Image src={KoalaFile} alt="New Snippet" width={16} height={16} className="brightness-0 invert" />
                   New Snippet
                 </Link>
               </Button>
@@ -254,7 +254,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
           <div className="px-3 py-2 border-t border-border overflow-y-auto max-h-48">
             <div className="flex items-center justify-between mb-2 px-1">
               <div className="flex items-center gap-1.5">
-                <Image src="/KoalaFolder.png" alt="Collections" width={24} height={24} />
+                <Image src={KoalaFolder} alt="Collections" width={24} height={24} />
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Collections
                 </h3>
@@ -356,7 +356,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                     }}
                     className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
                   >
-                    <Image src="/KoalaFolder.png" alt="Folder" width={16} height={16} />
+                    <Image src={KoalaFolder} alt="Folder" width={16} height={16} />
                     <span className="truncate">{col.name}</span>
                   </button>
                 ))

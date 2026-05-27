@@ -1,6 +1,6 @@
 {
   "name": "koalasnippets",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -26,6 +26,7 @@
     "prettier": "^3.8.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "sharp": "^0.34.5",
     "shiki": "^1",
     "zod": "^3"
   },
