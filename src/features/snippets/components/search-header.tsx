@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Search, Code, Command, Filter, X, ChevronDown, Check } from "lucide-react";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/features/core/utils/utils";
 import { SortSelect } from "./sort-select";
@@ -263,7 +264,7 @@ export function SnippetSearchHeader({
     <div className="sticky top-0 z-10 p-4 space-y-2">
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[160px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} suppressHydrationWarning />
+          <Image src="/KoalaSuche.png" alt="Search" width={18} height={15} className="absolute left-3 top-1/2 -translate-y-1/2 opacity-50" />
           <Input
             ref={inputRef}
             placeholder={placeholder}
