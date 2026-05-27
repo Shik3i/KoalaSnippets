@@ -115,6 +115,8 @@ function FilterDropdown({
         <div className="absolute top-full mt-1 left-0 w-56 bg-card border border-border rounded-lg shadow-xl z-50 p-1.5 space-y-1.5">
           <input
             type="text"
+            id={`filter-${label.toLowerCase()}`}
+            name={`filter-${label.toLowerCase()}`}
             value={search}
             onChange={(e) => { setSearch(e.target.value); setActiveIndex(0); }}
             placeholder={`Search ${label.toLowerCase()}...`}
@@ -268,6 +270,8 @@ export function SnippetSearchHeader({
           <Image src={KoalaSuche} alt="Search" width={28} height={22} className="absolute left-2.5 top-1/2 -translate-y-1/2 opacity-50 z-10" />
           <Input
             ref={inputRef}
+            id="snippet-search"
+            name="q"
             placeholder={placeholder}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -328,6 +332,8 @@ export function SnippetSearchHeader({
           <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors py-1">
             <input
               type="checkbox"
+              id="include-code"
+              name="includeCode"
               checked={includeCode}
               onChange={(e) => setIncludeCode(e.target.checked)}
               className="rounded border-border text-primary focus:ring-ring focus:ring-offset-background"

@@ -257,6 +257,8 @@ export function CommandPalette() {
           <Search className="w-5 h-5 text-muted-foreground mr-3 shrink-0" />
           <input
             ref={inputRef}
+            id="command-palette-search"
+            name="command-search"
             type="text"
             value={query}
             onChange={handleQueryChange}

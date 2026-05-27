@@ -313,6 +313,8 @@ export function SnippetCard({
             </Badge>
           ))}
           <input
+            id={`add-tag-${id}`}
+            name="newTag"
             className="w-20 h-5 px-1.5 text-[10px] bg-muted/50 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
             placeholder="+ tag"
             onKeyDown={(e) => {

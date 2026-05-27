@@ -8,9 +8,11 @@ interface CheckboxProps {
   "aria-label"?: string;
   className?: string;
   onClick?: (e: React.MouseEvent) => void;
+  id?: string;
+  name?: string;
 }
 
-export function Checkbox({ checked, onChange, indeterminate, "aria-label": ariaLabel, className, onClick }: CheckboxProps) {
+export function Checkbox({ checked, onChange, indeterminate, "aria-label": ariaLabel, className, onClick, id, name }: CheckboxProps) {
   return (
     <label
       className={cn("relative inline-flex items-center justify-center cursor-pointer select-none", className)}
@@ -18,6 +20,8 @@ export function Checkbox({ checked, onChange, indeterminate, "aria-label": ariaL
     >
       <input
         type="checkbox"
+        id={id}
+        name={name}
         checked={checked}
         onChange={onChange}
         className="sr-only"

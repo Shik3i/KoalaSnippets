@@ -251,6 +251,8 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
               <div className="flex items-center gap-1 px-1 mb-2">
                 <input
                   type="text"
+                  id="new-collection-name"
+                  name="collectionName"
                   value={newCollectionName}
                   onChange={(e) => setNewCollectionName(e.target.value)}
                   onKeyDown={async (e) => {

@@ -636,6 +636,8 @@ export function DetailView({
                       <label className="text-[11px] uppercase font-bold text-muted-foreground tracking-widest pl-1">{v}</label>
                       <input 
                         type="text"
+                        id={`env-var-${v}`}
+                        name={`env-${v}`}
                         className="bg-card/50 border border-border/50 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 text-foreground transition-all placeholder:text-muted-foreground/30"
                         placeholder="[ Enter value ]"
                         value={envVars[v] || ""}
@@ -661,6 +663,8 @@ export function DetailView({
                   <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-1.5 shadow-lg">
                     <input
                       type="number"
+                      id="go-to-line"
+                      name="goToLine"
                       min={1}
                       max={stats.lines}
                       placeholder={`Go to line (1-${stats.lines})`}
@@ -759,6 +763,8 @@ export function DetailView({
             <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-1.5 shadow-lg">
               <input
                 type="number"
+                id="go-to-line-zen"
+                name="goToLineZen"
                 min={1}
                 max={stats.lines}
                 placeholder={`Go to line (1-${stats.lines})`}

@@ -34,6 +34,8 @@ export function SortSelect({ current }: SortSelectProps) {
     <div className="flex items-center gap-1.5">
       <ArrowUpDown size={14} className="text-muted-foreground shrink-0" suppressHydrationWarning aria-hidden="true" />
       <select
+        id="sort-select"
+        name="sort"
         value={current}
         onChange={(e) => handleChange(e.target.value)}
         className="h-8 rounded-md border border-border bg-muted/40 backdrop-blur-sm px-2 py-0 text-xs text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
