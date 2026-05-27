@@ -27,7 +27,6 @@ export default async function FavoritesPage() {
     .limit(50);
 
   const snippetIds = favorites.map(f => f.snippetId);
-  const favoriteSet = new Set(snippetIds);
 
   const userSnippets = snippetIds.length > 0
     ? await db.select().from(snippets).where(and(inArray(snippets.id, snippetIds), isNull(snippets.deletedAt), or(isNull(snippets.expiresAt), gt(snippets.expiresAt, new Date())))).all()

@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/incompatible-library */
 "use client";
 
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
 import { Upload, Plus, Globe, Trash2, Download } from "lucide-react";

@@ -31,7 +31,6 @@ import {
   Wrench,
   PanelLeftClose,
   PanelLeftOpen,
-  ChevronLeft,
   Star,
 } from "lucide-react";
 

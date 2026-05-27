@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { userFavorites, snippets, snippetFiles } from "@/db/schema";
 import { getAuth } from "@/features/auth/utils/session";
-import { eq, desc, and, inArray, isNull, gt, or } from "drizzle-orm";
+import { eq, desc, and, inArray, isNull } from "drizzle-orm";
 import { getSafePage } from "@/features/core/utils/security";
 import { generateETag, isNotModified, notModifiedResponse, setETag } from "@/features/core/utils/etag";
 
@@ -40,7 +40,6 @@ export async function GET(request: Request) {
   }
 
   const snippetIds = favorites.map(f => f.snippetId);
-  const favoriteMap = new Map(favorites.map(f => [f.snippetId, f.favoritedAt]));
 
   const snippetResults = await db
     .select()

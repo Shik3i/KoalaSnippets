@@ -9,7 +9,7 @@ import { GlobalDropzone } from "@/features/core/components/global-dropzone";
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { db } from "@/db";
 import { snippets, snippetFiles, userFavorites } from "@/db/schema";
-import { eq, desc, asc, and, inArray, isNull, or, gt, sql } from "drizzle-orm";
+import { eq, and, inArray, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { buildSnippetConditions } from "@/features/snippets/utils/filters";
 

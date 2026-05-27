@@ -6,7 +6,7 @@ import { snippets, siteStatistics, siteSettings, snippetFiles, userFavorites } f
 import { getAuth } from "@/features/auth/utils/session";
 import { snippetSchema } from "@/features/core/utils/validations";
 import { generateId, generateShareToken, hashPassword } from "@/features/auth/utils/auth";
-import { eq, desc, like, or, and, sql, count, inArray, isNull, gt, asc } from "drizzle-orm";
+import { eq, desc, like, or, and, sql, count, inArray, isNull, gt } from "drizzle-orm";
 import { getSafePage, verifyCsrf } from "@/features/core/utils/security";
 import { escapeLike } from "@/features/core/utils/sql";
 import { logUserAction } from "@/features/admin/utils/audit";
