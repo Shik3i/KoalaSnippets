@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import * as htmlToImage from "html-to-image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,9 @@ import {
   BarChart3,
   ChevronDown,
   ArrowLeft,
+  MousePointerClick,
+  Star,
+  Pin,
 } from "lucide-react";
 
 interface DetailViewProps {
@@ -41,6 +44,8 @@ interface DetailViewProps {
   deletedAt?: Date | null;
   forkedFromId?: string;
   forkedFromTitle?: string;
+  isPinned?: boolean;
+  isFavorited?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
   onRestore?: () => void;
@@ -103,6 +108,8 @@ export function DetailView({
   deletedAt,
   forkedFromId,
   forkedFromTitle,
+  isPinned = false,
+  isFavorited = false,
   onEdit,
   onDelete,
   onRestore,
@@ -116,6 +123,8 @@ export function DetailView({
   const [copyOpen, setCopyOpen] = useState(false);
   const [zenMode, setZenMode] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [pinned, setPinned] = useState(isPinned);
+  const [favorited, setFavorited] = useState(isFavorited);
   const { addToast } = useToast();
   const VisIcon = VISIBILITY_CONFIG[visibility].icon;
   const { addRecentSnippet } = useRecentSnippets();
@@ -129,6 +138,32 @@ export function DetailView({
       addRecentSnippet(id, title);
     }
   }, [id, title, addRecentSnippet]);
+
+  const toggleFavorite = useCallback(async () => {
+    try {
+      const method = favorited ? "DELETE" : "POST";
+      const res = await fetch(`/api/snippets/${id}/favorite`, { method });
+      if (res.ok) {
+        setFavorited(!favorited);
+        addToast(favorited ? "Removed from favorites" : "Added to favorites", "success");
+      }
+    } catch {
+      addToast("Failed to update favorite", "error");
+    }
+  }, [favorited, id, addToast]);
+
+  const togglePin = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/snippets/${id}/pin`, { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setPinned(data.isPinned);
+        addToast(data.isPinned ? "Snippet pinned" : "Snippet unpinned", "success");
+      }
+    } catch {
+      addToast("Failed to update pin", "error");
+    }
+  }, [id, addToast]);
 
   useEffect(() => {
     return () => clearTimeout(copyTimeoutRef.current);
@@ -396,19 +431,25 @@ export function DetailView({
               )
             ) : (
               <>
-                {isOwner && (
-                  <>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit} aria-label="Edit snippet" disabled={isSubmitting}>
-                      <Pencil size={14} suppressHydrationWarning />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onDuplicate} aria-label="Duplicate snippet" disabled={isSubmitting}>
-                      <CopyPlus size={14} suppressHydrationWarning />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onToggleVisibility} aria-label="Toggle visibility" disabled={isSubmitting}>
-                      <VisIcon size={14} suppressHydrationWarning />
-                    </Button>
-                  </>
-                )}
+            {isOwner && (
+              <>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit} aria-label="Edit snippet" disabled={isSubmitting}>
+                  <Pencil size={14} suppressHydrationWarning />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onDuplicate} aria-label="Duplicate snippet" disabled={isSubmitting}>
+                  <CopyPlus size={14} suppressHydrationWarning />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={togglePin} aria-label={pinned ? "Unpin snippet" : "Pin snippet"} disabled={isSubmitting}>
+                  <Pin size={14} className={cn(pinned && "text-amber-400")} suppressHydrationWarning />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleFavorite} aria-label={favorited ? "Remove from favorites" : "Add to favorites"} disabled={isSubmitting}>
+                  <Star size={14} className={cn(favorited && "text-yellow-400 fill-yellow-400")} suppressHydrationWarning />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onToggleVisibility} aria-label="Toggle visibility" disabled={isSubmitting}>
+                  <VisIcon size={14} suppressHydrationWarning />
+                </Button>
+              </>
+            )}
                 {!isOwner && onFork && (visibility === "PUBLIC" || visibility === "SHARED") && (
                   <Button variant="ghost" size="icon" className="h-7 w-7 text-primary" onClick={onFork} aria-label="Fork snippet" disabled={isSubmitting}>
                     <GitFork size={14} suppressHydrationWarning />
@@ -614,7 +655,7 @@ export function DetailView({
                 className="w-full max-w-4xl p-6 sm:p-10 rounded-2xl bg-gradient-to-tr from-slate-950 via-[#131b2e] to-slate-950 flex items-center justify-center border border-white/5"
               >
                 <div 
-                  className="w-full rounded-xl border border-border bg-[#0d1117] shadow-2xl overflow-hidden relative"
+                  className="group/code w-full rounded-xl border border-border bg-[#0d1117] shadow-2xl overflow-hidden relative"
                 >
                 {goToLineOpen && (
                   <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-1.5 shadow-lg">
@@ -656,6 +697,10 @@ export function DetailView({
                   dangerouslySetInnerHTML={{ __html: processedHighlightedCode }}
                   style={{ fontFamily: "var(--font-jetbrains), monospace" }}
                 />
+                <div className="absolute top-2 left-2 opacity-0 group-hover/code:opacity-60 transition-opacity pointer-events-none flex items-center gap-1 text-[10px] text-white/70">
+                  <MousePointerClick size={10} />
+                  <span>Click to select</span>
+                </div>
               </div>
             </div>
           </div>

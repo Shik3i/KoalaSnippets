@@ -337,6 +337,42 @@ export function SnippetSearchHeader({
         </div>
       </div>
 
+      {hasActiveFilters && (
+        <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+          {activeTags.map(tag => (
+            <Badge key={`t-${tag}`} variant="secondary" className="gap-1 rounded-md py-0 px-2 h-5 flex items-center text-[11px]">
+              {tag}
+              <button type="button" onClick={() => toggleTag(tag)} className="hover:text-destructive ml-0.5" aria-label={`Remove ${tag}`}>
+                <X size={10} />
+              </button>
+            </Badge>
+          ))}
+          {activeLanguages.map(lang => (
+            <Badge key={`l-${lang}`} variant="secondary" className="gap-1 rounded-md py-0 px-2 h-5 flex items-center text-[11px] font-mono">
+              {lang}
+              <button type="button" onClick={() => toggleLanguage(lang)} className="hover:text-destructive ml-0.5" aria-label={`Remove ${lang}`}>
+                <X size={10} />
+              </button>
+            </Badge>
+          ))}
+          {activeCollection && (
+            <Badge variant="secondary" className="gap-1 rounded-md py-0 px-2 h-5 flex items-center text-[11px]">
+              Collection
+              <button type="button" onClick={() => updateParams({ collection: null })} className="hover:text-destructive ml-0.5" aria-label="Remove collection filter">
+                <X size={10} />
+              </button>
+            </Badge>
+          )}
+          <button
+            type="button"
+            onClick={() => updateParams({ tags: null, language: null, collection: null })}
+            className="text-[11px] text-muted-foreground hover:text-foreground hover:underline ml-1"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
+
       {filtersExpanded && (
         <div className="space-y-3 pt-2 pb-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -383,34 +419,6 @@ export function SnippetSearchHeader({
               {filterMode === "or" ? "Match any" : "Match all"}
             </span>
           </div>
-
-          {hasActiveFilters && (
-            <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-              {activeTags.map(tag => (
-                <Badge key={`t-${tag}`} variant="secondary" className="gap-1 rounded-md py-0 px-2 h-5 flex items-center text-[11px]">
-                  {tag}
-                  <button type="button" onClick={() => toggleTag(tag)} className="hover:text-destructive ml-0.5" aria-label={`Remove ${tag}`}>
-                    <X size={10} />
-                  </button>
-                </Badge>
-              ))}
-              {activeLanguages.map(lang => (
-                <Badge key={`l-${lang}`} variant="secondary" className="gap-1 rounded-md py-0 px-2 h-5 flex items-center text-[11px] font-mono">
-                  {lang}
-                  <button type="button" onClick={() => toggleLanguage(lang)} className="hover:text-destructive ml-0.5" aria-label={`Remove ${lang}`}>
-                    <X size={10} />
-                  </button>
-                </Badge>
-              ))}
-              <button
-                type="button"
-                onClick={() => updateParams({ tags: null, language: null, collection: null })}
-                className="text-[11px] text-muted-foreground hover:text-foreground hover:underline ml-1"
-              >
-                Clear all
-              </button>
-            </div>
-          )}
         </div>
       )}
     </div>

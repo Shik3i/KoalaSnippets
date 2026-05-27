@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/features/core/utils/utils";
@@ -8,7 +8,7 @@ import { VISIBILITY_CONFIG } from "@/features/snippets/utils/constants";
 import { SafeZone } from "@/components/ui/safe-zone";
 import { ContextMenu } from "@/components/ui/context-menu";
 import { useToast } from "@/components/ui/toast";
-import { LinkIcon, Loader2, Pencil, Trash2, X } from "lucide-react";
+import { LinkIcon, Loader2, Pencil, Trash2, X, Copy, Check, Star, Pin } from "lucide-react";
 
 interface SnippetCardProps {
   id: string;
@@ -24,6 +24,8 @@ interface SnippetCardProps {
   onToggleSelect?: (id: string) => void;
   authorUsername?: string;
   totalLines?: number;
+  isPinned?: boolean;
+  isFavorited?: boolean;
 }
 
 export function SnippetCard({
@@ -40,12 +42,9 @@ export function SnippetCard({
   onToggleSelect,
   authorUsername,
   totalLines = 0,
+  isPinned = false,
+  isFavorited = false,
 }: SnippetCardProps) {
-  const mounted = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false
-  );
   const VisIcon = VISIBILITY_CONFIG[visibility].icon;
   const { addToast } = useToast();
 
@@ -53,6 +52,9 @@ export function SnippetCard({
   const [localTags, setLocalTags] = useState<string[]>([]);
   const [savingTags, setSavingTags] = useState(false);
   const savingRef = useRef(false);
+  const [copyingCode, setCopyingCode] = useState(false);
+  const [pinned, setPinned] = useState(isPinned);
+  const [favorited, setFavorited] = useState(isFavorited);
 
   const handleSaveTags = useCallback(async () => {
     if (savingRef.current) return;
@@ -71,16 +73,48 @@ export function SnippetCard({
     }
   }, [id, localTags]);
 
-  const dateStr = mounted
-    ? new Date(createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'numeric', year: 'numeric' })
-    : new Date(createdAt).toISOString().split('T')[0];
-  const timeStr = mounted
-    ? new Date(createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-    : '';
+  const handleCopyCode = useCallback(async () => {
+    if (!highlightedCode) return;
+    const plainText = highlightedCode.replace(/<[^>]*>/g, "");
+    await navigator.clipboard.writeText(plainText);
+    setCopyingCode(true);
+    addToast("Code copied to clipboard", "success");
+    setTimeout(() => setCopyingCode(false), 2000);
+  }, [highlightedCode, addToast]);
 
-  const dateDisplay = mounted
-    ? `Vom ${dateStr}${timeStr ? `, ${timeStr}` : ''}`
-    : `Vom ${dateStr}`;
+  const toggleFavorite = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const method = favorited ? "DELETE" : "POST";
+      const res = await fetch(`/api/snippets/${id}/favorite`, { method });
+      if (res.ok) {
+        setFavorited(!favorited);
+        addToast(favorited ? "Removed from favorites" : "Added to favorites", "success");
+      }
+    } catch {
+      addToast("Failed to update favorite", "error");
+    }
+  }, [favorited, id, addToast]);
+
+  const togglePin = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const res = await fetch(`/api/snippets/${id}/pin`, { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setPinned(data.isPinned);
+        addToast(data.isPinned ? "Snippet pinned" : "Snippet unpinned", "success");
+      }
+    } catch {
+      addToast("Failed to update pin", "error");
+    }
+  }, [id, addToast]);
+
+  const dateStr = new Date(createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'numeric', year: 'numeric' });
+  const timeStr = new Date(createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  const dateDisplay = `Vom ${dateStr}, ${timeStr}`;
 
   const estimatedReadingTime = Math.max(1, Math.ceil(totalLines / 50));
 
@@ -110,12 +144,13 @@ export function SnippetCard({
           navigator.clipboard.writeText(url);
           addToast("Link copied to clipboard", "success");
         }},
+        { label: "Copy Code", icon: copyingCode ? Check : Copy, onClick: handleCopyCode },
         { label: "Edit Snippet", icon: Pencil, onClick: () => {
           window.location.href = `/snippets/${id}`;
         }},
         { label: "Delete", icon: Trash2, variant: "destructive", onClick: () => {
           fetch(`/api/snippets/${id}`, { method: "DELETE" }).then(() => {
-            addToast("Snippet deleted", "info", { label: "Undo", onClick: () => fetch(`/api/snippets/${id}`, { method: "PUT", body: JSON.stringify({ isRestore: true }) }) });
+            addToast("Snippet moved to trash", "info", { label: "Undo", onClick: () => fetch(`/api/snippets/${id}`, { method: "PUT", body: JSON.stringify({ isRestore: true }) }) });
             setTimeout(() => window.location.reload(), 2000);
           });
         }}
@@ -154,13 +189,34 @@ export function SnippetCard({
         </div>
       )}
       <div className={cn("flex items-start justify-between gap-2 mb-2", onToggleSelect && "ml-6")}>
-        <h3 
-          className="font-medium text-sm truncate group-hover:text-primary transition-colors"
-          style={{ viewTransitionName: `snippet-title-${id}` }}
-        >
-          {title}
-        </h3>
-        <VisIcon size={12} className={cn("shrink-0 mt-1", VISIBILITY_CONFIG[visibility].color)} suppressHydrationWarning aria-label={`Visibility: ${visibility}`} />
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          {pinned && <Pin size={12} className="shrink-0 text-amber-400" aria-label="Pinned" />}
+          <h3
+            className="font-medium text-sm truncate group-hover:text-primary transition-colors"
+            style={{ viewTransitionName: `snippet-title-${id}` }}
+          >
+            {title}
+          </h3>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={togglePin}
+            className="p-0.5 rounded hover:bg-accent/50 transition-colors"
+            aria-label={pinned ? "Unpin snippet" : "Pin snippet"}
+          >
+            <Pin size={12} className={cn("transition-colors", pinned ? "text-amber-400" : "text-muted-foreground opacity-0 group-hover:opacity-100")} />
+          </button>
+          <button
+            type="button"
+            onClick={toggleFavorite}
+            className="p-0.5 rounded hover:bg-accent/50 transition-colors"
+            aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
+          >
+            <Star size={12} className={cn("transition-colors", favorited ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground opacity-0 group-hover:opacity-100")} />
+          </button>
+          <VisIcon size={12} className={cn("shrink-0 mt-0.5", VISIBILITY_CONFIG[visibility].color)} suppressHydrationWarning aria-label={`Visibility: ${visibility}`} />
+        </div>
       </div>
 
       <div className="flex items-center gap-2 flex-wrap mb-2">
@@ -193,18 +249,13 @@ export function SnippetCard({
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                if (onToggleSelect) {
-                  const params = new URLSearchParams(window.location.search);
-                  params.set("tags", tag);
-                  let targetPath = window.location.pathname;
-                  if (targetPath.startsWith("/snippets")) {
-                    targetPath = visibility === "PUBLIC" ? "/public" : "/dashboard";
-                  }
-                  window.location.href = `${targetPath}?${params.toString()}`;
-                } else {
-                  setLocalTags([...tags]);
-                  setEditingTags(true);
+                const params = new URLSearchParams(window.location.search);
+                params.set("tags", tag);
+                let targetPath = window.location.pathname;
+                if (targetPath.startsWith("/snippets")) {
+                  targetPath = visibility === "PUBLIC" ? "/public" : "/dashboard";
                 }
+                window.location.href = `${targetPath}?${params.toString()}`;
               }}
             >
               {tag}
@@ -213,6 +264,19 @@ export function SnippetCard({
           {tags.length > 3 && (
             <span className="text-[10px] text-muted-foreground">+{tags.length - 3}</span>
           )}
+          <button
+            type="button"
+            className="text-[10px] text-muted-foreground hover:text-foreground transition-colors ml-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              setLocalTags([...(tags || [])]);
+              setEditingTags(true);
+            }}
+            aria-label="Edit tags"
+          >
+            Edit
+          </button>
         </div>
       )}
 

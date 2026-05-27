@@ -6,9 +6,11 @@ import { useToast } from "@/components/ui/toast";
 import { Upload, Plus, Globe, Trash2, Download } from "lucide-react";
 import { SnippetCard } from "./snippet-card";
 import { SnippetTableRow } from "./snippet-table-row";
+import { SnippetSkeleton } from "./snippet-skeleton";
 import { BulkActionBar } from "./bulk-action-bar";
 import { EmptyState } from "@/features/core/components/empty-state";
 import { ImportWizard } from "@/features/snippets/components/import-wizard";
+import { cn } from "@/features/core/utils/utils";
 
 interface SnippetData {
   id: string;
@@ -21,6 +23,8 @@ interface SnippetData {
   highlightedCode?: string;
   authorUsername?: string;
   totalLines: number;
+  isPinned?: boolean;
+  isFavorited?: boolean;
 }
 
 interface DashboardContentProps {
@@ -36,6 +40,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDragging, setIsDragging] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(snippets.length === 0);
   const router = useRouter();
   const { addToast } = useToast();
 
@@ -50,6 +55,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
       setLocalSnippets(snippets);
       setPage(1);
       setHasMore(hasMoreInitial);
+      setIsInitialLoading(false);
     }, 0);
   }, [snippets, hasMoreInitial]);
 
@@ -232,7 +238,15 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 sm:p-4">
-        {localSnippets.length === 0 ? (
+        {isInitialLoading ? (
+          <div className={cn(
+            viewMode === "table" ? "" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
+          )}>
+            {Array.from({ length: 9 }).map((_, i) => (
+              <SnippetSkeleton key={i} />
+            ))}
+          </div>
+        ) : localSnippets.length === 0 ? (
           isTrashView ? (
             <EmptyState
               icon={<Trash2 size={48} />}
@@ -293,6 +307,8 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
                     createdAt={s.createdAt}
                     selected={selectedIds.has(s.id)}
                     onToggleSelect={allowSelection ? toggleSelect : undefined}
+                    isPinned={s.isPinned}
+                    isFavorited={s.isFavorited}
                   />
                 ))}
               </tbody>
@@ -316,17 +332,25 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
                 onToggleSelect={allowSelection ? toggleSelect : undefined}
                 authorUsername={s.authorUsername}
                 totalLines={s.totalLines}
+                isPinned={s.isPinned}
+                isFavorited={s.isFavorited}
               />
             ))}
           </div>
         )}
         
         {hasMore && (
-          <div ref={loadMoreRef} className="py-6 flex justify-center items-center">
+          <div ref={loadMoreRef} className="py-6">
             {isLoadingMore ? (
-              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <div className={cn(
+                viewMode === "table" ? "" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
+              )}>
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <SnippetSkeleton key={`loading-${i}`} />
+                ))}
+              </div>
             ) : (
-              <div className="h-6" /> 
+              <div className="h-6" />
             )}
           </div>
         )}

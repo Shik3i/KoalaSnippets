@@ -32,6 +32,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   ChevronLeft,
+  Star,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -46,6 +47,7 @@ interface SidebarProps {
 const navItems = [
   { href: "/", label: "Home", icon: Home },
   { href: "/dashboard", label: "My Snippets", icon: FileCode },
+  { href: "/favorites", label: "Favorites", icon: Star },
   { href: "/dashboard/trash", label: "Trash", icon: Trash2 },
   { href: "/public", label: "Public Explorer", icon: Globe },
   { href: "/tools", label: "Dev Tools", icon: Wrench },

@@ -6,9 +6,19 @@ import { Button } from "@/components/ui/button";
 
 const shortcuts = [
   { keys: ["⌘K", "CtrlK"], description: "Command Palette" },
-  { keys: ["⌘G", "CtrlG"], description: "Go to Line (in snippet view)" },
   { keys: ["⌘S", "CtrlS"], description: "Save (in editor)" },
+  { keys: ["⌘⇧F", "CtrlShiftF"], description: "Format Code (in editor)" },
+  { keys: ["⌘⇧N", "CtrlShiftN"], description: "New Snippet" },
+  { keys: ["⌘⇧D", "CtrlShiftD"], description: "Duplicate Snippet" },
+  { keys: ["⌘⇧T", "CtrlShiftT"], description: "Open Trash" },
+  { keys: ["⌘G", "CtrlG"], description: "Go to Line (in snippet view)" },
   { keys: ["/"], description: "Focus search" },
+  { keys: ["J"], description: "Next snippet (grid/table)" },
+  { keys: ["K"], description: "Previous snippet (grid/table)" },
+  { keys: ["Enter"], description: "Open selected snippet" },
+  { keys: ["F"], description: "Toggle favorite" },
+  { keys: ["P"], description: "Toggle pin" },
+  { keys: ["Delete"], description: "Delete snippet" },
   { keys: ["Escape"], description: "Close modals, clear search, dismiss toasts" },
   { keys: ["?"], description: "Show this help" },
 ];
@@ -39,7 +49,15 @@ function ShortcutRow({ shortcut }: { shortcut: (typeof shortcuts)[number] }) {
               ? (isMac ? "⌘G" : "Ctrl+G")
               : key === "⌘S" || key === "CtrlS"
                 ? (isMac ? "⌘S" : "Ctrl+S")
-                : key;
+                : key === "⌘⇧F" || key === "CtrlShiftF"
+                  ? (isMac ? "⌘⇧F" : "Ctrl+Shift+F")
+                  : key === "⌘⇧N" || key === "CtrlShiftN"
+                    ? (isMac ? "⌘⇧N" : "Ctrl+Shift+N")
+                    : key === "⌘⇧D" || key === "CtrlShiftD"
+                      ? (isMac ? "⌘⇧D" : "Ctrl+Shift+D")
+                      : key === "⌘⇧T" || key === "CtrlShiftT"
+                        ? (isMac ? "⌘⇧T" : "Ctrl+Shift+T")
+                        : key;
           return (
             <span key={key} className="flex items-center gap-1.5">
               {i > 0 && <span className="text-muted-foreground/50 text-xs">or</span>}
@@ -79,7 +97,7 @@ export function ShortcutHelp({ open, onClose }: { open: boolean; onClose: () => 
           </Button>
         </div>
 
-        <div className="py-2">
+        <div className="py-2 max-h-[60vh] overflow-y-auto">
           {shortcuts.map((shortcut) => (
             <ShortcutRow key={shortcut.description} shortcut={shortcut} />
           ))}

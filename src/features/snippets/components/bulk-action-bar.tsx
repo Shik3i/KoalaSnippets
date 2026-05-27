@@ -27,7 +27,22 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
       });
       const data = await res.json();
       if (res.ok) {
-        addToast(data.message ?? "Action completed", "success");
+        if (action === "delete") {
+          const deletedIds = [...selectedIds];
+          addToast(`${selectedIds.length} snippet${selectedIds.length !== 1 ? "s" : ""} moved to trash`, "info", {
+            label: "Undo",
+            onClick: async () => {
+              for (const id of deletedIds) {
+                await fetch(`/api/snippets/${id}`, { method: "PUT", body: JSON.stringify({ isRestore: true }) });
+              }
+              addToast("Snippets restored", "success");
+              await revalidateDashboard();
+              onClear();
+            },
+          });
+        } else {
+          addToast(data.message ?? "Action completed", "success");
+        }
         await revalidateDashboard();
         onClear();
       } else {
@@ -103,9 +118,9 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
         open={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirm}
-        title="Delete Snippets"
-        description={`Delete ${selectedIds.length} snippet${selectedIds.length !== 1 ? "s" : ""}? This cannot be undone.`}
-        confirmLabel="Delete"
+        title="Move to Trash"
+        description={`Move ${selectedIds.length} snippet${selectedIds.length !== 1 ? "s" : ""} to trash? You can restore them later.`}
+        confirmLabel="Move to Trash"
         variant="destructive"
         loading={loading}
       />

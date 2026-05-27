@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { DetailView } from "@/features/core/components/detail-view";
 import { useToast } from "@/components/ui/toast";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { useKeyboardShortcuts } from "@/features/snippets/utils/keyboard-shortcuts";
 import { revalidateDashboard, revalidateSnippet } from "@/features/core/actions/revalidate";
 
 interface SnippetDetailClientProps {
@@ -19,6 +20,8 @@ interface SnippetDetailClientProps {
   updatedAt: Date;
   deletedAt?: Date | null;
   isOwner: boolean;
+  isPinned?: boolean;
+  isFavorited?: boolean;
   forkedFromId?: string;
   forkedFromTitle?: string;
   backUrl?: string;
@@ -30,6 +33,29 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
   const { addToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  const handleToggleFavorite = async () => {
+    try {
+      const method = props.isFavorited ? "DELETE" : "POST";
+      const res = await fetch(`/api/snippets/${props.id}/favorite`, { method });
+      if (res.ok) {
+        router.refresh();
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleTogglePin = async () => {
+    try {
+      const res = await fetch(`/api/snippets/${props.id}/pin`, { method: "POST" });
+      if (res.ok) {
+        router.refresh();
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   const handleEdit = () => {
     const editData = {
@@ -140,12 +166,20 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
     }
   };
 
+  useKeyboardShortcuts({
+    onDelete: props.deletedAt ? undefined : handleDelete,
+    onToggleFavorite: handleToggleFavorite,
+    onTogglePin: handleTogglePin,
+  });
+
   return (
     <>
       <DetailView
         {...props}
         isSubmitting={isSubmitting}
         showLineNumbers={props.showLineNumbers}
+        isPinned={props.isPinned}
+        isFavorited={props.isFavorited}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onRestore={handleRestore}

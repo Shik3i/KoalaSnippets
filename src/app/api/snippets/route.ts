@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import crypto from "crypto";
 import { db } from "@/db";
-import { snippets, siteStatistics, siteSettings, snippetFiles } from "@/db/schema";
+import { snippets, siteStatistics, siteSettings, snippetFiles, userFavorites } from "@/db/schema";
 import { getAuth } from "@/features/auth/utils/session";
 import { snippetSchema } from "@/features/core/utils/validations";
 import { generateId, generateShareToken, hashPassword } from "@/features/auth/utils/auth";
-import { eq, desc, like, or, and, sql, count, inArray, isNull, gt } from "drizzle-orm";
+import { eq, desc, like, or, and, sql, count, inArray, isNull, gt, asc } from "drizzle-orm";
 import { getSafePage, verifyCsrf } from "@/features/core/utils/security";
 import { escapeLike } from "@/features/core/utils/sql";
 import { logUserAction } from "@/features/admin/utils/audit";
@@ -90,7 +90,7 @@ export async function GET(request: Request) {
   } else if (sort === "totalLines") {
     orderByCondition = order === "asc" ? sql`${snippets.totalLines} asc` : sql`${snippets.totalLines} desc`;
   } else {
-    orderByCondition = order === "asc" ? sql`${snippets.createdAt} asc` : sql`${snippets.createdAt} desc`;
+    orderByCondition = order === "asc" ? sql`${snippets.isPinned} asc, ${snippets.createdAt} asc` : sql`${snippets.isPinned} desc, ${snippets.createdAt} desc`;
   }
 
   const results = await (whereClause
@@ -102,6 +102,12 @@ export async function GET(request: Request) {
   const files = snippetIds.length > 0 
     ? await db.select().from(snippetFiles).where(inArray(snippetFiles.snippetId, snippetIds)).all()
     : [];
+
+  const favoriteSet = new Set<string>();
+  if (session && snippetIds.length > 0) {
+    const favs = await db.select().from(userFavorites).where(and(eq(userFavorites.userId, session.user.id), inArray(userFavorites.snippetId, snippetIds))).all();
+    favs.forEach(f => favoriteSet.add(f.snippetId));
+  }
 
   const latestUpdate = results.reduce<Date | null>(
     (acc, s) => (!acc || s.updatedAt > acc ? s.updatedAt : acc),
@@ -133,6 +139,8 @@ export async function GET(request: Request) {
         tags: s.tags,
         visibility: s.visibility,
         totalLines: s.totalLines,
+        isPinned: s.isPinned,
+        isFavorited: favoriteSet.has(s.id),
         createdAt: s.createdAt,
         updatedAt: s.updatedAt,
       };

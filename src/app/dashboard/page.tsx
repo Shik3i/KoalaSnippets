@@ -8,8 +8,8 @@ import { DashboardContent } from "@/features/snippets/components/dashboard-conte
 import { GlobalDropzone } from "@/features/core/components/global-dropzone";
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { db } from "@/db";
-import { snippets, snippetFiles } from "@/db/schema";
-import { eq, desc, asc, and, inArray } from "drizzle-orm";
+import { snippets, snippetFiles, userFavorites } from "@/db/schema";
+import { eq, desc, asc, and, inArray, isNull, or, gt, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { buildSnippetConditions } from "@/features/snippets/utils/filters";
 
@@ -48,14 +48,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   const orderBy =
     sortMode === "oldest"
-      ? asc(snippets.createdAt)
+      ? sql`${snippets.isPinned} asc, ${snippets.createdAt} asc`
       : sortMode === "alphabetical"
-        ? asc(snippets.title)
+        ? sql`${snippets.title} collate nocase asc`
         : sortMode === "size-asc"
-          ? asc(snippets.totalLines)
+          ? sql`${snippets.isPinned} asc, ${snippets.totalLines} asc`
           : sortMode === "size-desc"
-            ? desc(snippets.totalLines)
-            : desc(snippets.createdAt);
+            ? sql`${snippets.isPinned} desc, ${snippets.totalLines} desc`
+            : sql`${snippets.isPinned} desc, ${snippets.createdAt} desc`;
 
   const whereClause = and(...conditions);
   const userSnippets = await (whereClause
@@ -68,10 +68,16 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     ? await db.select().from(snippetFiles).where(inArray(snippetFiles.snippetId, snippetIds)).all()
     : [];
 
+  const favs = snippetIds.length > 0
+    ? await db.select().from(userFavorites).where(and(eq(userFavorites.userId, session.user.id), inArray(userFavorites.snippetId, snippetIds))).all()
+    : [];
+  const favoriteSet = new Set(favs.map(f => f.snippetId));
+
   const userSnippetsWithFiles = userSnippets.map(s => {
     return {
       ...s,
-      files: files.filter(f => f.snippetId === s.id)
+      files: files.filter(f => f.snippetId === s.id),
+      isFavorited: favoriteSet.has(s.id),
     };
   });
 
@@ -140,6 +146,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             visibility: ((s as Record<string, unknown>).visibility ?? "PRIVATE") as "PRIVATE" | "SHARED" | "PUBLIC",
             authorUsername: session.user.username,
             totalLines: ((s as Record<string, unknown>).totalLines ?? 0) as number,
+            isPinned: ((s as Record<string, unknown>).isPinned ?? false) as boolean,
+            isFavorited: ((s as Record<string, unknown>).isFavorited ?? false) as boolean,
             createdAt: (s as Record<string, unknown>).createdAt as Date,
             highlightedCode: s.highlightedCode as string | undefined,
           }))}

@@ -1,13 +1,13 @@
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { snippets, snippetFiles } from "@/db/schema";
+import { snippets, snippetFiles, userFavorites } from "@/db/schema";
 import { getSession } from "@/features/auth/utils/session";
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { Sidebar } from "@/features/core/components/sidebar";
 import { BreadcrumbWithCollection } from "@/features/core/components/breadcrumb";
 import { SnippetDetailClient } from "./SnippetDetailClient";
 import { PasswordPrompt } from "@/features/snippets/components/password-prompt";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { escapeHtml } from "@/features/core/utils/security";
 import crypto from "crypto";
 import type { Metadata } from "next";
@@ -144,6 +144,12 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
   const isOwner = session?.user.id === (snippet.authorId as string);
   const backUrl = (snippet.visibility as string) === "PUBLIC" ? "/public" : "/dashboard";
 
+  let isFavorited = false;
+  if (session && isOwner === false) {
+    const fav = await db.select().from(userFavorites).where(and(eq(userFavorites.userId, session.user.id), eq(userFavorites.snippetId, id))).get();
+    isFavorited = !!fav;
+  }
+
   return (
     <div className="flex h-screen">
       <Sidebar isAuthenticated={!!session} isAdmin={session?.user.role === "ADMIN"} />
@@ -182,6 +188,8 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
               updatedAt={snippet.updatedAt as Date}
               deletedAt={snippet.deletedAt as Date | null}
               isOwner={isOwner}
+              isPinned={snippet.isPinned as boolean}
+              isFavorited={isFavorited}
               forkedFromId={snippet.forkedFromId as string | undefined}
               forkedFromTitle={snippet.forkedFromTitle as string | undefined}
               backUrl={backUrl}

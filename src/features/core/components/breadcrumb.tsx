@@ -2,6 +2,7 @@
 
 import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useEffect } from "react";
 import { ChevronRight, Home } from "lucide-react";
 import { cn } from "@/features/core/utils/utils";
 
@@ -10,11 +11,32 @@ interface BreadcrumbItem {
   href?: string;
 }
 
+function getStoredReferrer(): { href: string; label: string } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem("koala_referrer");
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function storeReferrer(href: string, label: string) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem("koala_referrer", JSON.stringify({ href, label }));
+  } catch {
+    // ignore
+  }
+}
+
 function useBreadcrumbItems(): BreadcrumbItem[] {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const collection = searchParams.get("collection");
   const collectionName = searchParams.get("collectionName");
+  const referrer = getStoredReferrer();
 
   const segments = pathname.split("/").filter(Boolean);
   const items: BreadcrumbItem[] = [];
@@ -38,9 +60,13 @@ function useBreadcrumbItems(): BreadcrumbItem[] {
       items.push({ label: "Trash" });
     }
   } else if (segments[0] === "snippets" && segments[1]) {
-    items.push({ label: "My Snippets", href: "/dashboard" });
-    if (collection) {
-      items.push({ label: collectionName || "Collection", href: `/dashboard?collection=${collection}` });
+    if (referrer) {
+      items.push({ label: referrer.label, href: referrer.href });
+    } else {
+      items.push({ label: "My Snippets", href: "/dashboard" });
+      if (collection) {
+        items.push({ label: collectionName || "Collection", href: `/dashboard?collection=${collection}` });
+      }
     }
     items.push({ label: "Snippet" });
   } else if (segments[0] === "admin") {
@@ -194,4 +220,25 @@ export function BreadcrumbWithCollection({
       })}
     </nav>
   );
+}
+
+export function ReferrerTracker() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const isListPage = pathname === "/dashboard" || pathname === "/public" || pathname === "/";
+    if (isListPage) {
+      const labels: Record<string, string> = {
+        "/dashboard": "My Snippets",
+        "/public": "Public Explorer",
+        "/": "Home",
+      };
+      const qs = searchParams.toString();
+      const href = qs ? `${pathname}?${qs}` : pathname;
+      storeReferrer(href, labels[pathname] || "Snippets");
+    }
+  }, [pathname, searchParams]);
+
+  return null;
 }
