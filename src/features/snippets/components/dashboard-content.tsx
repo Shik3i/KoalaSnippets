@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
 import { Upload, Plus, Globe, Trash2, Download } from "lucide-react";
@@ -11,6 +11,7 @@ import { BulkActionBar } from "./bulk-action-bar";
 import { EmptyState } from "@/features/core/components/empty-state";
 import { ImportWizard } from "@/features/snippets/components/import-wizard";
 import { cn } from "@/features/core/utils/utils";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 interface SnippetData {
   id: string;
@@ -36,6 +37,9 @@ interface DashboardContentProps {
   hasMoreInitial?: boolean;
 }
 
+const GRID_ITEM_HEIGHT = 220;
+const TABLE_ROW_HEIGHT = 44;
+
 export function DashboardContent({ snippets, viewMode, density, allowSelection = true, isTrashView = false, hasMoreInitial = false }: DashboardContentProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDragging, setIsDragging] = useState(false);
@@ -49,7 +53,6 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
   const [hasMore, setHasMore] = useState(hasMoreInitial);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Sync with prop changes (e.g. when searching or filtering)
   useEffect(() => {
     setTimeout(() => {
       setLocalSnippets(snippets);
@@ -196,6 +199,40 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
     }
   };
 
+  // Virtualizer for table view
+  const tableParentRef = useRef<HTMLDivElement>(null);
+  const tableVirtualizer = useVirtualizer({
+    count: localSnippets.length,
+    getScrollElement: () => tableParentRef.current,
+    estimateSize: () => TABLE_ROW_HEIGHT,
+    overscan: 10,
+  });
+
+  // Virtualizer for grid view
+  const gridParentRef = useRef<HTMLDivElement>(null);
+  const [gridColumns, setGridColumns] = useState(3);
+
+  useEffect(() => {
+    const updateColumns = () => {
+      if (!gridParentRef.current) return;
+      const width = gridParentRef.current.offsetWidth;
+      if (width < 640) setGridColumns(1);
+      else if (width < 1024) setGridColumns(2);
+      else if (width < 1280) setGridColumns(3);
+      else setGridColumns(4);
+    };
+    updateColumns();
+    window.addEventListener("resize", updateColumns);
+    return () => window.removeEventListener("resize", updateColumns);
+  }, []);
+
+  const gridVirtualizer = useVirtualizer({
+    count: Math.ceil(localSnippets.length / gridColumns),
+    getScrollElement: () => gridParentRef.current,
+    estimateSize: () => GRID_ITEM_HEIGHT,
+    overscan: 5,
+  });
+
   return (
     <div 
       className="flex-1 flex flex-col relative h-full"
@@ -229,7 +266,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
         {!isTrashView && (
           <button
             onClick={() => setImportOpen(true)}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors touch-target"
           >
             <Download size={14} />
             Import from URL
@@ -240,7 +277,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
       <div className="flex-1 overflow-y-auto p-3 sm:p-4">
         {isInitialLoading ? (
           <div className={cn(
-            viewMode === "table" ? "" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
+            viewMode === "table" ? "" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4"
           )}>
             {Array.from({ length: 9 }).map((_, i) => (
               <SnippetSkeleton key={i} />
@@ -279,63 +316,117 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
             />
           )
         ) : viewMode === "table" ? (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border text-left">
-                  {allowSelection && (
-                    <th className="w-10 px-2 py-2 text-xs font-medium text-muted-foreground">
-                      <span className="sr-only">Select</span>
-                    </th>
-                  )}
-                  <th className="px-3 py-2 text-xs font-medium text-muted-foreground min-w-[120px]">Title</th>
-                  <th className="px-3 py-2 text-xs font-medium text-muted-foreground">Language</th>
-                  <th className="px-3 py-2 text-xs font-medium text-muted-foreground hidden md:table-cell">Tags</th>
-                  <th className="px-3 py-2 text-xs font-medium text-muted-foreground">Visibility</th>
-                  <th className="px-3 py-2 text-xs font-medium text-muted-foreground">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {localSnippets.map((s) => (
-                  <SnippetTableRow
-                    key={s.id}
-                    id={s.id}
-                    title={s.title}
-                    language={s.language}
-                    tags={s.tags ?? undefined}
-                    visibility={s.visibility}
-                    createdAt={s.createdAt}
-                    selected={selectedIds.has(s.id)}
-                    onToggleSelect={allowSelection ? toggleSelect : undefined}
-                    isPinned={s.isPinned}
-                    isFavorited={s.isFavorited}
-                  />
-                ))}
-              </tbody>
-            </table>
+          <div ref={tableParentRef} className="overflow-auto" style={{ height: "calc(100vh - 200px)" }}>
+            <div
+              style={{
+                height: `${tableVirtualizer.getTotalSize()}px`,
+                width: "100%",
+                position: "relative",
+              }}
+            >
+              <table className="w-full">
+                <thead className="sticky top-0 z-10 bg-card">
+                  <tr className="border-b border-border text-left">
+                    {allowSelection && (
+                      <th className="w-10 px-2 py-2 text-xs font-medium text-muted-foreground">
+                        <span className="sr-only">Select</span>
+                      </th>
+                    )}
+                    <th className="px-3 py-2 text-xs font-medium text-muted-foreground min-w-[120px]">Title</th>
+                    <th className="px-3 py-2 text-xs font-medium text-muted-foreground">Language</th>
+                    <th className="px-3 py-2 text-xs font-medium text-muted-foreground hidden md:table-cell">Tags</th>
+                    <th className="px-3 py-2 text-xs font-medium text-muted-foreground">Visibility</th>
+                    <th className="px-3 py-2 text-xs font-medium text-muted-foreground">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tableVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const s = localSnippets[virtualRow.index];
+                    return (
+                      <tr
+                        key={s.id}
+                        data-index={virtualRow.index}
+                        ref={(node) => tableVirtualizer.measureElement(node)}
+                        style={{
+                          transform: `translateY(${virtualRow.start}px)`,
+                          position: "absolute",
+                          left: 0,
+                          right: 0,
+                        }}
+                      >
+                        <SnippetTableRow
+                          id={s.id}
+                          title={s.title}
+                          language={s.language}
+                          tags={s.tags ?? undefined}
+                          visibility={s.visibility}
+                          createdAt={s.createdAt}
+                          selected={selectedIds.has(s.id)}
+                          onToggleSelect={allowSelection ? toggleSelect : undefined}
+                          isPinned={s.isPinned}
+                          isFavorited={s.isFavorited}
+                        />
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {localSnippets.map((s) => (
-              <SnippetCard
-                key={s.id}
-                id={s.id}
-                title={s.title}
-                description={s.description ?? undefined}
-                language={s.language}
-                tags={s.tags ?? undefined}
-                visibility={s.visibility}
-                createdAt={s.createdAt}
-                snippetDensity={density}
-                highlightedCode={s.highlightedCode}
-                selected={selectedIds.has(s.id)}
-                onToggleSelect={allowSelection ? toggleSelect : undefined}
-                authorUsername={s.authorUsername}
-                totalLines={s.totalLines}
-                isPinned={s.isPinned}
-                isFavorited={s.isFavorited}
-              />
-            ))}
+          <div
+            ref={gridParentRef}
+            className="overflow-y-auto"
+            style={{ height: "calc(100vh - 200px)" }}
+          >
+            <div
+              style={{
+                height: `${gridVirtualizer.getTotalSize()}px`,
+                width: "100%",
+                position: "relative",
+              }}
+            >
+              {gridVirtualizer.getVirtualItems().map((virtualRow) => {
+                const startIndex = virtualRow.index * gridColumns;
+                const rowSnippets = localSnippets.slice(startIndex, startIndex + gridColumns);
+                return (
+                  <div
+                    key={virtualRow.index}
+                    data-index={virtualRow.index}
+                    ref={(node) => gridVirtualizer.measureElement(node)}
+                    className="grid gap-3 sm:gap-4"
+                    style={{
+                      transform: `translateY(${virtualRow.start}px)`,
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))`,
+                    }}
+                  >
+                    {rowSnippets.map((s) => (
+                      <SnippetCard
+                        key={s.id}
+                        id={s.id}
+                        title={s.title}
+                        description={s.description ?? undefined}
+                        language={s.language}
+                        tags={s.tags ?? undefined}
+                        visibility={s.visibility}
+                        createdAt={s.createdAt}
+                        snippetDensity={density}
+                        highlightedCode={s.highlightedCode}
+                        selected={selectedIds.has(s.id)}
+                        onToggleSelect={allowSelection ? toggleSelect : undefined}
+                        authorUsername={s.authorUsername}
+                        totalLines={s.totalLines}
+                        isPinned={s.isPinned}
+                        isFavorited={s.isFavorited}
+                      />
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
         
@@ -343,7 +434,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
           <div ref={loadMoreRef} className="py-6">
             {isLoadingMore ? (
               <div className={cn(
-                viewMode === "table" ? "" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
+                viewMode === "table" ? "" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4"
               )}>
                 {Array.from({ length: 3 }).map((_, i) => (
                   <SnippetSkeleton key={`loading-${i}`} />

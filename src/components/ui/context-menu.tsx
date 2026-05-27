@@ -40,13 +40,33 @@ export function ContextMenu({ children, options }: ContextMenuProps) {
       }
     };
 
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key === "Tab" && menuRef.current) {
+        const focusable = menuRef.current.querySelectorAll<HTMLElement>("button");
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
       document.addEventListener("keydown", handleEscape);
+      document.addEventListener("keydown", handleTab);
+      setTimeout(() => {
+        menuRef.current?.querySelector<HTMLElement>("button")?.focus();
+      }, 50);
     }
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("keydown", handleTab);
     };
   }, [isOpen]);
 

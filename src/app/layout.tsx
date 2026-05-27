@@ -62,6 +62,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${theme} bg-pattern-${bgPattern}`} suppressHydrationWarning>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
+        <a href="#main-content" className="skip-link">Skip to main content</a>
         <ToastProvider>
           {globalAnnouncement && (
             <div className="bg-primary text-primary-foreground px-4 py-2 text-center text-sm font-medium relative z-50 shadow-sm border-b border-primary/20">

@@ -553,17 +553,17 @@ export function DetailView({
         )}
 
         <div className="flex-1 overflow-auto relative bg-muted/20">
-          <div className="absolute top-3 right-3 z-20 flex gap-2">
+          <div className="absolute top-3 right-3 z-20 flex flex-wrap gap-2 justify-end max-w-[calc(100%-1.5rem)]">
             <div className="relative">
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1.5 bg-card/80 backdrop-blur-sm"
+                className="gap-1.5 bg-card/80 backdrop-blur-sm touch-target"
                 onClick={() => setCopyOpen(!copyOpen)}
                 aria-label="Copy code options"
               >
                 {copied ? <Check size={14} suppressHydrationWarning /> : <Copy size={14} suppressHydrationWarning />}
-                {copied ? "Copied!" : "Copy"}
+                <span className="hidden sm:inline">{copied ? "Copied!" : "Copy"}</span>
               </Button>
               {copyOpen && (
                 <div className="absolute right-0 top-full mt-1 w-32 bg-popover border border-border rounded-md shadow-md z-50 flex flex-col overflow-hidden">
@@ -693,7 +693,7 @@ export function DetailView({
                   </div>
                 </div>
                 <div
-                  className="p-6 font-mono text-sm leading-relaxed overflow-auto detail-view-code"
+                  className="p-6 font-mono text-sm leading-relaxed overflow-auto detail-view-code scroll-indicator"
                   dangerouslySetInnerHTML={{ __html: processedHighlightedCode }}
                   style={{ fontFamily: "var(--font-jetbrains), monospace" }}
                 />

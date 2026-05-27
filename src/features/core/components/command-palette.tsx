@@ -270,7 +270,7 @@ export function CommandPalette() {
         </div>
 
         {/* Suggestion List Area */}
-        <div className="max-h-[350px] overflow-y-auto p-2 space-y-1">
+        <div className="max-h-[350px] overflow-y-auto p-2 space-y-1" role="listbox" aria-live="polite" aria-label="Search results">
           {loading && (
             <div className="flex items-center justify-center p-8 text-sm text-muted-foreground">
               <span className="animate-pulse">Searching snippets...</span>

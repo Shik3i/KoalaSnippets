@@ -374,52 +374,118 @@ export function SnippetSearchHeader({
       )}
 
       {filtersExpanded && (
-        <div className="space-y-3 pt-2 pb-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <FilterDropdown
-              label="Tags"
-              options={availableTags}
-              selected={activeTags}
-              onToggle={toggleTag}
-            />
-            <FilterDropdown
-              label="Languages"
-              options={availableLanguages}
-              selected={activeLanguages}
-              onToggle={toggleLanguage}
-            />
+        <>
+          {/* Desktop: inline filter panel */}
+          <div className="hidden md:block space-y-3 pt-2 pb-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <FilterDropdown
+                label="Tags"
+                options={availableTags}
+                selected={activeTags}
+                onToggle={toggleTag}
+              />
+              <FilterDropdown
+                label="Languages"
+                options={availableLanguages}
+                selected={activeLanguages}
+                onToggle={toggleLanguage}
+              />
 
-            <div className="flex items-center gap-1 bg-muted/30 rounded-md p-0.5">
-              <button
-                type="button"
-                onClick={() => { setFilterMode("and"); updateParams({ filterMode: "and" }); }}
-                className={cn(
-                  "px-2.5 py-1 rounded text-[11px] font-medium transition-colors",
-                  filterMode === "and" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                )}
-                aria-label="Match all filters (AND)"
-                aria-pressed={filterMode === "and"}
-              >
-                AND
-              </button>
-              <button
-                type="button"
-                onClick={() => { setFilterMode("or"); updateParams({ filterMode: "or" }); }}
-                className={cn(
-                  "px-2.5 py-1 rounded text-[11px] font-medium transition-colors",
-                  filterMode === "or" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                )}
-                aria-label="Match any filter (OR)"
-                aria-pressed={filterMode === "or"}
-              >
-                OR
-              </button>
+              <div className="flex items-center gap-1 bg-muted/30 rounded-md p-0.5">
+                <button
+                  type="button"
+                  onClick={() => { setFilterMode("and"); updateParams({ filterMode: "and" }); }}
+                  className={cn(
+                    "px-2.5 py-1 rounded text-[11px] font-medium transition-colors",
+                    filterMode === "and" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  )}
+                  aria-label="Match all filters (AND)"
+                  aria-pressed={filterMode === "and"}
+                >
+                  AND
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setFilterMode("or"); updateParams({ filterMode: "or" }); }}
+                  className={cn(
+                    "px-2.5 py-1 rounded text-[11px] font-medium transition-colors",
+                    filterMode === "or" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  )}
+                  aria-label="Match any filter (OR)"
+                  aria-pressed={filterMode === "or"}
+                >
+                  OR
+                </button>
+              </div>
+              <span className="text-[10px] text-muted-foreground hidden sm:inline">
+                {filterMode === "or" ? "Match any" : "Match all"}
+              </span>
             </div>
-            <span className="text-[10px] text-muted-foreground hidden sm:inline">
-              {filterMode === "or" ? "Match any" : "Match all"}
-            </span>
           </div>
-        </div>
+
+          {/* Mobile: bottom sheet */}
+          <div className="md:hidden fixed inset-0 z-50" onClick={() => setFiltersExpanded(false)}>
+            <div className="absolute inset-0 bg-black/50 animate-in fade-in duration-200" />
+            <div
+              className="mobile-bottom-sheet bg-card border-t border-border p-4 space-y-3"
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-label="Filter options"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Filters</h3>
+                <button
+                  type="button"
+                  onClick={() => setFiltersExpanded(false)}
+                  className="p-2 rounded-md hover:bg-accent/50 touch-target"
+                  aria-label="Close filters"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <FilterDropdown
+                  label="Tags"
+                  options={availableTags}
+                  selected={activeTags}
+                  onToggle={toggleTag}
+                />
+                <FilterDropdown
+                  label="Languages"
+                  options={availableLanguages}
+                  selected={activeLanguages}
+                  onToggle={toggleLanguage}
+                />
+                <div className="flex items-center gap-1 bg-muted/30 rounded-md p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => { setFilterMode("and"); updateParams({ filterMode: "and" }); }}
+                    className={cn(
+                      "px-3 py-1.5 rounded text-xs font-medium transition-colors touch-target",
+                      filterMode === "and" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    )}
+                    aria-label="Match all filters (AND)"
+                    aria-pressed={filterMode === "and"}
+                  >
+                    AND
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setFilterMode("or"); updateParams({ filterMode: "or" }); }}
+                    className={cn(
+                      "px-3 py-1.5 rounded text-xs font-medium transition-colors touch-target",
+                      filterMode === "or" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    )}
+                    aria-label="Match any filter (OR)"
+                    aria-pressed={filterMode === "or"}
+                  >
+                    OR
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

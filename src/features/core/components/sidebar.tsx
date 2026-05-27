@@ -130,7 +130,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
   return (
     <>
       <button
-        className="fixed top-4 left-4 z-50 p-2 rounded-md bg-card border border-border md:hidden"
+        className="fixed top-4 left-4 z-50 p-2.5 rounded-md bg-card border border-border md:hidden touch-target"
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-label="Toggle menu"
       >
@@ -138,7 +138,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
       </button>
 
       <button
-        className="fixed top-4 right-4 z-50 p-2 rounded-md bg-card border border-border md:hidden flex items-center justify-center cursor-pointer"
+        className="fixed top-4 right-4 z-50 p-2.5 rounded-md bg-card border border-border md:hidden flex items-center justify-center cursor-pointer touch-target"
         onClick={() => {
           window.dispatchEvent(new CustomEvent("open-command-palette"));
         }}
@@ -150,10 +150,12 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-40 bg-card border-r border-border flex flex-col transform md:translate-x-0 md:relative md:z-auto md:shrink-0",
-          !isResizing && "transition-[width] duration-300 ease-in-out",
+          !isResizing && "transition-[width,transform] duration-300 ease-in-out",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
         style={{ width: collapsed ? 52 : (mobileOpen ? 280 : `${width}px`) }}
+        role="navigation"
+        aria-label="Main navigation"
       >
         {!mobileOpen && !collapsed && (
           <div className="absolute right-[-2px] top-0 bottom-0 w-4 cursor-col-resize z-50 hidden md:flex justify-center group"
@@ -591,8 +593,9 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
 
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          className="fixed inset-0 bg-black/50 z-30 md:hidden animate-in fade-in duration-200"
           onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
         />
       )}
       <MobileFAB />

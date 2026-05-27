@@ -131,7 +131,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         />
       </Suspense>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden" id="main-content" role="main">
         <Suspense fallback={<div className="h-9 border-b border-border bg-card/50" />}>
           <Breadcrumb />
         </Suspense>
