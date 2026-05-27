@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🐨 KoalaSnippets
+<img src="./public/MainLogo.png" alt="KoalaSnippets Logo" width="120" height="120" style="margin-bottom: 10px;" />
+
+# KoalaSnippets
 
 **A blazing fast, zero-bloat, privacy-first snippet manager designed to cure Notepad++ tab hell.**
 
