@@ -173,8 +173,8 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
             href="/" 
             className={cn("flex items-center gap-3 transition-opacity duration-200", collapsed && "group-hover:opacity-0")}
           >
-            <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0">
-              <Image src={MainLogo} alt="KoalaSnippets Logo" width={32} height={32} className="object-contain" unoptimized />
+            <div className="w-11 h-11 rounded-md flex items-center justify-center shrink-0">
+              <Image src={MainLogo} alt="KoalaSnippets Logo" width={44} height={44} className="object-contain" />
             </div>
             {!collapsed && <span className="font-semibold text-lg truncate">KoalaSnippets</span>}
           </Link>
