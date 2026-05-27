@@ -13,17 +13,9 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
-
-<br />
-<a href="https://snippets.koalastuff.net">
-  <img src="https://img.shields.io/badge/Live_Demo-snippets.koalastuff.net-FF6B6B?style=for-the-badge" alt="Live Demo" />
-</a>
-<br />
+[![Live Demo](https://img.shields.io/badge/Live_Demo-snippets.koalastuff.net-FF6B6B?style=for-the-badge)](https://snippets.koalastuff.net)
 
 KoalaSnippets is a self-hosted web application for storing, organizing, and sharing code snippets. It features a clean two-pane interface, server-side syntax highlighting, and rock-solid security — all with **zero external dependencies**. No CDNs. No tracking. No bloat. Just your code, your server, your rules.
-
-<!-- We recommend replacing this placeholder with a short feature showcase GIF -->
-<img src="./docs/assets/screenshot-placeholder.png" alt="KoalaSnippets Interface Demo" width="800" style="border-radius: 8px; margin-top: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
 
 </div>
 
