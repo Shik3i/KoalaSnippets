@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/features/core/utils/utils";
 import { useRecentSnippets } from "@/features/core/hooks/use-recent-snippets";
@@ -30,6 +31,7 @@ import {
   Wrench,
   PanelLeftClose,
   PanelLeftOpen,
+  ChevronLeft,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -161,32 +163,33 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
             <div className="w-[2px] h-full bg-transparent group-hover:bg-primary/50 transition-colors" />
           </div>
         )}
-        <div className={cn("flex items-center border-b border-border", collapsed ? "p-2 justify-center" : "p-4 justify-between")}>
-          {collapsed ? (
-            <Link href="/" className="flex items-center justify-center w-8 h-8 rounded-md bg-primary" aria-label="Home">
-              <span className="text-primary-foreground font-bold text-sm">K</span>
-            </Link>
-          ) : (
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">K</span>
+
+        <div className="flex flex-col border-b border-border">
+          <div className={cn("flex items-center h-[65px]", collapsed ? "justify-center" : "px-4")}>
+            <Link href="/" className={cn("flex items-center", collapsed ? "justify-center" : "gap-3")}>
+              <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0">
+                <Image src="/NavbarLogo.png" alt="KoalaSnippets Logo" width={32} height={32} className="object-contain" />
               </div>
-              <span className="font-semibold text-lg">KoalaSnippets</span>
+              {!collapsed && <span className="font-semibold text-lg truncate">KoalaSnippets</span>}
             </Link>
+          </div>
+          {!mobileOpen && (
+            <div className={cn("flex items-center border-t border-border/50 bg-muted/10", collapsed ? "justify-center py-2" : "justify-end px-3 py-1.5")}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 hidden md:flex shrink-0 text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  const next = !collapsed;
+                  setCollapsed(next);
+                  localStorage.setItem("koalasnippets_sidebar_collapsed", String(next));
+                }}
+                aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                {collapsed ? <PanelLeftOpen size={14} suppressHydrationWarning /> : <PanelLeftClose size={14} suppressHydrationWarning />}
+              </Button>
+            </div>
           )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 hidden md:flex shrink-0"
-            onClick={() => {
-              const next = !collapsed;
-              setCollapsed(next);
-              localStorage.setItem("koalasnippets_sidebar_collapsed", String(next));
-            }}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {collapsed ? <PanelLeftOpen size={16} suppressHydrationWarning /> : <PanelLeftClose size={16} suppressHydrationWarning />}
-          </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto">
