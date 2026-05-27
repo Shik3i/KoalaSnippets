@@ -178,7 +178,7 @@ export function SnippetCard({
       aria-label={`View snippet: ${title}`}
     >
       <div className={cn("h-10 w-full absolute top-0 left-0 bg-gradient-to-r opacity-50 transition-opacity group-hover:opacity-100", gradientClass)} />
-      <div className="p-3 sm:p-4 relative z-10">
+      <div className="p-3 relative z-10">
       {onToggleSelect && (
         <div className="absolute top-2 left-2 z-10">
           <Checkbox
@@ -191,7 +191,7 @@ export function SnippetCard({
       )}
       <div className={cn("flex items-start justify-between gap-2 mb-2", onToggleSelect && "ml-6")}>
         <div className="flex items-center gap-1.5 min-w-0 flex-1">
-          <Image src={KoalaFile} alt="" width={22} height={22} className="shrink-0 opacity-60" />
+          <Image src={KoalaFile} alt="" width={28} height={28} className="shrink-0 opacity-60" />
           {pinned && <Pin size={12} className="shrink-0 text-amber-400" aria-label="Pinned" />}
           <h3
             className="font-medium text-sm truncate group-hover:text-primary transition-colors"
