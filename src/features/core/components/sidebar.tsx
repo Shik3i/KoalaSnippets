@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/features/core/utils/utils";
 import { useRecentSnippets } from "@/features/core/hooks/use-recent-snippets";
@@ -167,31 +166,34 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
           </div>
         )}
 
-        <div className="flex flex-col border-b border-border">
-          <div className={cn("flex items-center h-[65px]", collapsed ? "justify-center" : "px-4")}>
-            <Link href="/" className={cn("flex items-center", collapsed ? "justify-center" : "gap-3")}>
-              <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0">
-                <Image src="/NavbarLogo.png" alt="KoalaSnippets Logo" width={32} height={32} className="object-contain" />
-              </div>
-              {!collapsed && <span className="font-semibold text-lg truncate">KoalaSnippets</span>}
-            </Link>
-          </div>
-          {!mobileOpen && (
-            <div className={cn("flex items-center border-t border-border/50 bg-muted/10", collapsed ? "justify-center py-2" : "justify-end px-3 py-1.5")}>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 hidden md:flex shrink-0 text-muted-foreground hover:text-foreground"
-                onClick={() => {
-                  const next = !collapsed;
-                  setCollapsed(next);
-                  localStorage.setItem("koalasnippets_sidebar_collapsed", String(next));
-                }}
-                aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              >
-                {collapsed ? <PanelLeftOpen size={14} suppressHydrationWarning /> : <PanelLeftClose size={14} suppressHydrationWarning />}
-              </Button>
+        <div className={cn("flex items-center border-b border-border h-[65px] group relative", collapsed ? "justify-center" : "px-4 justify-between")}>
+          <Link 
+            href="/" 
+            className={cn("flex items-center gap-3 transition-opacity duration-200", collapsed && "group-hover:opacity-0")}
+          >
+            <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0">
+              <img src="/NavbarLogo.png" alt="KoalaSnippets Logo" className="w-8 h-8 object-contain" />
             </div>
+            {!collapsed && <span className="font-semibold text-lg truncate">KoalaSnippets</span>}
+          </Link>
+
+          {!mobileOpen && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-7 w-7 hidden md:flex shrink-0 text-muted-foreground hover:text-foreground transition-all duration-200",
+                collapsed ? "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 z-10" : ""
+              )}
+              onClick={() => {
+                const next = !collapsed;
+                setCollapsed(next);
+                localStorage.setItem("koalasnippets_sidebar_collapsed", String(next));
+              }}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {collapsed ? <PanelLeftOpen size={16} suppressHydrationWarning /> : <PanelLeftClose size={16} suppressHydrationWarning />}
+            </Button>
           )}
         </div>
 
