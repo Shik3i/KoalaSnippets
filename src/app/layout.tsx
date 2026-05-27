@@ -27,6 +27,9 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "KoalaSnippets",
   description: "Self-hosted snippet management application",
+  icons: {
+    icon: "/MainLogo.png",
+  },
 };
 
 export default async function RootLayout({
