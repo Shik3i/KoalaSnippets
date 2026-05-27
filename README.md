@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./public/MainLogo.png" alt="KoalaSnippets Logo" width="120" height="120" />
+<img src="./public/MainLogo.png" alt="KoalaSnippets Logo" width="120" height="120" style="margin-bottom: 1px;" />
 
 # KoalaSnippets
 
