@@ -13,6 +13,7 @@ import { EmptyState } from "@/features/core/components/empty-state";
 import { ImportWizard } from "@/features/snippets/components/import-wizard";
 import { cn } from "@/features/core/utils/utils";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface SnippetData {
   id: string;
@@ -257,11 +258,10 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
         <div className="flex items-center gap-3">
           {allowSelection && (
             <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={allSelected}
                 onChange={() => (allSelected ? clearSelection() : selectAll())}
-                className="rounded border-border text-primary focus:ring-ring cursor-pointer"
+                indeterminate={selectedIds.size > 0 && !allSelected}
                 aria-label="Select all snippets"
               />
               {selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select all"}

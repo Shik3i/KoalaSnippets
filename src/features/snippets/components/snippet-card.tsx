@@ -9,6 +9,7 @@ import { SafeZone } from "@/components/ui/safe-zone";
 import { ContextMenu } from "@/components/ui/context-menu";
 import { useToast } from "@/components/ui/toast";
 import { LinkIcon, Loader2, Pencil, Trash2, X, Copy, Check, Star, Pin } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface SnippetCardProps {
   id: string;
@@ -177,12 +178,10 @@ export function SnippetCard({
       <div className={cn("h-10 w-full absolute top-0 left-0 bg-gradient-to-r opacity-50 transition-opacity group-hover:opacity-100", gradientClass)} />
       <div className="p-3 sm:p-4 relative z-10">
       {onToggleSelect && (
-        <div className="absolute top-2 left-2 z-10" onClick={(e) => e.preventDefault()}>
-          <input
-            type="checkbox"
+        <div className="absolute top-2 left-2 z-10">
+          <Checkbox
             checked={selected}
             onChange={() => onToggleSelect(id)}
-            className="rounded border-border text-primary focus:ring-ring cursor-pointer"
             aria-label={`Select ${title}`}
             onClick={(e) => e.stopPropagation()}
           />

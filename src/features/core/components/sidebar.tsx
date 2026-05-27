@@ -237,12 +237,12 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                 title="New Snippet"
                 className="flex items-center justify-center w-full py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               >
-                <Image src={KoalaFile} alt="New Snippet" width={16} height={16} className="brightness-0 invert" />
+                <Image src={KoalaFile} alt="New Snippet" width={16} height={16} />
               </Link>
             ) : (
               <Button className="w-full gap-2" size="sm" asChild>
                 <Link href="/dashboard/new" onClick={() => setMobileOpen(false)}>
-                  <Image src={KoalaFile} alt="New Snippet" width={16} height={16} className="brightness-0 invert" />
+                  <Image src={KoalaFile} alt="New Snippet" width={16} height={16} />
                   New Snippet
                 </Link>
               </Button>

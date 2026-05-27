@@ -265,7 +265,7 @@ export function SnippetSearchHeader({
     <div className="sticky top-0 z-10 p-4 space-y-2">
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[160px]">
-          <Image src={KoalaSuche} alt="Search" width={18} height={15} className="absolute left-3 top-1/2 -translate-y-1/2 opacity-50" />
+          <Image src={KoalaSuche} alt="Search" width={18} height={15} className="absolute left-3 top-1/2 -translate-y-1/2 opacity-50 z-10" />
           <Input
             ref={inputRef}
             placeholder={placeholder}

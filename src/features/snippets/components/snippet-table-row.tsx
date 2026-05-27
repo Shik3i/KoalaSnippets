@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/features/core/utils/utils";
 import { useToast } from "@/components/ui/toast";
 import { Lock, Globe, Link2, Star, Pin } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface SnippetTableRowProps {
   id: string;
@@ -86,11 +87,9 @@ export function SnippetTableRow({
     >
       {onToggleSelect && (
         <td className="w-10 px-2 py-2.5">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={selected}
             onChange={() => onToggleSelect(id)}
-            className="rounded border-border text-primary focus:ring-ring cursor-pointer"
             aria-label={`Select ${title}`}
             onClick={(e) => e.stopPropagation()}
           />
