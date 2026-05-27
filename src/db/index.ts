@@ -3,10 +3,12 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import path from "path";
 import * as schema from "./schema";
 
-let _db: ReturnType<typeof drizzle> | null = null;
+const globalForDb = globalThis as unknown as {
+  conn: ReturnType<typeof drizzle> | undefined;
+};
 
 function getDb() {
-  if (!_db) {
+  if (!globalForDb.conn) {
     const dbPath = process.env.DATABASE_URL?.replace("file:", "") ?? "./data/koalasnippets.db";
     const resolvedPath = path.resolve(process.cwd(), dbPath);
     const sqlite = new Database(resolvedPath);
@@ -14,9 +16,9 @@ function getDb() {
     sqlite.pragma("foreign_keys = ON");
     sqlite.pragma("busy_timeout = 5000");
     sqlite.pragma("synchronous = NORMAL");
-    _db = drizzle(sqlite, { schema });
+    globalForDb.conn = drizzle(sqlite, { schema });
   }
-  return _db;
+  return globalForDb.conn;
 }
 
 export const db = new Proxy({} as ReturnType<typeof drizzle>, {

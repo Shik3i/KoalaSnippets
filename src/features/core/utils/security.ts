@@ -10,6 +10,13 @@ export function getSafePage(pageStr: string | null): number {
 import crypto from "crypto";
 
 export function verifyCsrf(request: Request): boolean {
+  // Programmatic API Key requests (Bearer token) bypass CSRF checks.
+  // CSRF protection is only required for cookie-based browser session authentication.
+  const authHeader = request.headers.get("authorization");
+  if (authHeader && authHeader.startsWith("Bearer ks_")) {
+    return true;
+  }
+
   const apiKey = request.headers.get("x-api-key");
   if (apiKey && process.env.API_KEY) {
     const bufA = Buffer.from(apiKey);

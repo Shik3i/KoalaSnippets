@@ -9,7 +9,7 @@ import { GlobalDropzone } from "@/features/core/components/global-dropzone";
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { db } from "@/db";
 import { snippets, snippetFiles, userFavorites } from "@/db/schema";
-import { eq, and, inArray, sql } from "drizzle-orm";
+import { eq, and, inArray, sql, isNull, isNotNull } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { buildSnippetConditions } from "@/features/snippets/utils/filters";
 
@@ -81,12 +81,27 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     };
   });
 
-  const allUserSnippets = await db.select({ tags: snippets.tags }).from(snippets).where(eq(snippets.authorId, session.user.id)).all();
-  const allUserFiles = await db.select({ language: snippetFiles.language }).from(snippetFiles).where(
-    inArray(snippetFiles.snippetId, db.select({ id: snippets.id }).from(snippets).where(eq(snippets.authorId, session.user.id)))
+  const activeUserTags = await db.select({ tags: snippets.tags }).from(snippets).where(
+    and(
+      eq(snippets.authorId, session.user.id),
+      isNull(snippets.deletedAt),
+      isNotNull(snippets.tags)
+    )
   ).all();
-  const sidebarTags = [...new Set(allUserSnippets.flatMap((s) => s.tags ?? []))].sort();
-  const sidebarLanguages = [...new Set(allUserFiles.map((f) => f.language))].sort();
+  const userLanguages = await db
+    .selectDistinct({ language: snippetFiles.language })
+    .from(snippetFiles)
+    .innerJoin(snippets, eq(snippetFiles.snippetId, snippets.id))
+    .where(
+      and(
+        eq(snippets.authorId, session.user.id),
+        isNull(snippets.deletedAt)
+      )
+    )
+    .all();
+
+  const sidebarTags = [...new Set(activeUserTags.flatMap((s) => s.tags ?? []))].sort();
+  const sidebarLanguages = userLanguages.map((f) => f.language).sort();
 
   const density = session?.user?.preferences?.snippetDensity ?? "preview";
   const syntaxTheme = session?.user?.preferences?.syntaxTheme ?? "github-dark";

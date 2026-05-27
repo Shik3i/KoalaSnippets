@@ -38,6 +38,11 @@ export async function GET(
 
   const isOwner = session && snippet.authorId === session.user.id;
 
+  // Enforce soft-delete restrictions: non-owners cannot access soft-deleted snippets.
+  if (snippet.deletedAt && !isOwner) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
   if (snippet.expiresAt && new Date() > snippet.expiresAt && !isOwner) {
     return NextResponse.json({ error: "Snippet has expired" }, { status: 410 });
   }
@@ -52,6 +57,26 @@ export async function GET(
         return NextResponse.json({ error: "Not found" }, { status: 404 });
       }
     }
+  }
+
+  // Enforce password protection: mask files and code details for non-owners until they unlock it via the unlock API.
+  if (snippet.passwordHash && !isOwner) {
+    return NextResponse.json({
+      id: snippet.id,
+      title: snippet.title,
+      description: snippet.description,
+      code: "",
+      language: "plaintext",
+      files: [],
+      tags: snippet.tags,
+      visibility: snippet.visibility,
+      shareToken: snippet.visibility === "SHARED" ? snippet.shareToken : undefined,
+      createdAt: snippet.createdAt,
+      updatedAt: snippet.updatedAt,
+      deletedAt: snippet.deletedAt,
+      isOwner: false,
+      isPasswordProtected: true,
+    });
   }
 
   const files = await db.select().from(snippetFiles).where(eq(snippetFiles.snippetId, id)).all();

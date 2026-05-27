@@ -39,7 +39,7 @@ export const snippetSchema = z.object({
   tags: z.array(z.string().trim().min(1).max(50)).max(10).optional(),
   visibility: z.enum(["PRIVATE", "SHARED", "PUBLIC"]).default("PRIVATE"),
   collectionId: z.string().nullable().optional(),
-  expiresAt: z.union([z.string(), z.date()]).nullable().optional(),
+  expiresAt: z.union([z.string().datetime(), z.date()]).nullable().optional(),
   password: z.string().nullable().optional(),
   isRestore: z.boolean().optional(),
 });

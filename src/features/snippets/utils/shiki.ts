@@ -1,4 +1,8 @@
 import { createHighlighter, type Highlighter, type BundledLanguage, type BundledTheme } from "shiki";
+import crypto from "crypto";
+
+const highlightCache = new Map<string, string>();
+const MAX_CACHE_SIZE = 1000;
 
 let highlighterPromise: Promise<Highlighter> | null = null;
 
@@ -60,6 +64,13 @@ async function getHighlighter(): Promise<Highlighter> {
 }
 
 export async function highlightCode(code: string, language: string, themeName: string = "github-dark"): Promise<string> {
+  const codeHash = crypto.createHash("md5").update(code).digest("hex");
+  const cacheKey = `${language}:${themeName}:${codeHash}`;
+
+  if (highlightCache.has(cacheKey)) {
+    return highlightCache.get(cacheKey)!;
+  }
+
   const hl = await getHighlighter();
 
   let targetLang = "plaintext";
@@ -89,10 +100,21 @@ export async function highlightCode(code: string, language: string, themeName: s
 
   const activeTheme = hl.getLoadedThemes().includes(themeName) ? themeName : THEME_DEFAULT;
 
-  return hl.codeToHtml(code, {
+  const html = hl.codeToHtml(code, {
     lang: targetLang,
     theme: activeTheme,
   });
+
+  // Limit cache size to prevent memory exhaustion
+  if (highlightCache.size >= MAX_CACHE_SIZE) {
+    const firstKey = highlightCache.keys().next().value;
+    if (firstKey) {
+      highlightCache.delete(firstKey);
+    }
+  }
+  highlightCache.set(cacheKey, html);
+
+  return html;
 }
 
 export function getAvailableLanguages(): string[] {

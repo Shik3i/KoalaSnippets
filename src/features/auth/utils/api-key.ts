@@ -47,6 +47,7 @@ export async function authenticateApiKey(authHeader: string): Promise<ApiKeySess
     id: apiKeys.id,
     userId: apiKeys.userId,
     tokenHash: apiKeys.tokenHash,
+    lastUsedAt: apiKeys.lastUsedAt,
     user: {
       id: users.id,
       username: users.username,
@@ -61,9 +62,15 @@ export async function authenticateApiKey(authHeader: string): Promise<ApiKeySess
 
   if (!constantTimeCompare(key.tokenHash, tokenHash)) return null;
 
-  await db.update(apiKeys)
-    .set({ lastUsedAt: new Date() })
-    .where(eq(apiKeys.id, key.id));
+  // Throttled lastUsedAt updates: only write to DB if lastUsedAt is null or older than 5 minutes.
+  // This avoids high write-lock contention (SQLITE_BUSY) on frequent read-heavy API calls.
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+  if (!key.lastUsedAt || key.lastUsedAt < fiveMinutesAgo) {
+    db.update(apiKeys)
+      .set({ lastUsedAt: new Date() })
+      .where(eq(apiKeys.id, key.id))
+      .run();
+  }
 
   return {
     user: {

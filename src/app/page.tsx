@@ -5,7 +5,7 @@ import { DashboardContent } from "@/features/snippets/components/dashboard-conte
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { db } from "@/db";
 import { snippets, snippetFiles, users } from "@/db/schema";
-import { eq, desc, asc, and, inArray, or, isNull, ne } from "drizzle-orm";
+import { eq, desc, asc, and, inArray, or, isNull, isNotNull, ne } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { buildSnippetConditions } from "@/features/snippets/utils/filters";
 
@@ -74,12 +74,27 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     files: files.filter(f => f.snippetId === s.id)
   }));
 
-  const allPublicSnippets = await db.select({ tags: snippets.tags }).from(snippets).where(eq(snippets.visibility, "PUBLIC")).all();
-  const allPublicFiles = await db.select({ language: snippetFiles.language }).from(snippetFiles).where(
-    inArray(snippetFiles.snippetId, db.select({ id: snippets.id }).from(snippets).where(eq(snippets.visibility, "PUBLIC")))
+  const activePublicTags = await db.select({ tags: snippets.tags }).from(snippets).where(
+    and(
+      eq(snippets.visibility, "PUBLIC"),
+      isNull(snippets.deletedAt),
+      isNotNull(snippets.tags)
+    )
   ).all();
-  const sidebarTags = [...new Set(allPublicSnippets.flatMap((s) => s.tags ?? []))].sort();
-  const sidebarLanguages = [...new Set(allPublicFiles.map((f) => f.language))].sort();
+  const publicLanguages = await db
+    .selectDistinct({ language: snippetFiles.language })
+    .from(snippetFiles)
+    .innerJoin(snippets, eq(snippetFiles.snippetId, snippets.id))
+    .where(
+      and(
+        eq(snippets.visibility, "PUBLIC"),
+        isNull(snippets.deletedAt)
+      )
+    )
+    .all();
+
+  const sidebarTags = [...new Set(activePublicTags.flatMap((s) => s.tags ?? []))].sort();
+  const sidebarLanguages = publicLanguages.map((f) => f.language).sort();
 
   const density = session?.user?.preferences?.snippetDensity ?? "preview";
   const syntaxTheme = session?.user?.preferences?.syntaxTheme ?? "github-dark";

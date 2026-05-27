@@ -202,23 +202,31 @@ export async function POST(request: Request) {
     const combinedCode = filesToInsert.map(f => f.code).join("");
     const contentHash = crypto.createHash("sha256").update(combinedCode).digest("hex");
     
-    if (body.ignoreDuplicate !== true) {
-      const existing = await db.select({ id: snippets.id }).from(snippets).where(
-        and(eq(snippets.authorId, session.user.id), eq(snippets.contentHash, contentHash), isNull(snippets.deletedAt))
-      ).get();
-      
-      if (existing) {
-        return NextResponse.json({ error: "Duplicate snippet detected", isDuplicate: true, existingId: existing.id }, { status: 409 });
-      }
-    }
-
     let snippetData: typeof snippets.$inferInsert;
 
     db.transaction((tx) => {
-      const currentCount = tx.select({ c: count() }).from(snippets).where(eq(snippets.authorId, session.user.id)).get();
+      // 1. Duplicate check inside the transaction block with database lock.
+      // This prevents race conditions under rapid concurrent API requests.
+      if (body.ignoreDuplicate !== true) {
+        const existing = tx.select({ id: snippets.id }).from(snippets).where(
+          and(eq(snippets.authorId, session.user.id), eq(snippets.contentHash, contentHash), isNull(snippets.deletedAt))
+        ).get();
+        
+        if (existing) {
+          const err = new Error("DUPLICATE_SNIPPET") as Error & { existingId: string };
+          err.existingId = existing.id;
+          throw err;
+        }
+      }
+
+      // 2. User Quota count check
+      const currentCount = tx.select({ c: count() }).from(snippets).where(and(eq(snippets.authorId, session.user.id), isNull(snippets.deletedAt))).get();
       if (currentCount && currentCount.c >= maxSnippets) {
         throw new Error(`Snippet quota exceeded (Max: ${maxSnippets})`);
       }
+
+      const expiresDate = expiresAt ? new Date(expiresAt) : null;
+      const validExpiresDate = (expiresDate && !isNaN(expiresDate.getTime())) ? expiresDate : null;
 
       snippetData = {
         id: generateId(),
@@ -231,7 +239,7 @@ export async function POST(request: Request) {
         totalLines,
         contentHash,
         passwordHash,
-        expiresAt: expiresAt ? new Date(expiresAt) : null,
+        expiresAt: validExpiresDate,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -273,6 +281,11 @@ export async function POST(request: Request) {
       shareToken: snippetData!.shareToken ?? undefined 
     }, { status: 201 });
   } catch (error: unknown) {
+    if (error instanceof Error && error.message === "DUPLICATE_SNIPPET") {
+      const existingId = (error as { existingId?: string }).existingId;
+      return NextResponse.json({ error: "Duplicate snippet detected", isDuplicate: true, existingId }, { status: 409 });
+    }
+
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("[Snippets API Error]", message, error instanceof Error ? error.stack : undefined);
     
