@@ -54,11 +54,10 @@ export async function GET(request: Request) {
 
   const includeCode = searchParams.get("includeCode") === "true";
 
-  const matchingSnippetIds = new Set<string>();
   if (query) {
     const escapedQuery = escapeLike(query);
     
-    const fileQuery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
+    const fileSubquery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
       .where(
         includeCode
           ? or(
@@ -68,16 +67,11 @@ export async function GET(request: Request) {
           : like(snippetFiles.language, `%${escapedQuery}%`)
       );
     
-    const matchedFiles = await fileQuery.all();
-    matchedFiles.forEach(f => matchingSnippetIds.add(f.snippetId));
-
     const searchConditions = [
       like(snippets.title, `%${escapedQuery}%`),
       like(snippets.tags, `%${escapedQuery}%`),
+      inArray(snippets.id, fileSubquery),
     ];
-    if (matchingSnippetIds.size > 0) {
-      searchConditions.push(inArray(snippets.id, Array.from(matchingSnippetIds)));
-    }
 
     conditions.push(or(...searchConditions)!);
   }

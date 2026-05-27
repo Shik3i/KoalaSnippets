@@ -139,6 +139,10 @@ export async function PUT(
       return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
     }
 
+    if (snippet.deletedAt && !parsed.data.isRestore) {
+      return NextResponse.json({ error: "Cannot modify a deleted snippet" }, { status: 400 });
+    }
+
     const updates: Record<string, unknown> = { ...parsed.data, updatedAt: new Date() };
     const { code, language, files, isRestore, ...snippetUpdates } = updates;
 

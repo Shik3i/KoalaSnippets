@@ -53,21 +53,24 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(hasMoreInitial);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const isFetchingRef = useRef(false);
 
   useEffect(() => {
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setLocalSnippets(snippets);
       setPage(1);
       setHasMore(hasMoreInitial);
       setIsInitialLoading(false);
     }, 0);
+    return () => clearTimeout(timer);
   }, [snippets, hasMoreInitial]);
 
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const loadMoreFnRef = useRef<(() => void) | null>(null);
 
   const loadMore = useCallback(async () => {
-    if (isLoadingMore || !hasMore) return;
+    if (isFetchingRef.current || !hasMore) return;
+    isFetchingRef.current = true;
     setIsLoadingMore(true);
     try {
       const currentUrl = new URL(window.location.href);
@@ -88,9 +91,10 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
     } catch (error) {
       console.error("Failed to load more snippets:", error);
     } finally {
+      isFetchingRef.current = false;
       setIsLoadingMore(false);
     }
-  }, [hasMore, isLoadingMore, isTrashView, page]);
+  }, [hasMore, isTrashView, page]);
 
   useEffect(() => {
     loadMoreFnRef.current = loadMore;
