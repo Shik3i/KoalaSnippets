@@ -189,7 +189,7 @@ export function SnippetCard({
           />
         </div>
       )}
-      <div className={cn("flex items-start justify-between gap-2 mb-2", onToggleSelect && "ml-6")}>
+      <div className={cn("flex items-start justify-between gap-2 mb-2 -mt-1.5", onToggleSelect && "ml-6")}>
         <div className="flex items-center gap-1.5 min-w-0 flex-1">
           <Image src={KoalaFile} alt="" width={28} height={28} className="shrink-0 opacity-60" />
           {pinned && <Pin size={12} className="shrink-0 text-amber-400" aria-label="Pinned" />}
