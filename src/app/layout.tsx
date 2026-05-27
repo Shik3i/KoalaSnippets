@@ -28,6 +28,10 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "KoalaSnippets",
   description: "Self-hosted snippet management application",
+  icons: {
+    icon: "/favicon-v3.png",
+    apple: "/apple-icon-v3.png",
+  },
 };
 
 export default async function RootLayout({
