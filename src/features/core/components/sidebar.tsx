@@ -17,14 +17,12 @@ import {
   FileCode,
   Globe,
   ChevronRight,
-  Menu,
   X,
   Settings,
   LogOut,
   BarChart3,
   Shield,
   Palette,
-  Search,
   PlusCircle,
   Github,
   Trash2,
@@ -129,24 +127,6 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
 
   return (
     <>
-      <button
-        className="fixed top-4 left-4 z-50 p-2.5 rounded-md bg-card border border-border md:hidden touch-target"
-        onClick={() => setMobileOpen(!mobileOpen)}
-        aria-label="Toggle menu"
-      >
-        {mobileOpen ? <X size={20} suppressHydrationWarning /> : <Menu size={20} suppressHydrationWarning />}
-      </button>
-
-      <button
-        className="fixed top-4 right-4 z-50 p-2.5 rounded-md bg-card border border-border md:hidden flex items-center justify-center cursor-pointer touch-target"
-        onClick={() => {
-          window.dispatchEvent(new CustomEvent("open-command-palette"));
-        }}
-        aria-label="Open Command Palette Search"
-      >
-        <Search size={20} suppressHydrationWarning />
-      </button>
-
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-40 bg-card border-r border-border flex flex-col transform md:translate-x-0 md:relative md:z-auto md:shrink-0",
@@ -237,12 +217,12 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                 title="New Snippet"
                 className="flex items-center justify-center w-full py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               >
-                <Image src={KoalaFile} alt="New Snippet" width={16} height={16} />
+                <Image src={KoalaFile} alt="New Snippet" width={22} height={22} />
               </Link>
             ) : (
               <Button className="w-full gap-2" size="sm" asChild>
                 <Link href="/dashboard/new" onClick={() => setMobileOpen(false)}>
-                  <Image src={KoalaFile} alt="New Snippet" width={16} height={16} />
+                <Image src={KoalaFile} alt="New Snippet" width={22} height={22} />
                   New Snippet
                 </Link>
               </Button>
@@ -604,7 +584,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
           aria-hidden="true"
         />
       )}
-      <MobileFAB />
+      <MobileFAB onToggleMenu={() => setMobileOpen(!mobileOpen)} mobileOpen={mobileOpen} />
     </>
   );
 }

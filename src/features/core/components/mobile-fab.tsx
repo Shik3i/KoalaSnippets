@@ -2,10 +2,15 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { Plus, FileDown, ClipboardPaste, X, Wrench } from "lucide-react";
+import { Plus, FileDown, ClipboardPaste, X, Wrench, Menu, Search } from "lucide-react";
 import { cn } from "@/features/core/utils/utils";
 
-export function MobileFAB() {
+interface MobileFABProps {
+  onToggleMenu?: () => void;
+  mobileOpen?: boolean;
+}
+
+export function MobileFAB({ onToggleMenu, mobileOpen }: MobileFABProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -42,15 +47,40 @@ export function MobileFAB() {
     }
   };
 
+  const handleSearch = () => {
+    setIsOpen(false);
+    window.dispatchEvent(new CustomEvent("open-command-palette"));
+  };
+
+  const handleMenu = () => {
+    setIsOpen(false);
+    onToggleMenu?.();
+  };
+
   return (
     <div ref={containerRef} className="fixed bottom-6 right-6 z-50 md:hidden flex flex-col items-end gap-3 pointer-events-none">
-      {/* Menu items */}
       <div
         className={cn(
           "flex flex-col items-end gap-3 transition-all duration-200 pointer-events-auto",
           isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
         )}
       >
+        <button
+          onClick={handleMenu}
+          className="flex items-center gap-2 px-4 py-3 rounded-full bg-accent text-accent-foreground shadow-lg backdrop-blur-md border border-border/50 text-sm font-medium hover:bg-accent/80 active:scale-95 transition-all touch-target"
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+        >
+          {mobileOpen ? "Close Menu" : "Menu"}
+          {mobileOpen ? <X size={16} /> : <Menu size={16} />}
+        </button>
+        <button
+          onClick={handleSearch}
+          className="flex items-center gap-2 px-4 py-3 rounded-full bg-accent text-accent-foreground shadow-lg backdrop-blur-md border border-border/50 text-sm font-medium hover:bg-accent/80 active:scale-95 transition-all touch-target"
+          aria-label="Search"
+        >
+          Search
+          <Search size={16} />
+        </button>
         <button
           onClick={handlePaste}
           className="flex items-center gap-2 px-4 py-3 rounded-full bg-accent text-accent-foreground shadow-lg backdrop-blur-md border border-border/50 text-sm font-medium hover:bg-accent/80 active:scale-95 transition-all touch-target"

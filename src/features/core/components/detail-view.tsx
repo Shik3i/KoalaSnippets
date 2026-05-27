@@ -693,7 +693,7 @@ export function DetailView({
                   </div>
                 </div>
                 <div
-                  className="p-6 font-mono text-sm leading-relaxed overflow-auto detail-view-code scroll-indicator"
+                  className="p-6 font-mono text-sm leading-relaxed overflow-auto detail-view-code scroll-indicator [&_span]:!bg-transparent"
                   dangerouslySetInnerHTML={{ __html: processedHighlightedCode }}
                   style={{ fontFamily: "var(--font-jetbrains), monospace" }}
                 />
@@ -793,7 +793,7 @@ export function DetailView({
           </div>
           <div 
             ref={zenRef}
-            className="flex-1 overflow-auto bg-[#0d1117] rounded-xl border border-white/10 p-6 font-mono text-sm leading-relaxed text-white/90 detail-view-code"
+            className="flex-1 overflow-auto bg-[#0d1117] rounded-xl border border-white/10 p-6 font-mono text-sm leading-relaxed text-white/90 detail-view-code [&_span]:!bg-transparent"
             dangerouslySetInnerHTML={{ __html: processedHighlightedCode }}
             style={{ fontFamily: "var(--font-jetbrains), monospace" }}
           />

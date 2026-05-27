@@ -191,7 +191,7 @@ export function SnippetCard({
       )}
       <div className={cn("flex items-start justify-between gap-2 mb-2", onToggleSelect && "ml-6")}>
         <div className="flex items-center gap-1.5 min-w-0 flex-1">
-          <Image src={KoalaFile} alt="" width={14} height={14} className="shrink-0 opacity-60 mt-px" />
+          <Image src={KoalaFile} alt="" width={20} height={20} className="shrink-0 opacity-60" />
           {pinned && <Pin size={12} className="shrink-0 text-amber-400" aria-label="Pinned" />}
           <h3
             className="font-medium text-sm truncate group-hover:text-primary transition-colors"
@@ -337,7 +337,7 @@ export function SnippetCard({
 
       {snippetDensity !== "compact" && highlightedCode && (
         <div
-          className="mt-3 rounded-md border border-border bg-muted/20 text-[11px] max-h-40 overflow-y-auto leading-normal [&>pre]:!bg-transparent [&>pre]:!p-2 [&>pre]:!m-0 [&>pre]:overflow-x-auto select-text font-mono"
+          className="mt-3 rounded-md border border-border bg-muted/20 text-[11px] max-h-40 overflow-y-auto leading-normal [&>pre]:!bg-transparent [&>pre]:!p-2 [&>pre]:!m-0 [&>pre]:overflow-x-auto select-text font-mono [&_span]:!bg-transparent"
           style={{ fontFamily: "var(--font-jetbrains), monospace" }}
           dangerouslySetInnerHTML={{ __html: highlightedCode }}
           onClick={(e) => {
