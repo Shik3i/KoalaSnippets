@@ -49,6 +49,14 @@ These rules MUST be followed by any AI agent working on this codebase.
 - **Command Palette (`Ctrl+K`):** Global frosted-glass search palette for snippets and slash navigations.
 - **Code Editor:** Zero-dependency native editor for code input (`CodeEditor`) supporting Tab capture, bracket auto-close, and pair matching deletion.
 
+### i18n Conventions
+- All user-facing strings MUST use the `useI18n()` hook from `@/features/core/i18n`.
+- New translation keys go in `src/features/core/i18n/types.ts` (the `Translations` interface), then added to both `locales/en.ts` and `locales/de.ts`.
+- Do NOT hardcode English/German strings in JSX — use `{t.someKey}` instead.
+- When adding a new key, update `tests/unit/i18n.test.ts` with the key in `ALL_KEYS`.
+- The `I18nProvider` wraps the entire app in `src/app/layout.tsx`. Always test with both languages.
+- Adding a new language: create `locales/xx.ts` satisfying the `Translations` type, add to `SUPPORTED_LOCALES` and `LOCALE_LABELS` in `types.ts`.
+
 ### File Organization (Feature-Driven)
 The codebase uses a domain-driven layout for high modularity:
 ```
@@ -58,7 +66,7 @@ src/
     admin/      # administrative controls, metrics, database backup and scheduler processes
     auth/       # sign-in, registers, passwords and Argon2 crypt utilities
     snippets/   # code list cards, search filters, custom editor UI & Shiki syntax highlighter
-    core/       # sidebars, details, command palette overlays, utility libraries & global CSS styles
+    core/       # sidebars, details, command palette overlays, i18n, utility libraries & global CSS styles
   components/
     ui/         # shadcn/ui primitives + toasts
   db/           # Drizzle schema, migrations, connection

@@ -58,7 +58,8 @@ KoalaSnippets is a self-hosted web application for storing, organizing, and shar
 | **Keyboard-Driven Workflow** | Full keyboard support: `Escape` to clear search or dismiss toasts, Arrow keys in filter dropdowns, `/` to focus search, Enter/Escape on confirmation modals. |
 | **Dynamic Theming Engine** | Personalize your workspace with 7 custom app themes (incl. Dracula, Nordic, Midnight), 4 CSS-driven background patterns, and customizable list densities. |
 | **Stats Dashboard** | A stunning public metrics page featuring glassmorphic cards tracking total snippets, lines of code, unique tags, and languages. |
-| **Beautiful 2-Pane UI** | Responsive card grid, dark mode by default, clean shadcn/ui components, JetBrains Mono for code. |
+| **Beautiful 2-Pane UI** | Responsive card grid, dark mode by default, clean shadcn/ui components, JetBrains Mono for code. Collapsible sidebar controls keep navigation tidy. |
+| **Internationalization (i18n)** | Full English/German localization with a language toggle. Extensible architecture: add a new locale file and it works everywhere. |
 
 ### ⚡ Developer Workflow & Performance
 *Built for power users who demand speed and precision.*
@@ -92,6 +93,7 @@ KoalaSnippets is a self-hosted web application for storing, organizing, and shar
 | Authentication | Session cookies + Argon2id + Pepper + RBAC |
 | Fonts | next/font/google (Inter, JetBrains Mono) |
 | Icons | lucide-react (bundled) |
+| i18n | Custom React Context + typed locale files (EN, DE) |
 
 ## 🚀 Quick Start
 

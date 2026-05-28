@@ -37,15 +37,21 @@ interface DashboardContentProps {
   allowSelection?: boolean;
   isTrashView?: boolean;
   hasMoreInitial?: boolean;
+  importOpen?: boolean;
+  onImportClose?: () => void;
 }
 
 const GRID_ITEM_HEIGHT = 220;
 const TABLE_ROW_HEIGHT = 44;
 
-export function DashboardContent({ snippets, viewMode, density, allowSelection = true, isTrashView = false, hasMoreInitial = false }: DashboardContentProps) {
+export function DashboardContent({ snippets, viewMode, density, allowSelection = true, isTrashView = false, hasMoreInitial = false, importOpen: importOpenProp, onImportClose }: DashboardContentProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDragging, setIsDragging] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
+  const [importOpenInternal, setImportOpenInternal] = useState(false);
+  const isControlled = importOpenProp !== undefined;
+  const importOpen = isControlled ? importOpenProp : importOpenInternal;
+  const closeImport = isControlled ? onImportClose! : () => setImportOpenInternal(false);
+  const openImport = () => isControlled ? window.dispatchEvent(new CustomEvent("koalasnippets:open-import")) : setImportOpenInternal(true);
   const [isInitialLoading, setIsInitialLoading] = useState(snippets.length === 0);
   const router = useRouter();
   const { addToast } = useToast();
@@ -205,23 +211,24 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
     }
   };
 
+  // Shared scroll container for table and grid views
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   // Virtualizer for table view
-  const tableParentRef = useRef<HTMLDivElement>(null);
   const tableVirtualizer = useVirtualizer({
     count: localSnippets.length,
-    getScrollElement: () => tableParentRef.current,
+    getScrollElement: () => scrollContainerRef.current,
     estimateSize: () => TABLE_ROW_HEIGHT,
     overscan: 10,
   });
 
   // Virtualizer for grid view
-  const gridParentRef = useRef<HTMLDivElement>(null);
   const [gridColumns, setGridColumns] = useState(3);
 
   useEffect(() => {
     const updateColumns = () => {
-      if (!gridParentRef.current) return;
-      const width = gridParentRef.current.offsetWidth;
+      if (!scrollContainerRef.current) return;
+      const width = scrollContainerRef.current.offsetWidth;
       if (width < 640) setGridColumns(1);
       else if (width < 1024) setGridColumns(2);
       else if (width < 1280) setGridColumns(3);
@@ -234,7 +241,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
 
   const gridVirtualizer = useVirtualizer({
     count: Math.ceil(localSnippets.length / gridColumns),
-    getScrollElement: () => gridParentRef.current,
+    getScrollElement: () => scrollContainerRef.current,
     estimateSize: () => GRID_ITEM_HEIGHT,
     overscan: 5,
   });
@@ -268,18 +275,9 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
             </label>
           )}
         </div>
-        {!isTrashView && (
-          <button
-            onClick={() => setImportOpen(true)}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors touch-target"
-          >
-            <Download size={14} />
-            Import from URL
-          </button>
-        )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-3 sm:p-4">
         {isInitialLoading ? (
           <div className={cn(
             viewMode === "table" ? "" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4"
@@ -309,7 +307,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
                   label: "Import from URL",
                   icon: <Download size={14} />,
                   variant: "outline",
-                  onClick: () => setImportOpen(true),
+                  onClick: () => openImport(),
                 },
                 {
                   label: "Browse Public",
@@ -321,7 +319,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
             />
           )
         ) : viewMode === "table" ? (
-          <div ref={tableParentRef} className="overflow-auto" style={{ height: "calc(100vh - 200px)" }}>
+          <div className="h-full relative">
             <div
               style={{
                 height: `${tableVirtualizer.getTotalSize()}px`,
@@ -353,10 +351,11 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
                         data-index={virtualRow.index}
                         ref={(node) => tableVirtualizer.measureElement(node)}
                         style={{
-                          transform: `translateY(${virtualRow.start}px)`,
                           position: "absolute",
                           left: 0,
                           right: 0,
+                          top: 0,
+                          transform: `translateY(${virtualRow.start}px)`,
                         }}
                       >
                         <SnippetTableRow
@@ -379,11 +378,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
             </div>
           </div>
         ) : (
-          <div
-            ref={gridParentRef}
-            className="overflow-y-auto"
-            style={{ height: "calc(100vh - 200px)" }}
-          >
+          <div className="h-full relative">
             <div
               style={{
                 height: `${gridVirtualizer.getTotalSize()}px`,
@@ -456,7 +451,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
         <BulkActionBar selectedIds={Array.from(selectedIds)} onClear={clearSelection} />
       )}
 
-      <ImportWizard open={importOpen} onClose={() => setImportOpen(false)} />
+      <ImportWizard open={importOpen} onClose={closeImport} />
     </div>
   );
 }

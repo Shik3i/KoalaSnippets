@@ -3,9 +3,8 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/features/auth/utils/session";
 import { Sidebar } from "@/features/core/components/sidebar";
 import { Breadcrumb } from "@/features/core/components/breadcrumb";
-import { SnippetSearchHeader } from "@/features/snippets/components/search-header";
-import { DashboardContent } from "@/features/snippets/components/dashboard-content";
 import { GlobalDropzone } from "@/features/core/components/global-dropzone";
+import { DashboardClient } from "./_dashboard-client";
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { db } from "@/db";
 import { snippets, snippetFiles, userFavorites } from "@/db/schema";
@@ -150,9 +149,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <Suspense fallback={<div className="h-9 border-b border-border bg-card/50" />}>
           <Breadcrumb />
         </Suspense>
-        <SnippetSearchHeader availableTags={sidebarTags} availableLanguages={sidebarLanguages} sort={sortMode} viewMode={viewMode} resultCount={highlightedSnippets.length} />
-        <DashboardContent
-          snippets={highlightedSnippets.map((s) => ({
+        <DashboardClient
+          sidebarTags={sidebarTags}
+          sidebarLanguages={sidebarLanguages}
+          sortMode={sortMode}
+          viewMode={viewMode}
+          resultCount={highlightedSnippets.length}
+          highlightedSnippets={highlightedSnippets.map((s) => ({
             id: (s as Record<string, unknown>).id as string,
             title: (s as Record<string, unknown>).title as string,
             description: (s as Record<string, unknown>).description as string | null,
@@ -166,7 +169,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             createdAt: (s as Record<string, unknown>).createdAt as Date,
             highlightedCode: s.highlightedCode as string | undefined,
           }))}
-          viewMode={viewMode}
           density={density}
           hasMoreInitial={highlightedSnippets.length === 50}
         />

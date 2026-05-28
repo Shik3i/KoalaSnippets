@@ -5,6 +5,7 @@ import { CommandPalette } from "@/features/core/components/command-palette";
 import { GlobalDropzone } from "@/features/core/components/global-dropzone";
 import { ShortcutHelpOverlay } from "@/features/core/components/shortcut-help-overlay";
 import { ReferrerTracker } from "@/features/core/components/breadcrumb";
+import { I18nProvider } from "@/features/core/i18n";
 import { getSession } from "@/features/auth/utils/session";
 import { db } from "@/db";
 import { siteSettings } from "@/db/schema";
@@ -74,11 +75,13 @@ export default async function RootLayout({
               {globalAnnouncement}
             </div>
           )}
-          {children}
-          <ReferrerTracker />
-          <CommandPalette />
-          <ShortcutHelpOverlay />
-          <GlobalDropzone />
+          <I18nProvider>
+            {children}
+            <ReferrerTracker />
+            <CommandPalette />
+            <ShortcutHelpOverlay />
+            <GlobalDropzone />
+          </I18nProvider>
         </ToastProvider>
       </body>
     </html>

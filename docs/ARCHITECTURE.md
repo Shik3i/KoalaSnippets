@@ -132,10 +132,46 @@ src/
                             #   shared constants (VISIBILITY_CONFIG)
     core/                  # Domain-independent structure and layouts
       components/          # Global Sidebar, DetailView, glassmorphic CommandPalette, AppearanceSettingsForm
+      i18n/                # Internationalization: Context provider, typed locale files (EN, DE), useI18n hook
       utils/               # Tailwind style merges, validations, seed metrics, rate limiters
   components/
     ui/                    # shadcn/ui base primitive layouts (buttons, inputs, cards, toasts, confirm-modal)
 ```
+
+## Internationalization (i18n)
+
+### Architecture
+
+KoalaSnippets uses a lightweight, zero-dependency i18n system based on React Context:
+
+```
+src/features/core/i18n/
+  types.ts              # Locale type, Translations interface, constants
+  locales/en.ts         # English translation strings (44 keys)
+  locales/de.ts         # German translation strings (44 keys)
+  context.tsx            # I18nProvider (Context) + useI18n() hook
+  index.ts              # Barrel exports
+```
+
+### Design Principles
+
+- **Typed translations:** The `Translations` interface in `types.ts` is the single source of truth. Both `en.ts` and `de.ts` must satisfy every key. Unit tests enforce this at build time.
+- **Extensible:** Adding a new language requires only a new locale file + a one-line entry in `types.ts`.
+- **Persistence:** Language preference is stored in `localStorage` (`koalasnippets_locale`). On first visit, the browser's `navigator.language` is detected.
+- **Zero bundle bloat:** All locale files are tree-shakable TypeScript constants. No external i18n library.
+
+### Usage
+
+```tsx
+import { useI18n } from "@/features/core/i18n";
+
+function MyComponent() {
+  const { t, locale, setLocale } = useI18n();
+  return <button onClick={() => setLocale("de")}>{t.mySnippets}</button>;
+}
+```
+
+The `I18nProvider` wraps the entire app in `src/app/layout.tsx`.
 
 ## Search Architecture
 

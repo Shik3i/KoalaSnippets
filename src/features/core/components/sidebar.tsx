@@ -17,6 +17,8 @@ import {
   FileCode,
   Globe,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   X,
   Settings,
   LogOut,
@@ -31,7 +33,9 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Star,
+  Languages,
 } from "lucide-react";
+import { useI18n, type Locale, LOCALE_LABELS } from "@/features/core/i18n";
 
 interface SidebarProps {
   tags?: string[];
@@ -43,19 +47,20 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/dashboard", label: "My Snippets", icon: FileCode },
-  { href: "/favorites", label: "Favorites", icon: Star },
-  { href: "/dashboard/trash", label: "Trash", icon: Trash2 },
-  { href: "/public", label: "Public Explorer", icon: Globe },
-  { href: "/tools", label: "Dev Tools", icon: Wrench },
-  { href: "/stats", label: "Statistics", icon: BarChart3 },
+  { href: "/", labelKey: "home" as const, icon: Home },
+  { href: "/dashboard", labelKey: "mySnippets" as const, icon: FileCode },
+  { href: "/favorites", labelKey: "favorites" as const, icon: Star },
+  { href: "/dashboard/trash", labelKey: "trash" as const, icon: Trash2 },
+  { href: "/public", labelKey: "publicExplorer" as const, icon: Globe },
+  { href: "/tools", labelKey: "devTools" as const, icon: Wrench },
+  { href: "/stats", labelKey: "statistics" as const, icon: BarChart3 },
 ];
 
 export function Sidebar({ tags = [], languages = [], isAuthenticated = false, isAdmin = false, onTagClick, onLanguageClick }: SidebarProps) {
   const pathname = usePathname();
   const searchParamsObj = useSearchParams();
   const { recentSnippets, clearRecentSnippets } = useRecentSnippets();
+  const { t, locale, setLocale } = useI18n();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collections, setCollections] = useState<{ id: string; name: string }[]>([]);
   const [newCollectionName, setNewCollectionName] = useState("");
@@ -68,6 +73,12 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
       return localStorage.getItem("koalasnippets_sidebar_collapsed") === "true";
     }
     return false;
+  });
+  const [controlsExpanded, setControlsExpanded] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("koalasnippets_controls_expanded") === "true";
+    }
+    return true;
   });
 
   useEffect(() => {
@@ -172,7 +183,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                 setCollapsed(next);
                 localStorage.setItem("koalasnippets_sidebar_collapsed", String(next));
               }}
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-label={collapsed ? t.expandSidebar : t.collapseSidebar}
             >
               {collapsed ? <PanelLeftOpen size={16} suppressHydrationWarning /> : <PanelLeftClose size={16} suppressHydrationWarning />}
             </Button>
@@ -187,11 +198,12 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
             }
             const Icon = item.icon;
             const isActive = pathname === item.href;
+            const label = t[item.labelKey];
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                title={collapsed ? item.label : undefined}
+                title={collapsed ? label : undefined}
                 className={cn(
                   "flex items-center gap-3 rounded-md text-sm transition-colors",
                   collapsed ? "justify-center px-2 py-2" : "px-3 py-2",
@@ -202,7 +214,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                 onClick={() => setMobileOpen(false)}
               >
                 <Icon size={16} suppressHydrationWarning />
-                {!collapsed && item.label}
+                {!collapsed && label}
               </Link>
             );
           })}
@@ -223,7 +235,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
               <Button className="w-full gap-2" size="sm" asChild>
                 <Link href="/dashboard/new" onClick={() => setMobileOpen(false)}>
                 <Image src={KoalaFile} alt="New Snippet" width={26} height={26} />
-                  New Snippet
+                  {t.newSnippet}
                 </Link>
               </Button>
             )}
@@ -236,13 +248,13 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
               <div className="flex items-center gap-1.5">
                 <Image src={KoalaFolder} alt="Collections" width={24} height={24} />
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Collections
+                  {t.collections}
                 </h3>
               </div>
               <button 
                 onClick={() => { setAddingCollection(true); setNewCollectionName(""); }}
                 className="text-muted-foreground hover:text-foreground"
-                aria-label="Add collection"
+                aria-label={t.addCollection}
               >
                 <PlusCircle size={14} />
               </button>
@@ -275,7 +287,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                       setNewCollectionName("");
                     }
                   }}
-                  placeholder="Collection name"
+                  placeholder={t.collectionName}
                   className="flex-1 h-7 px-2 text-[11px] bg-muted/50 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
                   disabled={creatingCollection}
                   autoFocus
@@ -297,7 +309,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
             )}
             <div className="space-y-0.5">
               {collections.length === 0 ? (
-                <div className="text-xs text-muted-foreground px-1 py-2">No collections yet</div>
+                <div className="text-xs text-muted-foreground px-1 py-2">{t.noCollections}</div>
               ) : (
                 collections.map((col) => (
                   <button
@@ -350,7 +362,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
         {languages.length > 0 && !collapsed && (
           <div className="px-3 py-2 border-t border-border overflow-y-auto max-h-48">
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">
-              Languages
+              {t.languages}
             </h3>
             <div className="space-y-0.5">
               {languages.map((lang) => {
@@ -387,7 +399,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
         {tags.length > 0 && !collapsed && (
           <div className="px-3 py-2 border-t border-border overflow-y-auto max-h-48">
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">
-              Tags
+              {t.tags}
             </h3>
             <div className="flex flex-wrap gap-1.5 px-1">
               {tags.map((tag) => {
@@ -434,12 +446,12 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
                 <Clock size={12} />
-                Recently Accessed
+                {t.recentlyAccessed}
               </span>
               <button
                 onClick={clearRecentSnippets}
                 className="text-muted-foreground hover:text-destructive transition-colors p-0.5 rounded"
-                aria-label="Clear recently accessed snippets"
+                aria-label={t.clearRecent}
               >
                 <X size={10} />
               </button>
@@ -464,78 +476,53 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
         </div>
 
         <div className="mt-auto border-t border-border">
-          <div className={cn("space-y-1", collapsed ? "p-1.5" : "p-3")}>
-            {isAdmin && (
-              <Link
-                href="/admin"
-                title={collapsed ? "Admin Dashboard" : undefined}
-                className={cn(
-                  "flex items-center gap-3 rounded-md text-sm transition-colors",
-                  collapsed ? "justify-center px-2 py-2" : "px-3 py-2",
-                  pathname === "/admin"
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-                )}
-                onClick={() => setMobileOpen(false)}
-              >
-                <Shield size={16} suppressHydrationWarning />
-                {!collapsed && "Admin Dashboard"}
-              </Link>
-            )}
-            <Link
-              href="/settings/appearance"
-              title={collapsed ? "Appearance Settings" : undefined}
-              className={cn(
-                "flex items-center gap-3 rounded-md text-sm transition-colors",
-                collapsed ? "justify-center px-2 py-2" : "px-3 py-2",
-                pathname === "/settings/appearance"
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-              )}
-              onClick={() => setMobileOpen(false)}
-            >
-              <Palette size={16} suppressHydrationWarning />
-              {!collapsed && "Appearance Settings"}
-            </Link>
-            {isAuthenticated ? (
-              <>
+          {collapsed ? (
+            <div className="p-1.5 space-y-1">
+              {isAdmin && (
                 <Link
-                  href="/settings"
-                  title={collapsed ? "Security Settings" : undefined}
-                  className={cn(
-                    "flex items-center gap-3 rounded-md text-sm transition-colors",
-                    collapsed ? "justify-center px-2 py-2" : "px-3 py-2",
-                    pathname === "/settings"
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-                  )}
+                  href="/admin"
+                  title="Admin Dashboard"
+                  className="flex items-center justify-center w-full py-2 rounded-md text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
                   onClick={() => setMobileOpen(false)}
                 >
-                  <Settings size={16} suppressHydrationWarning />
-                  {!collapsed && "Security Settings"}
+                  <Shield size={16} suppressHydrationWarning />
                 </Link>
-                <button
-                  onClick={async () => {
-                    try {
-                      await fetch("/api/auth/logout", { method: "POST" });
-                    } catch (error) {
-                      console.error("Logout failed", error);
-                    } finally {
-                      window.location.href = "/login";
-                    }
-                  }}
-                  title="Sign Out"
-                  className={cn(
-                    "flex items-center gap-3 rounded-md text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors",
-                    collapsed ? "justify-center w-full px-2 py-2" : "w-full px-3 py-2"
-                  )}
-                >
-                  <LogOut size={16} suppressHydrationWarning />
-                  {!collapsed && "Sign Out"}
-                </button>
-              </>
-            ) : (
-              collapsed ? (
+              )}
+              <Link
+                href="/settings/appearance"
+                title="Appearance Settings"
+                className="flex items-center justify-center w-full py-2 rounded-md text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
+                onClick={() => setMobileOpen(false)}
+              >
+                <Palette size={16} suppressHydrationWarning />
+              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link
+                    href="/settings"
+                    title="Security Settings"
+                    className="flex items-center justify-center w-full py-2 rounded-md text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <Settings size={16} suppressHydrationWarning />
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await fetch("/api/auth/logout", { method: "POST" });
+                      } catch (error) {
+                        console.error("Logout failed", error);
+                      } finally {
+                        window.location.href = "/login";
+                      }
+                    }}
+                    title="Sign Out"
+                    className="flex items-center justify-center w-full py-2 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                  >
+                    <LogOut size={16} suppressHydrationWarning />
+                  </button>
+                </>
+              ) : (
                 <Link
                   href="/login"
                   onClick={() => setMobileOpen(false)}
@@ -544,35 +531,132 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                 >
                   <LogOut size={16} suppressHydrationWarning />
                 </Link>
-              ) : (
-                <Button variant="outline" className="w-full gap-2 mt-2" asChild>
-                  <Link href="/login" onClick={() => setMobileOpen(false)}>
-                    Sign In
+              )}
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={() => {
+                  const next = !controlsExpanded;
+                  setControlsExpanded(next);
+                  localStorage.setItem("koalasnippets_controls_expanded", String(next));
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/30 transition-colors"
+                aria-label={controlsExpanded ? t.collapseControls : t.expandControls}
+              >
+                <Settings size={14} suppressHydrationWarning />
+                <span className="flex-1 text-left">{t.controls}</span>
+                {controlsExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
+              {controlsExpanded && (
+                <div className="space-y-1 p-3 pt-0">
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      className={cn(
+                        "flex items-center gap-3 rounded-md text-sm transition-colors px-3 py-2",
+                        pathname === "/admin"
+                          ? "bg-accent text-accent-foreground"
+                          : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                      )}
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <Shield size={16} suppressHydrationWarning />
+                      {t.adminDashboard}
+                    </Link>
+                  )}
+                  <Link
+                    href="/settings/appearance"
+                    className={cn(
+                      "flex items-center gap-3 rounded-md text-sm transition-colors px-3 py-2",
+                      pathname === "/settings/appearance"
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                    )}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <Palette size={16} suppressHydrationWarning />
+                    {t.appearanceSettings}
                   </Link>
-                </Button>
-              )
-            )}
-          </div>
+                  {isAuthenticated ? (
+                    <>
+                      <Link
+                        href="/settings"
+                        className={cn(
+                          "flex items-center gap-3 rounded-md text-sm transition-colors px-3 py-2",
+                          pathname === "/settings"
+                            ? "bg-accent text-accent-foreground"
+                            : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                        )}
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        <Settings size={16} suppressHydrationWarning />
+                        {t.securitySettings}
+                      </Link>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await fetch("/api/auth/logout", { method: "POST" });
+                          } catch (error) {
+                            console.error("Logout failed", error);
+                          } finally {
+                            window.location.href = "/login";
+                          }
+                        }}
+                        className="flex items-center gap-3 rounded-md text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors w-full px-3 py-2"
+                      >
+                        <LogOut size={16} suppressHydrationWarning />
+                        {t.signOut}
+                      </button>
+                      <button
+                        onClick={() => {
+                          const next: Locale = locale === "en" ? "de" : "en";
+                          setLocale(next);
+                        }}
+                        className="flex items-center gap-3 rounded-md text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors w-full px-3 py-2"
+                        aria-label={t.toggleLanguage}
+                      >
+                        <Languages size={16} suppressHydrationWarning />
+                        <span className="flex-1">{LOCALE_LABELS[locale]}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {locale === "en" ? "en → de" : "de → en"}
+                        </span>
+                      </button>
+                    </>
+                  ) : (
+                    <Button variant="outline" className="w-full gap-2 mt-2" asChild>
+                      <Link href="/login" onClick={() => setMobileOpen(false)}>
+                        {t.signIn}
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              )}
+            </>
+          )}
           {!collapsed && (
           <div className="px-3 pb-3">
-            <div className="flex gap-3 text-xs text-muted-foreground px-2 mb-1">
-              <Link href="/impressum" className="hover:text-foreground transition-colors">
-                Impressum
-              </Link>
-              <Link href="/privacy" className="hover:text-foreground transition-colors">
-                Datenschutz
-              </Link>
-            </div>
-            <div className="text-xs text-muted-foreground px-2 flex items-center justify-between">
-              <a
-                href="https://github.com/Shik3i/KoalaSnippets"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors pr-2"
-              >
-                <Github size={12} suppressHydrationWarning />
-                {process.env.NEXT_PUBLIC_APP_VERSION}
-              </a>
+            <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground px-2">
+              <div className="flex items-center gap-3 min-w-0">
+                <Link href="/impressum" className="hover:text-foreground transition-colors shrink-0">
+                  {t.imprint}
+                </Link>
+                <Link href="/privacy" className="hover:text-foreground transition-colors shrink-0">
+                  {t.privacy}
+                </Link>
+              </div>
+              {typeof width === "number" && width > 210 && (
+                <a
+                  href="https://github.com/Shik3i/KoalaSnippets"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                  title={`KoalaSnippets ${process.env.NEXT_PUBLIC_APP_VERSION}`}
+                >
+                  <Github size={12} suppressHydrationWarning />
+                  <span className="hidden sm:inline tabular-nums">{process.env.NEXT_PUBLIC_APP_VERSION}</span>
+                </a>
+              )}
             </div>
           </div>
           )}

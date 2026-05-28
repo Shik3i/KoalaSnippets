@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { Code, Command, Filter, X, ChevronDown, Check } from "lucide-react";
+import { Code, Command, Filter, X, ChevronDown, Check, Download } from "lucide-react";
 import Image from "next/image";
 import KoalaSuche from "../../../../public/KoalaSuche.png";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ interface SnippetSearchHeaderProps {
   sort?: "newest" | "oldest" | "alphabetical" | "size-asc" | "size-desc";
   viewMode?: "grid" | "table";
   resultCount?: number;
+  onImportClick?: () => void;
 }
 
 function FilterDropdown({
@@ -169,6 +170,7 @@ export function SnippetSearchHeader({
   sort = "newest",
   viewMode = "grid",
   resultCount,
+  onImportClick,
 }: SnippetSearchHeaderProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -329,19 +331,33 @@ export function SnippetSearchHeader({
             <ViewToggle current={viewMode} />
           </div>
 
-          <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors py-1">
-            <input
-              type="checkbox"
-              id="include-code"
-              name="includeCode"
-              checked={includeCode}
-              onChange={(e) => setIncludeCode(e.target.checked)}
-              className="rounded border-border text-primary focus:ring-ring focus:ring-offset-background"
-              aria-label="Include code in search"
-            />
-            <Code size={14} className="text-muted-foreground" />
-            <span className="hidden sm:inline font-medium">Include code</span>
-          </label>
+          <button
+            type="button"
+            onClick={() => setIncludeCode(!includeCode)}
+            className={cn(
+              "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs transition-colors",
+              includeCode
+                ? 'bg-accent/80 text-accent-foreground'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/40 bg-muted/40 backdrop-blur-sm'
+            )}
+            aria-pressed={includeCode}
+            aria-label="Include code in search"
+          >
+            <Code size={12} />
+            <span className="hidden sm:inline font-medium">Code</span>
+          </button>
+
+          {onImportClick && (
+            <button
+              type="button"
+              onClick={onImportClick}
+              className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 bg-muted/40 backdrop-blur-sm transition-colors"
+              aria-label="Import from URL"
+            >
+              <Download size={12} />
+              <span className="hidden sm:inline font-medium">Import</span>
+            </button>
+          )}
         </div>
       </div>
 
