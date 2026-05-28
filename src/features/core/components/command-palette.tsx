@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Search, Plus, Settings, Shield, Home, FileCode, Command, ArrowRight, Moon, Copy, Pencil, Wrench, Upload, LayoutGrid } from "lucide-react";
 import { cn } from "@/features/core/utils/utils";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
+import { useI18n } from "@/features/core/i18n";
 
 interface SnippetResult {
   id: string;
@@ -18,29 +19,30 @@ interface SnippetResult {
   updatedAt: string;
 }
 
-const commands = [
-  { label: "Create New Snippet", value: "/new", href: "/dashboard/new", description: "Create a new snippet", icon: Plus },
-  { label: "Toggle Dark Mode", value: "/theme", action: "toggleTheme", description: "Switch between light and dark mode", icon: Moon },
-  { label: "Open Developer Tools", value: "/tools", href: "/tools", description: "Regex, Timestamp, URL, Color tools", icon: Wrench },
-  { label: "Import Snippets", value: "/import", action: "openImport", description: "Import snippets from file or URL", icon: Upload },
-  { label: "Set Density: Compact", value: "/density compact", action: "density-compact", description: "Minimal metadata-only view", icon: LayoutGrid },
-  { label: "Set Density: Preview", value: "/density preview", action: "density-preview", description: "5-line code preview view", icon: LayoutGrid },
-  { label: "Set Density: Full", value: "/density full", action: "density-full", description: "Full code card view", icon: LayoutGrid },
-  { label: "Account Settings", value: "/settings", href: "/settings", description: "Manage your account settings", icon: Settings },
-  { label: "Admin Dashboard", value: "/admin", href: "/admin", description: "Admin tools and database backups", icon: Shield },
-  { label: "Go to Home", value: "/home", href: "/", description: "Back to home page", icon: Home },
-  { label: "My Snippets Dashboard", value: "/dashboard", href: "/dashboard", description: "View your personal snippets", icon: FileCode },
-];
-
 export function CommandPalette() {
   const router = useRouter();
   const pathname = usePathname();
   const { addToast } = useToast();
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [snippets, setSnippets] = useState<SnippetResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+
+  const commands = useMemo(() => [
+    { label: t.cmdCreateSnippet, value: "/new", href: "/dashboard/new", description: t.cmdCreateSnippetDesc, icon: Plus },
+    { label: t.cmdToggleTheme, value: "/theme", action: "toggleTheme", description: t.cmdToggleThemeDesc, icon: Moon },
+    { label: t.cmdDevTools, value: "/tools", href: "/tools", description: t.cmdDevToolsDesc, icon: Wrench },
+    { label: t.cmdImport, value: "/import", action: "openImport", description: t.cmdImportDesc, icon: Upload },
+    { label: t.cmdDensityCompact, value: "/density compact", action: "density-compact", description: t.cmdDensityCompactDesc, icon: LayoutGrid },
+    { label: t.cmdDensityPreview, value: "/density preview", action: "density-preview", description: t.cmdDensityPreviewDesc, icon: LayoutGrid },
+    { label: t.cmdDensityFull, value: "/density full", action: "density-full", description: t.cmdDensityFullDesc, icon: LayoutGrid },
+    { label: t.cmdSettings, value: "/settings", href: "/settings", description: t.cmdSettingsDesc, icon: Settings },
+    { label: t.cmdAdmin, value: "/admin", href: "/admin", description: t.cmdAdminDesc, icon: Shield },
+    { label: t.cmdHome, value: "/home", href: "/", description: t.cmdHomeDesc, icon: Home },
+    { label: t.cmdDashboard, value: "/dashboard", href: "/dashboard", description: t.cmdDashboardDesc, icon: FileCode },
+  ], [t]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -139,8 +141,8 @@ export function CommandPalette() {
   if (pathname.startsWith("/snippets/")) {
     const snippetId = pathname.split("/")[2];
     currentCommands = [
-      { label: "Copy Snippet Link", value: "/copy", action: "copyShareLink", description: "Copy URL to clipboard", icon: Copy },
-      { label: "Edit Snippet", value: "/edit", href: `/dashboard/new?edit=${snippetId}`, description: "Edit current snippet", icon: Pencil },
+      { label: t.cmdCopyLink, value: "/copy", action: "copyShareLink", description: t.cmdCopyLinkDesc, icon: Copy },
+      { label: t.cmdEditSnippet, value: "/edit", href: `/dashboard/new?edit=${snippetId}`, description: t.cmdEditSnippetDesc, icon: Pencil },
       ...currentCommands
     ];
   }
@@ -195,7 +197,7 @@ export function CommandPalette() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ snippetDensity: density }),
         }).catch(console.error);
-        addToast(`Density set to ${density}`, "success");
+        addToast(t.densitySet.replace("{density}", density), "success");
         return;
       } else if (item.action === "openImport") {
         router.push("/dashboard/new?import=1");
@@ -263,7 +265,7 @@ export function CommandPalette() {
             value={query}
             onChange={handleQueryChange}
             onKeyDown={handleKeyDown}
-            placeholder="Search snippets or type commands (e.g. /new, /settings)..."
+            placeholder={t.commandPalettePlaceholder}
             className="w-full h-12 bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none text-sm"
           />
           <div className="flex items-center gap-1 text-[10px] bg-muted/30 border border-white/10 rounded-md px-1.5 py-0.5 text-muted-foreground select-none">
@@ -275,13 +277,13 @@ export function CommandPalette() {
         <div className="max-h-[350px] overflow-y-auto p-2 space-y-1" role="listbox" aria-live="polite" aria-label="Search results">
           {loading && (
             <div className="flex items-center justify-center p-8 text-sm text-muted-foreground">
-              <span className="animate-pulse">Searching snippets...</span>
+              <span className="animate-pulse">{t.commandPaletteSearching}</span>
             </div>
           )}
 
           {!loading && totalItems.length === 0 && (
             <div className="p-8 text-center text-sm text-muted-foreground">
-              No results found for &quot;{query}&quot;
+              {t.commandPaletteNoResults.replace("{query}", query)}
             </div>
           )}
 
@@ -290,7 +292,7 @@ export function CommandPalette() {
               {/* Commands Section */}
               {filteredCommands.length > 0 && (
                 <div className="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Commands
+                  {t.commandPaletteCommands}
                 </div>
               )}
               {filteredCommands.map((cmd, idx) => {
@@ -324,7 +326,7 @@ export function CommandPalette() {
               {/* Snippets Section */}
               {snippets.length > 0 && (
                 <div className="px-2 py-1.5 mt-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Snippets
+                  {t.commandPaletteSnippets}
                 </div>
               )}
               {snippets.map((snip, idx) => {
@@ -366,11 +368,11 @@ export function CommandPalette() {
         {/* Footer shortcuts helper */}
         <div className="flex items-center justify-between px-4 py-2 bg-white/[0.02] border-t border-white/5 text-[10px] text-muted-foreground">
           <div className="flex items-center gap-1.5">
-            <span className="flex items-center gap-0.5"><Command className="w-3 h-3" /> + K</span> to launch
+            <span className="flex items-center gap-0.5"><Command className="w-3 h-3" /> + K</span> {t.commandPaletteFooter}
           </div>
           <div className="flex gap-2">
-            <span>↑↓ to navigate</span>
-            <span>↵ to select</span>
+            <span>{t.commandPaletteNavigate}</span>
+            <span>{t.commandPaletteSelect}</span>
           </div>
         </div>
       </div>

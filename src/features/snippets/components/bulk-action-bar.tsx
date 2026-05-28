@@ -6,6 +6,7 @@ import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { useToast } from "@/components/ui/toast";
 import { revalidateDashboard } from "@/features/core/actions/revalidate";
 import { Trash2, Lock, Globe, X } from "lucide-react";
+import { useI18n } from "@/features/core/i18n";
 
 interface BulkActionBarProps {
   selectedIds: string[];
@@ -16,6 +17,7 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
   const [loading, setLoading] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const { addToast } = useToast();
+  const { t } = useI18n();
 
   const performBulk = async (action: string, visibility?: "PRIVATE" | "PUBLIC") => {
     setLoading(true);
@@ -29,27 +31,27 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
       if (res.ok) {
         if (action === "delete") {
           const deletedIds = [...selectedIds];
-          addToast(`${selectedIds.length} snippet${selectedIds.length !== 1 ? "s" : ""} moved to trash`, "info", {
-            label: "Undo",
+          addToast(`${selectedIds.length} snippet${selectedIds.length !== 1 ? "s" : ""} ${t.movedToTrash}`, "info", {
+            label: t.undo,
             onClick: async () => {
               for (const id of deletedIds) {
                 await fetch(`/api/snippets/${id}`, { method: "PUT", body: JSON.stringify({ isRestore: true }) });
               }
-              addToast("Snippets restored", "success");
+              addToast(t.snippetsRestored, "success");
               await revalidateDashboard();
               onClear();
             },
           });
         } else {
-          addToast(data.message ?? "Action completed", "success");
+          addToast(data.message ?? t.actionCompleted, "success");
         }
         await revalidateDashboard();
         onClear();
       } else {
-        addToast(data.error ?? "Action failed", "error");
+        addToast(data.error ?? t.actionFailed, "error");
       }
     } catch {
-      addToast("An error occurred", "error");
+      addToast(t.errorOccurred, "error");
     } finally {
       setLoading(false);
     }
@@ -68,13 +70,13 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
           size="icon"
           className="h-7 w-7"
           onClick={onClear}
-          aria-label="Clear selection"
+          aria-label={t.clearSelection}
           disabled={loading}
         >
           <X size={14} suppressHydrationWarning />
         </Button>
         <span className="text-sm font-medium">
-          {selectedIds.length} snippet{selectedIds.length !== 1 ? "s" : ""} selected
+          {selectedIds.length} snippet{selectedIds.length !== 1 ? "s" : ""} {t.selected}
         </span>
       </div>
 
@@ -85,10 +87,10 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
           className="gap-1.5"
           onClick={() => performBulk("set-visibility", "PRIVATE")}
           disabled={loading}
-          aria-label="Make selected snippets private"
+          aria-label={t.makePrivate}
         >
           <Lock size={14} suppressHydrationWarning />
-          <span className="hidden sm:inline">Make Private</span>
+          <span className="hidden sm:inline">{t.makePrivate}</span>
         </Button>
         <Button
           variant="outline"
@@ -96,10 +98,10 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
           className="gap-1.5"
           onClick={() => performBulk("set-visibility", "PUBLIC")}
           disabled={loading}
-          aria-label="Make selected snippets public"
+          aria-label={t.makePublic}
         >
           <Globe size={14} suppressHydrationWarning />
-          <span className="hidden sm:inline">Make Public</span>
+          <span className="hidden sm:inline">{t.makePublic}</span>
         </Button>
         <Button
           variant="destructive"
@@ -107,10 +109,10 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
           className="gap-1.5"
           onClick={() => setDeleteModalOpen(true)}
           disabled={loading}
-          aria-label="Delete selected snippets"
+          aria-label={t.delete}
         >
           <Trash2 size={14} suppressHydrationWarning />
-          <span className="hidden sm:inline">Delete</span>
+          <span className="hidden sm:inline">{t.delete}</span>
         </Button>
       </div>
 
@@ -118,9 +120,9 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
         open={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirm}
-        title="Move to Trash"
-        description={`Move ${selectedIds.length} snippet${selectedIds.length !== 1 ? "s" : ""} to trash? You can restore them later.`}
-        confirmLabel="Move to Trash"
+        title={t.moveToTrash}
+        description={t.moveToTrashDesc.replace("{count}", String(selectedIds.length))}
+        confirmLabel={t.moveToTrash}
         variant="destructive"
         loading={loading}
       />

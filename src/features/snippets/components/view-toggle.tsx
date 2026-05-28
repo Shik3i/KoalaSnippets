@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/features/core/utils/utils";
 import { LayoutGrid, List } from "lucide-react";
+import { useI18n } from "@/features/core/i18n";
 
 interface ViewToggleProps {
   current: "grid" | "table";
@@ -11,6 +12,7 @@ interface ViewToggleProps {
 
 export function ViewToggle({ current }: ViewToggleProps) {
   const router = useRouter();
+  const { t } = useI18n();
 
   const setView = (view: "grid" | "table") => {
     document.cookie = `snippet_view=${view}; path=/; max-age=31536000; SameSite=Lax`;
@@ -27,7 +29,7 @@ export function ViewToggle({ current }: ViewToggleProps) {
           current === "grid" && "bg-accent text-accent-foreground"
         )}
         onClick={() => setView("grid")}
-        aria-label="Grid view"
+        aria-label={t.gridView}
       >
         <LayoutGrid size={16} suppressHydrationWarning />
       </Button>
@@ -39,7 +41,7 @@ export function ViewToggle({ current }: ViewToggleProps) {
           current === "table" && "bg-accent text-accent-foreground"
         )}
         onClick={() => setView("table")}
-        aria-label="Table view"
+        aria-label={t.tableView}
       >
         <List size={16} suppressHydrationWarning />
       </Button>

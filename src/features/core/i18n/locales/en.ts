@@ -48,6 +48,106 @@ const en: Translations = {
   toggleLanguage: "Toggle language",
   close: "Close",
   version: "Version",
+
+  // Sort options
+  sortNewest: "Newest",
+  sortOldest: "Oldest",
+  sortAlphabetical: "Alphabetical",
+  sortSizeLargest: "Size (Largest)",
+  sortSizeSmallest: "Size (Smallest)",
+  sortSnippets: "Sort snippets",
+
+  // Search & Filter
+  noMatches: "No matches",
+  clearAll: "Clear all",
+  collection: "Collection",
+  searchLabel: "Search {label}...",
+
+  // Table headers
+  headerTitle: "Title",
+  headerLanguage: "Language",
+  headerTags: "Tags",
+  headerVisibility: "Visibility",
+  headerDate: "Date",
+
+  // Visibility labels
+  visibilityPrivate: "Private",
+  visibilityShared: "Shared",
+  visibilityPublic: "Public",
+
+  // Drag & Drop
+  dropFilesHere: "Drop files here",
+  dropFilesDesc: "to create a new snippet",
+  importingFiles: "Importing {count} file(s)...",
+
+  // Bulk actions
+  makePrivate: "Make Private",
+  makePublic: "Make Public",
+  delete: "Delete",
+  moveToTrash: "Move to Trash",
+  moveToTrashDesc: "Move {count} snippet(s) to trash? You can restore them later.",
+  movedToTrash: "moved to trash",
+  undo: "Undo",
+  snippetsRestored: "Snippets restored",
+  actionCompleted: "Action completed",
+  actionFailed: "Action failed",
+  errorOccurred: "An error occurred",
+  clearSelection: "Clear selection",
+
+  // Snippet row actions
+  pinned: "Pinned",
+  pinSnippet: "Pin snippet",
+  unpinSnippet: "Unpin snippet",
+  addToFavorites: "Add to favorites",
+  removeFromFavorites: "Remove from favorites",
+  addedToFavorites: "Added to favorites",
+  removedFromFavorites: "Removed from favorites",
+  failedToUpdateFavorite: "Failed to update favorite",
+  failedToUpdatePin: "Failed to update pin",
+  snippetPinned: "Snippet pinned",
+  snippetUnpinned: "Snippet unpinned",
+
+  // View toggle
+  gridView: "Grid view",
+  tableView: "List view",
+
+  // Command palette
+  commandPalettePlaceholder: "Search snippets or type commands (e.g. /new, /settings)...",
+  commandPaletteSearching: "Searching snippets...",
+  commandPaletteNoResults: "No results found for \"{query}\"",
+  commandPaletteCommands: "Commands",
+  commandPaletteSnippets: "Snippets",
+  commandPaletteFooter: "to launch",
+  commandPaletteNavigate: "↑↓ to navigate",
+  commandPaletteSelect: "↵ to select",
+  densitySet: "Density set to {density}",
+  // Command palette options
+  cmdCreateSnippet: "Create New Snippet",
+  cmdCreateSnippetDesc: "Create a new snippet",
+  cmdToggleTheme: "Toggle Dark Mode",
+  cmdToggleThemeDesc: "Switch between light and dark mode",
+  cmdDevTools: "Open Developer Tools",
+  cmdDevToolsDesc: "Regex, Timestamp, URL, Color tools",
+  cmdImport: "Import Snippets",
+  cmdImportDesc: "Import snippets from file or URL",
+  cmdDensityCompact: "Set Density: Compact",
+  cmdDensityCompactDesc: "Minimal metadata-only view",
+  cmdDensityPreview: "Set Density: Preview",
+  cmdDensityPreviewDesc: "5-line code preview view",
+  cmdDensityFull: "Set Density: Full",
+  cmdDensityFullDesc: "Full code card view",
+  cmdSettings: "Account Settings",
+  cmdSettingsDesc: "Manage your account settings",
+  cmdAdmin: "Admin Dashboard",
+  cmdAdminDesc: "Admin tools and database backups",
+  cmdHome: "Go to Home",
+  cmdHomeDesc: "Back to home page",
+  cmdDashboard: "My Snippets Dashboard",
+  cmdDashboardDesc: "View your personal snippets",
+  cmdCopyLink: "Copy Snippet Link",
+  cmdCopyLinkDesc: "Copy URL to clipboard",
+  cmdEditSnippet: "Edit Snippet",
+  cmdEditSnippetDesc: "Edit current snippet",
 };
 
 export default en;

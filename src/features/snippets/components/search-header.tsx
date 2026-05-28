@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/features/core/utils/utils";
 import { SortSelect } from "./sort-select";
 import { ViewToggle } from "./view-toggle";
+import { useI18n } from "@/features/core/i18n";
 
 interface SnippetSearchHeaderProps {
   placeholder?: string;
@@ -23,11 +24,15 @@ interface SnippetSearchHeaderProps {
 
 function FilterDropdown({
   label,
+  placeholder,
+  noMatchesLabel,
   options,
   selected,
   onToggle,
 }: {
   label: string;
+  placeholder: string;
+  noMatchesLabel: string;
   options: string[];
   selected: string[];
   onToggle: (value: string) => void;
@@ -120,13 +125,13 @@ function FilterDropdown({
             name={`filter-${label.toLowerCase()}`}
             value={search}
             onChange={(e) => { setSearch(e.target.value); setActiveIndex(0); }}
-            placeholder={`Search ${label.toLowerCase()}...`}
+            placeholder={placeholder}
             className="w-full h-7 px-2 text-[11px] bg-muted/50 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
             autoFocus
           />
           <div ref={listRef} className="max-h-40 overflow-y-auto space-y-0.5" role="listbox">
             {filtered.length === 0 ? (
-              <div className="text-[11px] text-muted-foreground px-2 py-2 text-center">No matches</div>
+              <div className="text-[11px] text-muted-foreground px-2 py-2 text-center">{noMatchesLabel}</div>
             ) : (
               filtered.map((option, i) => {
                 const isSelected = selected.includes(option);
@@ -164,7 +169,7 @@ function FilterDropdown({
 }
 
 export function SnippetSearchHeader({ 
-  placeholder = "Search snippets...",
+  placeholder,
   availableTags = [],
   availableLanguages = [],
   sort = "newest",
@@ -175,6 +180,8 @@ export function SnippetSearchHeader({
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useI18n();
+  const resolvedPlaceholder = placeholder ?? t.searchSnippets;
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const [includeCode, setIncludeCode] = useState(searchParams.get("includeCode") === "true");
   const [filterMode, setFilterMode] = useState(searchParams.get("filterMode") ?? "and");
@@ -274,11 +281,11 @@ export function SnippetSearchHeader({
             ref={inputRef}
             id="snippet-search"
             name="q"
-            placeholder={placeholder}
+            placeholder={resolvedPlaceholder}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="pl-10 h-9 pr-14 w-full border-0 shadow-none focus-visible:ring-0 bg-muted/40 backdrop-blur-sm"
-            aria-label="Search snippets"
+            aria-label={t.searchSnippets}
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2">
             {searching ? (
@@ -312,7 +319,7 @@ export function SnippetSearchHeader({
             aria-label="Toggle filter panel"
           >
             <Filter size={12} />
-            <span className="font-medium hidden sm:inline">Filters</span>
+            <span className="font-medium hidden sm:inline">{t.filters}</span>
             {hasActiveFilters && (
               <span className="min-w-[16px] h-4 rounded-full bg-primary text-[9px] text-primary-foreground flex items-center justify-center px-1">
                 {activeFilterCount}
@@ -325,6 +332,7 @@ export function SnippetSearchHeader({
               {resultCount} snippet{resultCount !== 1 ? "s" : ""}
             </span>
           )}
+
 
           <div className="flex items-center gap-2">
             <SortSelect current={sort} />
@@ -344,7 +352,7 @@ export function SnippetSearchHeader({
             aria-label="Include code in search"
           >
             <Code size={12} />
-            <span className="hidden sm:inline font-medium">Code</span>
+            <span className="hidden sm:inline font-medium">{t.code}</span>
           </button>
 
           {onImportClick && (
@@ -355,7 +363,7 @@ export function SnippetSearchHeader({
               aria-label="Import from URL"
             >
               <Download size={12} />
-              <span className="hidden sm:inline font-medium">Import</span>
+              <span className="hidden sm:inline font-medium">{t.import}</span>
             </button>
           )}
         </div>
@@ -381,8 +389,8 @@ export function SnippetSearchHeader({
           ))}
           {activeCollection && (
             <Badge variant="secondary" className="gap-1 rounded-md py-0 px-2 h-5 flex items-center text-[11px]">
-              Collection
-              <button type="button" onClick={() => updateParams({ collection: null })} className="hover:text-destructive ml-0.5" aria-label="Remove collection filter">
+              {t.collection}
+              <button type="button" onClick={() => updateParams({ collection: null })} className="hover:text-destructive ml-0.5" aria-label={`Remove ${t.collection}`}>
                 <X size={10} />
               </button>
             </Badge>
@@ -392,7 +400,7 @@ export function SnippetSearchHeader({
             onClick={() => updateParams({ tags: null, language: null, collection: null })}
             className="text-[11px] text-muted-foreground hover:text-foreground hover:underline ml-1"
           >
-            Clear all
+            {t.clearAll}
           </button>
         </div>
       )}
@@ -403,13 +411,17 @@ export function SnippetSearchHeader({
           <div className="hidden md:block space-y-3 pt-2 pb-1">
             <div className="flex flex-wrap items-center gap-2">
               <FilterDropdown
-                label="Tags"
+                label={t.tags}
+                placeholder={t.searchLabel.replace("{label}", t.tags)}
+                noMatchesLabel={t.noMatches}
                 options={availableTags}
                 selected={activeTags}
                 onToggle={toggleTag}
               />
               <FilterDropdown
-                label="Languages"
+                label={t.languages}
+                placeholder={t.searchLabel.replace("{label}", t.languages)}
+                noMatchesLabel={t.noMatches}
                 options={availableLanguages}
                 selected={activeLanguages}
                 onToggle={toggleLanguage}
@@ -442,7 +454,7 @@ export function SnippetSearchHeader({
                 </button>
               </div>
               <span className="text-[10px] text-muted-foreground hidden sm:inline">
-                {filterMode === "or" ? "Match any" : "Match all"}
+                {filterMode === "or" ? t.matchAny : t.matchAll}
               </span>
             </div>
           </div>
@@ -457,7 +469,7 @@ export function SnippetSearchHeader({
               aria-label="Filter options"
             >
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">Filters</h3>
+                <h3 className="text-sm font-semibold">{t.filters}</h3>
                 <button
                   type="button"
                   onClick={() => setFiltersExpanded(false)}
@@ -469,13 +481,17 @@ export function SnippetSearchHeader({
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <FilterDropdown
-                  label="Tags"
+                  label={t.tags}
+                  placeholder={t.searchLabel.replace("{label}", t.tags)}
+                  noMatchesLabel={t.noMatches}
                   options={availableTags}
                   selected={activeTags}
                   onToggle={toggleTag}
                 />
                 <FilterDropdown
-                  label="Languages"
+                  label={t.languages}
+                  placeholder={t.searchLabel.replace("{label}", t.languages)}
+                  noMatchesLabel={t.noMatches}
                   options={availableLanguages}
                   selected={activeLanguages}
                   onToggle={toggleLanguage}

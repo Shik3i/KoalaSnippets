@@ -48,6 +48,106 @@ const de: Translations = {
   toggleLanguage: "Sprache wechseln",
   close: "Schließen",
   version: "Version",
+
+  // Sort options
+  sortNewest: "Neueste",
+  sortOldest: "Älteste",
+  sortAlphabetical: "Alphabetisch",
+  sortSizeLargest: "Größe (Größte)",
+  sortSizeSmallest: "Größe (Kleinste)",
+  sortSnippets: "Snippets sortieren",
+
+  // Search & Filter
+  noMatches: "Keine Treffer",
+  clearAll: "Alle löschen",
+  collection: "Sammlung",
+  searchLabel: "{label} suchen...",
+
+  // Table headers
+  headerTitle: "Titel",
+  headerLanguage: "Sprache",
+  headerTags: "Tags",
+  headerVisibility: "Sichtbarkeit",
+  headerDate: "Datum",
+
+  // Visibility labels
+  visibilityPrivate: "Privat",
+  visibilityShared: "Geteilt",
+  visibilityPublic: "Öffentlich",
+
+  // Drag & Drop
+  dropFilesHere: "Dateien hier ablegen",
+  dropFilesDesc: "um ein neues Snippet zu erstellen",
+  importingFiles: "{count} Datei(en) werden importiert...",
+
+  // Bulk actions
+  makePrivate: "Privat machen",
+  makePublic: "Öffentlich machen",
+  delete: "Löschen",
+  moveToTrash: "In Papierkorb",
+  moveToTrashDesc: "{count} Snippet(s) in den Papierkorb verschieben? Du kannst sie später wiederherstellen.",
+  movedToTrash: "in den Papierkorb verschoben",
+  undo: "Rückgängig",
+  snippetsRestored: "Snippets wiederhergestellt",
+  actionCompleted: "Aktion abgeschlossen",
+  actionFailed: "Aktion fehlgeschlagen",
+  errorOccurred: "Ein Fehler ist aufgetreten",
+  clearSelection: "Auswahl aufheben",
+
+  // Snippet row actions
+  pinned: "Angeheftet",
+  pinSnippet: "Snippet anheften",
+  unpinSnippet: "Snippet lösen",
+  addToFavorites: "Zu Favoriten hinzufügen",
+  removeFromFavorites: "Aus Favoriten entfernen",
+  addedToFavorites: "Zu Favoriten hinzugefügt",
+  removedFromFavorites: "Aus Favoriten entfernt",
+  failedToUpdateFavorite: "Favorit konnte nicht aktualisiert werden",
+  failedToUpdatePin: "Anheften fehlgeschlagen",
+  snippetPinned: "Snippet angeheftet",
+  snippetUnpinned: "Snippet gelöst",
+
+  // View toggle
+  gridView: "Kachelansicht",
+  tableView: "Listenansicht",
+
+  // Command palette
+  commandPalettePlaceholder: "Snippets suchen oder Befehle eingeben (z.B. /new, /settings)...",
+  commandPaletteSearching: "Snippets werden gesucht...",
+  commandPaletteNoResults: "Keine Ergebnisse für \"{query}\"",
+  commandPaletteCommands: "Befehle",
+  commandPaletteSnippets: "Snippets",
+  commandPaletteFooter: "zum Starten",
+  commandPaletteNavigate: "↑↓ zum Navigieren",
+  commandPaletteSelect: "↵ zum Auswählen",
+  densitySet: "Dichte auf {density} gesetzt",
+  // Command palette options
+  cmdCreateSnippet: "Neues Snippet erstellen",
+  cmdCreateSnippetDesc: "Erstellt ein neues Snippet",
+  cmdToggleTheme: "Dark Mode umschalten",
+  cmdToggleThemeDesc: "Wechselt zwischen hellem und dunklem Design",
+  cmdDevTools: "Developer Tools öffnen",
+  cmdDevToolsDesc: "Regex-, Zeitstempel-, URL- und Farbbearbeitungswerkzeuge",
+  cmdImport: "Snippets importieren",
+  cmdImportDesc: "Importiert Snippets aus einer Datei oder URL",
+  cmdDensityCompact: "Dichte einstellen: Kompakt",
+  cmdDensityCompactDesc: "Minimale Ansicht, nur Metadaten",
+  cmdDensityPreview: "Dichte einstellen: Vorschau",
+  cmdDensityPreviewDesc: "5 Zeilen Code-Vorschau",
+  cmdDensityFull: "Dichte einstellen: Voll",
+  cmdDensityFullDesc: "Vollständige Kachelansicht",
+  cmdSettings: "Kontoeinstellungen",
+  cmdSettingsDesc: "Verwalte deine Kontoeinstellungen",
+  cmdAdmin: "Admin-Dashboard",
+  cmdAdminDesc: "Admin-Tools und Datenbank-Backups",
+  cmdHome: "Zur Startseite",
+  cmdHomeDesc: "Zurück zur Startseite",
+  cmdDashboard: "Meine Snippets",
+  cmdDashboardDesc: "Zeige deine persönlichen Snippets an",
+  cmdCopyLink: "Snippet-Link kopieren",
+  cmdCopyLinkDesc: "Kopiert die URL in die Zwischenablage",
+  cmdEditSnippet: "Snippet bearbeiten",
+  cmdEditSnippetDesc: "Aktuelles Snippet bearbeiten",
 };
 
 export default de;
