@@ -4,23 +4,22 @@
 
 # KoalaSnippets
 
-**A blazing fast, zero-bloat, privacy-first snippet manager designed to cure Notepad++ tab hell.**
+**The cure for Notepad++ tab hell — a self-hosted snippet manager for all those unnamed code files.**
 
 [![Version](https://img.shields.io/badge/Version-1.11.5-blue?style=for-the-badge)](https://github.com/Shik3i/KoalaSnippets/releases)
-[![Docker Image](https://img.shields.io/badge/Docker-Latest-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://hub.docker.com/r/shik3i/koalasnippets)
+[![Docker Image](https://img.shields.io/badge/GHCR-Latest-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://github.com/Shik3i/KoalaSnippets/pkgs/container/koalasnippets)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/Shik3i/KoalaSnippets/docker-build.yml?style=for-the-badge&logo=github&label=Build)](https://github.com/Shik3i/KoalaSnippets/actions)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
-[![Live Demo](https://img.shields.io/badge/Live_Demo-snippets.koalastuff.net-FF6B6B?style=for-the-badge)](https://snippets.koalastuff.net)
 
-KoalaSnippets is a self-hosted web application for storing, organizing, and sharing code snippets. It features a clean two-pane interface, server-side syntax highlighting, and rock-solid security — all with **zero external dependencies**. No CDNs. No tracking. No bloat. Just your code, your server, your rules.
+KoalaSnippets is a self-hosted web application for storing, organizing, and sharing code snippets. Make them taggable, searchable, filterable — and finally get rid of those thousands of unnamed files in Notepad++. Features a two-pane interface, server-side syntax highlighting, and a self-contained build with no external CDN calls. Your code, your server, your rules.
 
 </div>
 
 <details>
-<summary><b>📚 Table of Contents</b></summary>
+<summary><b>Table of Contents</b></summary>
 
 - [✨ Core Features](#-core-features)
 - [🧱 Tech Stack](#-tech-stack)
@@ -28,7 +27,8 @@ KoalaSnippets is a self-hosted web application for storing, organizing, and shar
 - [🐳 Docker Deployment](#-docker-deployment)
 - [📁 Project Structure](#-project-structure)
 - [🔐 Security](#-security)
-- [🗺️ Roadmap](#-roadmap)
+- [🌐 Translations & Localization](#-translations--localization)
+- [🗺️ Roadmap](#️-roadmap)
 - [📄 License](#-license)
 
 <br/>
@@ -36,49 +36,42 @@ KoalaSnippets is a self-hosted web application for storing, organizing, and shar
 
 ## ✨ Core Features
 
-> [!TIP]
-> KoalaSnippets is engineered to be the **ultimate cure for Notepad++ tab hell**. We stripped away the bloat and focused on a premium developer experience, rock-solid security, and blazing-fast performance.
-
-### 🛡️ Privacy & Hardened Security
-*Your code, your server, your rules. Zero external dependencies, zero tracking.*
+### 🛡️ Privacy & Security
 
 | Feature | Description |
 |---------|-------------|
-| **Crypto-Grade Hashing** | Passwords secured via Argon2id + Salt + application-level Pepper. |
-| **Timing Attack Resistance** | Shared tokens are compared using constant-time `crypto.timingSafeEqual`. |
-| **Enterprise Defenses** | Strict CSP headers, Next.js Middleware rate-limiting, and 100% locally bundled assets (Next/Font, Lucide-React). |
-| **Visibility Controls** | Public Explorer for anyone, secure shared links with unguessable tokens, or keep strictly private. |
+| **Argon2id Password Hashing** | Passwords secured with Argon2id, per-user salt, and an application-level pepper via `AUTH_PEPPER`. |
+| **Timing-Attack-Resistant Comparisons** | Share tokens and API keys compared using `crypto.timingSafeEqual` with SHA-256 normalization. |
+| **Content Security Policy** | Strict CSP headers configured in Next.js and optionally enforced via Caddy reverse proxy. |
+| **Visibility Controls** | Public Explorer for anyone, secure shared links with unguessable tokens, or keep snippets strictly private. |
 
-### 🎨 Premium Aesthetic & UX
-*A beautifully crafted two-pane interface that feels incredibly responsive and alive.*
-
-| Feature | Description |
-|---------|-------------|
-| **Glassmorphic Command Palette** | Hit `Ctrl+K` / `⌘K` for a global frosted-glass HUD to search snippets instantly or execute slash commands (`/new`, `/settings`, `/backups`). |
-| **Keyboard-Driven Workflow** | Full keyboard support: `Escape` to clear search or dismiss toasts, Arrow keys in filter dropdowns, `/` to focus search, Enter/Escape on confirmation modals. |
-| **Dynamic Theming Engine** | Personalize your workspace with 7 custom app themes (incl. Dracula, Nordic, Midnight), 4 CSS-driven background patterns, and customizable list densities. |
-| **Stats Dashboard** | A stunning public metrics page featuring glassmorphic cards tracking total snippets, lines of code, unique tags, and languages. |
-| **Beautiful 2-Pane UI** | Responsive card grid, dark mode by default, clean shadcn/ui components, JetBrains Mono for code. Collapsible sidebar controls keep navigation tidy. |
-| **Internationalization (i18n)** | Full English/German localization with a language toggle. Extensible architecture: add a new locale file and it works everywhere. |
-
-### ⚡ Developer Workflow & Performance
-*Built for power users who demand speed and precision.*
+### 🎨 User Interface
 
 | Feature | Description |
 |---------|-------------|
-| **Multi-File Snippets & Collections** | Group related code pieces together seamlessly. Organize your workspace using tags, collections, and favorites. |
-| **Premium Custom CodeEditor** | A zero-dependency native editor featuring automatic Tab indentation, matching bracket auto-closing, overtype skipping, and pair matching deletions. |
-| **Lazy-Loaded Syntax Highlighting** | Server-side Shiki highlighting for 30+ languages, dynamically loaded on demand for instantaneous render times. |
-| **Blazing Fast Search & Filters** | Server-side parameterized FTS-style queries with "include code in search" toggle. Collapsible filter panel with searchable combobox dropdowns for tags and languages, OR/AND logic toggle, and keyboard navigation. |
+| **Command Palette** | `Ctrl+K` / `⌘K` opens a search and command palette with shortcuts like `/new`, `/settings`, `/admin`, and `/theme`. |
+| **Keyboard Shortcuts** | 14+ shortcuts including vim-style navigation (`j`/`k`), `Cmd+S` to save, `Cmd+Shift+N` for new snippets, and `?` for help. |
+| **Themes & Backgrounds** | 7 app themes (Dark, Midnight, Nordic, Dracula, Terracotta, Hacker, Light) and 12 CSS background patterns. |
+| **Statistics Page** | Public metrics tracking total snippets, lines of code, unique tags, languages, and more. |
+| **2-Pane Layout** | Responsive card grid with dark mode by default, JetBrains Mono for code, and a collapsible sidebar. |
+| **Internationalization** | Full English and German localization with a language toggle. Extensible via locale files. |
 
-### 📥 Enterprise Reliability
-*Set it and forget it. KoalaSnippets manages itself.*
+### ⚡ Developer Workflow
 
 | Feature | Description |
 |---------|-------------|
-| **Hardened WAL-Mode SQLite** | Configured for maximum concurrent read/write throughput with Write-Ahead Logging and tuned busy timeouts. |
-| **Automated GFS Backups** | Built-in `VACUUM INTO` backup scheduler running silently in the background, enforcing Grandfather-Father-Son retention (7 daily, 4 weekly, 12 monthly). |
-| **RBAC Admin Portal** | A dedicated control center for administrators to manage users, trigger backups manually, and monitor system health endpoints. |
+| **Multi-File Snippets & Collections** | Group related code files within a single snippet. Organize with tags, collections, and favorites. |
+| **Custom Code Editor** | A lightweight editor with Tab indentation, bracket auto-closing, overtype skipping, and pair-matching deletions. |
+| **Server-Side Syntax Highlighting** | Shiki-based highlighting for 30+ languages, with languages and themes lazy-loaded on demand. |
+| **Search & Filters** | Server-side search with an "include code in search" toggle, filterable by tags and languages, with OR/AND logic. |
+
+### 📦 Reliability
+
+| Feature | Description |
+|---------|-------------|
+| **WAL-Mode SQLite** | Write-Ahead Logging with tuned busy timeouts for concurrent read/write access. |
+| **Automated Backups** | Built-in `VACUUM INTO` backup scheduler with Grandfather-Father-Son retention (7 daily, 4 weekly, 12 monthly). |
+| **Admin Panel** | Role-based admin dashboard for managing users, triggering backups, and monitoring system health. |
 
 ## 🧱 Tech Stack
 
@@ -86,10 +79,10 @@ KoalaSnippets is a self-hosted web application for storing, organizing, and shar
 |-------|------------|
 | Framework | Next.js 16 (App Router, React Server Components) |
 | Language | TypeScript (strict mode) |
-| Styling | Tailwind CSS v4 + shadcn/ui |
-| Database | SQLite (better-sqlite3) |
+| Styling | Tailwind CSS v4 + shadcn/ui-inspired components |
+| Database | SQLite via better-sqlite3 |
 | ORM | Drizzle ORM |
-| Syntax Highlighting | Shiki (server-side with lazy-loading language modules) |
+| Syntax Highlighting | Shiki (server-side with lazy-loaded language modules) |
 | Authentication | Session cookies + Argon2id + Pepper + RBAC |
 | Fonts | next/font/google (Inter, JetBrains Mono) |
 | Icons | lucide-react (bundled) |
@@ -99,7 +92,7 @@ KoalaSnippets is a self-hosted web application for storing, organizing, and shar
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 20+ (Node.js 22 used in Docker)
 - npm (or pnpm/yarn)
 
 ### 1. Clone & Install
@@ -166,7 +159,7 @@ npm run db:migrate
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The server uses Turbopack for instant hot-reloading. The SQLite database initializes automatically on first access.
+Open [http://localhost:3000](http://localhost:3000). The server uses Turbopack for fast hot-reloading. The SQLite database initializes automatically on first access.
 
 ### Available Scripts
 
@@ -215,7 +208,7 @@ docker run -d -p 3000:3000 \
 
 ### Reverse Proxy (Caddy)
 
-See `Caddyfile.example` for a production-ready Caddy configuration with strict security headers (CSP, HSTS, X-Content-Type-Options).
+See `Caddyfile.example` for a production-ready Caddy configuration with security headers (CSP, HSTS, X-Content-Type-Options).
 
 ## 📁 Project Structure
 
@@ -238,37 +231,34 @@ KoalaSnippets/
 │   │   ├── stats/          # Public statistics page
 │   │   ├── impressum/      # German imprint
 │   │   └── privacy/        # Privacy policy
-│   ├── features/           # Domain-driven features folders (Restructured)
+│   ├── features/           # Domain-driven feature folders
 │   │   ├── admin/          # Backup UI lists, metrics, scheduling logic & admin guards
 │   │   ├── auth/           # Login/register forms, session handlers & crypt auth utils
-│   │   ├── snippets/       # Snippet cards, search header with filter dropdowns, custom CodeEditor, sort/view toggles, bulk actions & lazy Shiki highlighting
-│   │   │   └── utils/       #   Keyboard shortcuts, filter logic (OR/AND), shared constants (VISIBILITY_CONFIG)
-│   │   └── core/           # Common layouts (sidebar with inline collection form, detail-view), confirm modals, global rate limiters, CommandPalette & styles
+│   │   ├── snippets/       # Snippet cards, search header, custom CodeEditor, sort/view toggles & lazy Shiki highlighting
+│   │   │   └── utils/      #   Keyboard shortcuts, filter logic (OR/AND), shared constants
+│   │   └── core/           # Common layouts, confirm modals, rate limiters, CommandPalette & i18n
 │   ├── components/
-│   │   └── ui/             # shadcn/ui base primitives (buttons, inputs, cards, toasts with exit animations, confirm-modal)
+│   │   └── ui/             # shadcn/ui-inspired base primitives (buttons, inputs, cards, toasts, confirm-modal)
 │   ├── db/                 # Drizzle schema, migrations, connection (WAL enabled)
-│   ├── proxy.ts            # Next.js Middleware (renamed from middleware.ts for compatibility)
+│   ├── proxy.ts            # Next.js Middleware
 │   ├── instrumentation.ts  # Server lifecycle hooks (backup, seeding)
-│   ├── Dockerfile          # Multi-stage production build
-│   ├── docker-compose.yml      # Docker orchestration
-│   ├── Caddyfile.example       # Reverse proxy with security headers
-│   └── PRIVACY.md              # Detailed privacy policy
+├── Dockerfile              # Multi-stage production build
+├── docker-compose.yml      # Docker orchestration
+└── Caddyfile.example       # Reverse proxy with security headers
 ```
 
 ## 🌐 Translations & Localization (i18n)
 
-KoalaSnippets is fully localized in both **English** and **German** (100% translation coverage). 
+KoalaSnippets is fully localized in both **English** and **German**.
 
-Want to contribute by translating KoalaSnippets into your language? We make it extremely simple and type-safe! 
-
-Please check out our detailed **[i18n Translation & Contribution Guide](src/features/core/i18n/README.md)** to see how to add a new language in a few quick steps.
+Want to contribute a translation? See the **[i18n Translation & Contribution Guide](src/features/core/i18n/README.md)** for details on adding a new language.
 
 ## 🔐 Security
 
 - Passwords hashed with **Argon2id + Salt + Pepper**
-- Session tokens stored as hashes, never plaintext
+- Session tokens stored as HMAC-SHA-256 hashes, never plaintext
 - Strict CSP and security headers via Next.js config + Caddy
-- Zero external CDNs — everything bundled locally
+- No external CDN calls — all assets bundled locally
 - SQL injection prevented via Drizzle parameterized queries
 - Timing-attack-resistant token comparison (`crypto.timingSafeEqual`)
 - Rate limiting on login (5/15min) and registration (3/60min)
@@ -278,7 +268,7 @@ See [docs/SECURITY.md](docs/SECURITY.md) for the full security specification.
 
 ## 🗺️ Roadmap
 
-We are constantly improving KoalaSnippets. Check out our [Roadmap](docs/ROADMAP.md) to see what planned features (like CLI integration and API Keys) are coming next!
+Check the [Roadmap](docs/ROADMAP.md) to see planned features like CLI integration and API keys.
 
 ## 📄 License
 
