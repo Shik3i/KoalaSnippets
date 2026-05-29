@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { SnippetSearchHeader } from "@/features/snippets/components/search-header";
 import { DashboardContent } from "@/features/snippets/components/dashboard-content";
+import { RecentlyEdited } from "@/features/snippets/components/recently-edited";
 
 interface DashboardClientProps {
   sidebarTags: string[];
@@ -54,6 +55,7 @@ export function DashboardClient({
         resultCount={resultCount}
         onImportClick={() => setImportOpen(true)}
       />
+      <RecentlyEdited />
       <DashboardContent
         snippets={highlightedSnippets}
         viewMode={viewMode}

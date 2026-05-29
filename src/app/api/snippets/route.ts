@@ -28,9 +28,52 @@ export async function GET(request: Request) {
   const order = searchParams.get("order") || "desc";
   const tagsParam = searchParams.get("tags");
   const offset = (page - 1) * PAGE_SIZE;
+  const recent = searchParams.get("recent") === "true";
 
   if (!session && visibility !== "PUBLIC") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (recent && session) {
+    const whereClause = and(
+      eq(snippets.authorId, session.user.id),
+      isNull(snippets.deletedAt)
+    );
+
+    const recentResults = await db.select().from(snippets)
+      .where(whereClause)
+      .orderBy(desc(snippets.updatedAt))
+      .limit(5)
+      .all();
+
+    const recentIds = recentResults.map(s => s.id);
+    const recentFiles = recentIds.length > 0
+      ? await db.select().from(snippetFiles).where(inArray(snippetFiles.snippetId, recentIds)).all()
+      : [];
+
+    const recentFavs = session ? await db.select().from(userFavorites).where(and(eq(userFavorites.userId, session.user.id), inArray(userFavorites.snippetId, recentIds))).all() : [];
+    const recentFavoriteSet = new Set(recentFavs.map(f => f.snippetId));
+
+    return NextResponse.json({
+      snippets: recentResults.map((s) => {
+        const sFiles = recentFiles.filter(f => f.snippetId === s.id);
+        return {
+          id: s.id,
+          title: s.title,
+          description: s.description,
+          language: sFiles[0]?.language ?? "plaintext",
+          tags: s.tags,
+          visibility: s.visibility,
+          totalLines: s.totalLines,
+          isPinned: s.isPinned,
+          isFavorited: recentFavoriteSet.has(s.id),
+          createdAt: s.createdAt,
+          updatedAt: s.updatedAt,
+        };
+      }),
+      page: 1,
+      hasMore: false,
+    });
   }
 
   const baseQuery = db.select().from(snippets);

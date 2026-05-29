@@ -249,6 +249,29 @@ const en: Translations = {
   helpTocFaq: "FAQ Accordion",
   helpTocApiKeys: "API Keys",
   helpApiKeysTitle: "API Keys Guide",
+
+  searchCheatSheet: "Search help",
+  searchCheatSheetTitle: "Power-Search Cheatsheet",
+  searchCheatSheetPinned: "Filter by pinned status",
+  searchCheatSheetFavorited: "Filter by favorite status",
+  searchCheatSheetMinLines: "Minimum lines of code",
+  searchCheatSheetMaxLines: "Maximum lines of code",
+  searchCheatSheetMinFiles: "Minimum number of files",
+  searchCheatSheetBefore: "Created before date",
+  searchCheatSheetAfter: "Created after date",
+  searchCheatSheetTitleFilter: "Filter by snippet title",
+  searchCheatSheetLanguage: "Filter by programming language",
+  searchCheatSheetTag: "Filter by tag",
+  searchCheatSheetSort: "Change sort order",
+  searchCheatSheetPrefix: "Prefix",
+  searchCheatSheetDesc: "Description",
+  searchCheatSheetExample: "Example",
+
+  recentlyEdited: "Recently Edited",
+  editedXDaysAgo: "{days} days ago",
+  editedYesterday: "Yesterday",
+  editedToday: "Today",
+  justNow: "Just now",
 };
 
 export default en;

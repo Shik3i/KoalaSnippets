@@ -444,7 +444,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
                       gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))`,
                     }}
                   >
-                    {rowSnippets.map((s) => (
+                    {rowSnippets.map((s, idx) => (
                       <SnippetCard
                         key={s.id}
                         id={s.id}
@@ -462,6 +462,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
                         totalLines={s.totalLines}
                         isPinned={s.isPinned}
                         isFavorited={s.isFavorited}
+                        cardIndex={startIndex + idx}
                       />
                     ))}
                   </div>

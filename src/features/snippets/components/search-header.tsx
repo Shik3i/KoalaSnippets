@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { Code, Command, Filter, X, ChevronDown, Check, Download, UserCheck, UserX, User } from "lucide-react";
+import { Code, Command, Filter, X, ChevronDown, Check, Download, UserCheck, UserX, User, HelpCircle } from "lucide-react";
 import Image from "next/image";
 import KoalaSuche from "../../../../public/KoalaSuche.png";
 import { Badge } from "@/components/ui/badge";
@@ -647,7 +647,21 @@ export function SnippetSearchHeader({
   const [filterMode, setFilterMode] = useState(searchParams.get("filterMode") ?? "and");
   const [searching, setSearching] = useState(false);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [cheatsheetOpen, setCheatsheetOpen] = useState(false);
+  const cheatsheetRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (cheatsheetRef.current && !cheatsheetRef.current.contains(e.target as Node)) {
+        setCheatsheetOpen(false);
+      }
+    }
+    if (cheatsheetOpen) {
+      document.addEventListener("mousedown", handleClick);
+      return () => document.removeEventListener("mousedown", handleClick);
+    }
+  }, [cheatsheetOpen]);
 
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [isShowingTip, setIsShowingTip] = useState(false);
@@ -899,23 +913,89 @@ export function SnippetSearchHeader({
             className="pl-10 h-9 pr-14 w-full border-0 shadow-none focus-visible:ring-0 bg-muted/40 backdrop-blur-sm"
             aria-label={t.searchSnippets}
           />
-          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
             {searching ? (
               <div className="w-3.5 h-3.5 border border-muted-foreground border-t-transparent rounded-full animate-spin" />
             ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
-                }}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 px-1.5 py-0.5 rounded transition-colors"
-                aria-label="Open Command Palette"
-              >
-                <Command size={14} suppressHydrationWarning />
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => setCheatsheetOpen(!cheatsheetOpen)}
+                  className="flex items-center justify-center w-6 h-6 rounded text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
+                  aria-label={t.searchCheatSheet}
+                  title={t.searchCheatSheetTitle}
+                >
+                  <HelpCircle size={13} suppressHydrationWarning />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
+                  }}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30 px-1.5 py-0.5 rounded transition-colors"
+                  aria-label="Open Command Palette"
+                >
+                  <Command size={14} suppressHydrationWarning />
+                </button>
+              </>
             )}
           </div>
         </div>
+
+        {cheatsheetOpen && (
+          <div className="absolute top-full left-4 right-4 mt-1 z-50 bg-card border border-border rounded-xl shadow-2xl p-4 animate-in fade-in slide-in-from-top-2 duration-150 max-w-[480px]" ref={cheatsheetRef}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold">{t.searchCheatSheetTitle}</h3>
+              <button
+                type="button"
+                onClick={() => setCheatsheetOpen(false)}
+                className="text-muted-foreground hover:text-foreground p-1 rounded"
+                aria-label={t.close}
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-1.5 pr-3 text-muted-foreground font-medium uppercase tracking-wider text-[10px]">{t.searchCheatSheetPrefix}</th>
+                    <th className="text-left py-1.5 pr-3 text-muted-foreground font-medium uppercase tracking-wider text-[10px]">{t.searchCheatSheetDesc}</th>
+                    <th className="text-left py-1.5 text-muted-foreground font-medium uppercase tracking-wider text-[10px]">{t.searchCheatSheetExample}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { prefix: "pinned:true", desc: t.searchCheatSheetPinned, example: "pinned:true" },
+                    { prefix: "pinned:false", desc: t.searchCheatSheetPinned, example: "pinned:false" },
+                    { prefix: "favorited:true", desc: t.searchCheatSheetFavorited, example: "favorited:true" },
+                    { prefix: "favorited:false", desc: t.searchCheatSheetFavorited, example: "favorited:false" },
+                    { prefix: "tag:<tag>", desc: t.searchCheatSheetTag, example: "tag:python" },
+                    { prefix: "lang:<lang>", desc: t.searchCheatSheetLanguage, example: "lang:typescript" },
+                    { prefix: "from:<user>", desc: t.creator, example: "from:koala" },
+                    { prefix: "from:!<user>", desc: t.creatorModeExclude, example: "from:!bots" },
+                    { prefix: "is:public", desc: t.visibilityPublic, example: "is:public" },
+                    { prefix: "is:private", desc: t.visibilityPrivate, example: "is:private" },
+                    { prefix: "is:shared", desc: t.visibilityShared, example: "is:shared" },
+                    { prefix: "lines:<n", desc: t.searchCheatSheetMinLines, example: "lines:\x3C 50" },
+                    { prefix: "lines:>n", desc: t.searchCheatSheetMaxLines, example: "lines:\x3E 100" },
+                    { prefix: "has:files>n", desc: t.searchCheatSheetMinFiles, example: "has:files>1" },
+                    { prefix: "before:YYYY-MM-DD", desc: t.searchCheatSheetBefore, example: "before:2025-01-01" },
+                    { prefix: "after:YYYY-MM-DD", desc: t.searchCheatSheetAfter, example: "after:2024-06-01" },
+                    { prefix: "title:<text>", desc: t.searchCheatSheetTitleFilter, example: "title:config" },
+                    { prefix: "sort:newest", desc: t.searchCheatSheetSort, example: "sort:newest" },
+                  ].map((row, i) => (
+                    <tr key={i} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                      <td className="py-1.5 pr-3 font-mono text-primary whitespace-nowrap">{row.prefix}</td>
+                      <td className="py-1.5 pr-3 text-muted-foreground">{row.desc}</td>
+                      <td className="py-1.5 font-mono text-blue-400 whitespace-nowrap">{row.example}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center gap-2 text-[11px] flex-shrink-0">
           <button

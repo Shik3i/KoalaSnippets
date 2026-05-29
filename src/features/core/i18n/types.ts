@@ -249,6 +249,30 @@ export interface Translations {
   helpTocFaq: string;
   helpTocApiKeys: string;
   helpApiKeysTitle: string;
+  helpApiKeysTitle: string;
+
+  searchCheatSheet: string;
+  searchCheatSheetTitle: string;
+  searchCheatSheetPinned: string;
+  searchCheatSheetFavorited: string;
+  searchCheatSheetMinLines: string;
+  searchCheatSheetMaxLines: string;
+  searchCheatSheetMinFiles: string;
+  searchCheatSheetBefore: string;
+  searchCheatSheetAfter: string;
+  searchCheatSheetTitleFilter: string;
+  searchCheatSheetLanguage: string;
+  searchCheatSheetTag: string;
+  searchCheatSheetSort: string;
+  searchCheatSheetPrefix: string;
+  searchCheatSheetDesc: string;
+  searchCheatSheetExample: string;
+
+  recentlyEdited: string;
+  editedXDaysAgo: string;
+  editedYesterday: string;
+  editedToday: string;
+  justNow: string;
 }
 
 export const SUPPORTED_LOCALES: Locale[] = ["en", "de"];

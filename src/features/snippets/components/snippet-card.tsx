@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import KoalaFile from "../../../../public/KoalaFile.png";
@@ -29,6 +29,7 @@ interface SnippetCardProps {
   totalLines?: number;
   isPinned?: boolean;
   isFavorited?: boolean;
+  cardIndex?: number;
 }
 
 export function SnippetCard({
@@ -47,9 +48,21 @@ export function SnippetCard({
   totalLines = 0,
   isPinned = false,
   isFavorited = false,
+  cardIndex = 0,
 }: SnippetCardProps) {
   const VisIcon = VISIBILITY_CONFIG[visibility].icon;
   const { addToast } = useToast();
+  const hasAnimated = useRef(false);
+  const [shouldAnimate, setShouldAnimate] = useState(false);
+
+  useEffect(() => {
+    if (hasAnimated.current) return;
+    hasAnimated.current = true;
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) return;
+    const timer = setTimeout(() => setShouldAnimate(true), 30);
+    return () => clearTimeout(timer);
+  }, []);
 
   const [editingTags, setEditingTags] = useState(false);
   const [localTags, setLocalTags] = useState<string[]>([]);
@@ -172,9 +185,13 @@ export function SnippetCard({
       }}
       className={cn(
         "group block rounded-xl border border-border bg-card transition-all hover:border-primary/50 hover:shadow-lg relative cursor-grab active:cursor-grabbing overflow-hidden",
+        shouldAnimate && "animate-card-enter",
         selected && "border-primary/50 ring-1 ring-primary/30 bg-primary/5"
       )}
-      style={{ viewTransitionName: `snippet-card-${id}` }}
+      style={{
+        viewTransitionName: `snippet-card-${id}`,
+        ...(shouldAnimate ? { animationDelay: `${cardIndex * 50}ms` } : {}),
+      }}
       aria-label={`View snippet: ${title}`}
     >
       <div className={cn("h-10 w-full absolute top-0 left-0 bg-gradient-to-r opacity-50 transition-opacity group-hover:opacity-100", gradientClass)} />

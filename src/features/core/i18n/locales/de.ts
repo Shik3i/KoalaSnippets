@@ -249,6 +249,29 @@ const de: Translations = {
   helpTocFaq: "FAQ-Bereich",
   helpTocApiKeys: "API-Keys",
   helpApiKeysTitle: "API-Keys Anleitung",
+
+  searchCheatSheet: "Suchhilfe",
+  searchCheatSheetTitle: "Power-Suche Spickzettel",
+  searchCheatSheetPinned: "Nach Anheftungsstatus filtern",
+  searchCheatSheetFavorited: "Nach Favoritenstatus filtern",
+  searchCheatSheetMinLines: "Minimale Code-Zeilen",
+  searchCheatSheetMaxLines: "Maximale Code-Zeilen",
+  searchCheatSheetMinFiles: "Mindestanzahl an Dateien",
+  searchCheatSheetBefore: "Erstellt vor Datum",
+  searchCheatSheetAfter: "Erstellt nach Datum",
+  searchCheatSheetTitleFilter: "Nach Snippet-Titel filtern",
+  searchCheatSheetLanguage: "Nach Programmiersprache filtern",
+  searchCheatSheetTag: "Nach Tag filtern",
+  searchCheatSheetSort: "Sortierung ändern",
+  searchCheatSheetPrefix: "Präfix",
+  searchCheatSheetDesc: "Beschreibung",
+  searchCheatSheetExample: "Beispiel",
+
+  recentlyEdited: "Zuletzt bearbeitet",
+  editedXDaysAgo: "vor {days} Tagen",
+  editedYesterday: "Gestern",
+  editedToday: "Heute",
+  justNow: "Gerade eben",
 };
 
 export default de;
