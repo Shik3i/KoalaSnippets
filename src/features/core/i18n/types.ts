@@ -247,6 +247,8 @@ export interface Translations {
   helpTocVisibility: string;
   helpTocImport: string;
   helpTocFaq: string;
+  helpTocApiKeys: string;
+  helpApiKeysTitle: string;
 }
 
 export const SUPPORTED_LOCALES: Locale[] = ["en", "de"];

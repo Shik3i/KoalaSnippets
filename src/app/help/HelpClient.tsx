@@ -29,6 +29,8 @@ import {
   Globe,
   Download,
   ChevronDown,
+  Key,
+  Plus,
 } from "lucide-react";
 
 interface HelpClientProps {
@@ -267,6 +269,13 @@ export function HelpClient({
             >
               <Download size={10} />
               {t.helpTocImport}
+            </button>
+            <button
+              onClick={() => document.getElementById("api-keys-section")?.scrollIntoView({ behavior: "smooth" })}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold bg-muted hover:bg-primary/10 hover:text-primary border border-border/80 hover:border-primary/20 transition-all shrink-0 select-none"
+            >
+              <Key size={10} />
+              {t.helpTocApiKeys}
             </button>
             <button
               onClick={() => document.getElementById("faq-section")?.scrollIntoView({ behavior: "smooth" })}
@@ -748,6 +757,60 @@ export function HelpClient({
                         </pre>
                       </div>
                     )}
+                  </div>
+                </div>
+              </div>
+
+              {/* API Keys Guide Section (Relocated to Left Column) */}
+              <div
+                id="api-keys-section"
+                className="scroll-animate opacity-0 translate-y-8 transition-all duration-700 ease-out bg-card/25 backdrop-blur-md rounded-2xl border border-border/60 p-6 space-y-6 shadow-xl"
+              >
+                <div className="space-y-1">
+                  <h2 className="text-xl font-extrabold flex items-center gap-2">
+                    <Key size={20} className="text-primary" />
+                    {t.helpApiKeysTitle}
+                  </h2>
+                  <p className="text-xs text-muted-foreground">
+                    Connect external applications and automate workflows using personal access tokens.
+                  </p>
+                </div>
+
+                <div className="space-y-4 text-xs text-muted-foreground leading-relaxed">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4">
+                    <div className="space-y-2 bg-card/40 border border-border/40 rounded-xl p-4">
+                      <h3 className="font-bold text-foreground text-sm flex items-center gap-1.5">
+                        <Plus size={14} className="text-primary" />
+                        1. Generation
+                      </h3>
+                      <p>
+                        Navigate to the <span className="font-semibold text-foreground">Settings</span> page from the sidebar. Enter a descriptive label (e.g., <code className="bg-muted px-1 py-0.5 rounded">Terminal-CLI</code>) and click <span className="font-semibold text-foreground">Create</span>.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 bg-card/40 border border-border/40 rounded-xl p-4">
+                      <h3 className="font-bold text-foreground text-sm flex items-center gap-1.5">
+                        <Info size={14} className="text-primary" />
+                        2. Key Storage
+                      </h3>
+                      <p className="text-amber-500/90 font-medium">
+                        ⚠️ Copy the generated token immediately! For security reasons, the raw token (prefixed with <code className="bg-muted px-1 py-0.5 rounded">ks_</code>) is shown only once and cannot be recovered later.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-card/50 border border-border/50 rounded-xl p-5 space-y-3">
+                    <h3 className="font-semibold text-sm text-foreground flex items-center gap-2">
+                      <Terminal size={16} className="text-primary" />
+                      Programmatic Usage Example
+                    </h3>
+                    <p className="text-xs">
+                      Authenticate curl requests or custom tools by including your personal token in the HTTP <code className="bg-muted px-1 rounded">Authorization</code> header:
+                    </p>
+                    <pre className="text-[10px] font-mono text-emerald-400 bg-black/40 p-3 rounded overflow-x-auto leading-relaxed border border-emerald-500/10">
+                      curl -H "Authorization: Bearer ks_your_api_key_here" \
+  https://snippets.koala/api/snippets
+                    </pre>
                   </div>
                 </div>
               </div>

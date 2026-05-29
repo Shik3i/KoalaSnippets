@@ -247,6 +247,8 @@ const en: Translations = {
   helpTocVisibility: "Visibility Guide",
   helpTocImport: "Import Guide",
   helpTocFaq: "FAQ Accordion",
+  helpTocApiKeys: "API Keys",
+  helpApiKeysTitle: "API Keys Guide",
 };
 
 export default en;
