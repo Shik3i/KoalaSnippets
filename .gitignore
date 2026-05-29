@@ -60,3 +60,6 @@ docker-compose.override.yml
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local temp files
+.local/
