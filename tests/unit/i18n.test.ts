@@ -42,14 +42,14 @@ function getKeys(obj: Record<string, unknown>): string[] {
 
 describe("i18n locales", () => {
   it("both en and de have the same number of keys", () => {
-    const enKeys = getKeys(en);
-    const deKeys = getKeys(de);
+    const enKeys = getKeys(en as unknown as Record<string, unknown>);
+    const deKeys = getKeys(de as unknown as Record<string, unknown>);
     assert.strictEqual(enKeys.length, deKeys.length, `en has ${enKeys.length} keys, de has ${deKeys.length} keys`);
   });
 
   it("both en and de have exactly the same keys", () => {
-    const enKeys = getKeys(en);
-    const deKeys = getKeys(de);
+    const enKeys = getKeys(en as unknown as Record<string, unknown>);
+    const deKeys = getKeys(de as unknown as Record<string, unknown>);
     assert.deepStrictEqual(enKeys, deKeys);
   });
 
@@ -66,8 +66,8 @@ describe("i18n locales", () => {
   });
 
   it("de has no unexpected keys (same as en type)", () => {
-    const deKeys = getKeys(de);
-    const enKeys = getKeys(en);
+    const deKeys = getKeys(de as unknown as Record<string, unknown>);
+    const enKeys = getKeys(en as unknown as Record<string, unknown>);
     for (const key of deKeys) {
       assert.ok(enKeys.includes(key), `Unexpected key "${key}" in de locale`);
     }
