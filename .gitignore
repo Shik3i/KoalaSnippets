@@ -62,4 +62,4 @@ docker-compose.override.yml
 next-env.d.ts
 
 # Local temp files
-.local/
+_local/
