@@ -62,16 +62,14 @@ export function AdminBackupList() {
   };
 
   const getRestoreCommand = (filename: string) => {
-    return `# 1. Docker-Container stoppen
+    return `# 1. Container stoppen
 docker compose stop koalasnippets
 
-# 2. Aktuelle DB sichern (optional)
-cp ./data/koalasnippets.db ./data/koalasnippets.db.bak
+# 2. Backup aus dem Volume in die Datenbank kopieren
+docker cp koalasnippets-backups:/app/backups/${filename} /tmp/restore.db
+docker cp /tmp/restore.db koalasnippets-data:/koalasnippets.db
 
-# 3. Backup überschreibt die Live-Datenbank
-cp ./backups/${filename} ./data/koalasnippets.db
-
-# 4. Container neu starten
+# 3. Container neu starten
 docker compose start koalasnippets`;
   };
 
