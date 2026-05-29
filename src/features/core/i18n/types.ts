@@ -249,7 +249,6 @@ export interface Translations {
   helpTocFaq: string;
   helpTocApiKeys: string;
   helpApiKeysTitle: string;
-  helpApiKeysTitle: string;
 
   searchCheatSheet: string;
   searchCheatSheetTitle: string;

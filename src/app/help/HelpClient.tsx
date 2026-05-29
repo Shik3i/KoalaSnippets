@@ -534,7 +534,7 @@ export function HelpClient({
                           {["canvas", "visual"].map((tag) => (
                             <button
                               key={tag}
-                              onClick={() => handleTagClick(tag)}
+                              onClick={() => handleTagClick()}
                               className="inline-flex items-center gap-0.5 text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors bg-accent/20 px-2 py-0.5 rounded-full border border-border/20"
                             >
                               # {tag}
