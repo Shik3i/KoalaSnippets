@@ -71,7 +71,10 @@ rm -f ./data/koalasnippets.db-wal ./data/koalasnippets.db-shm
 # 3. Backup überschreibt Live-Datenbank
 cp ./backups/${filename} ./data/koalasnippets.db
 
-# 4. Container neu starten
+# 4. Dateirechte korrigieren (Container läuft als UID 1001)
+chown 1001:1001 ./data/koalasnippets.db
+
+# 5. Container neu starten
 docker compose start koalasnippets`;
   };
 
