@@ -255,6 +255,14 @@ KoalaSnippets/
 │   └── PRIVACY.md              # Detailed privacy policy
 ```
 
+## 🌐 Translations & Localization (i18n)
+
+KoalaSnippets is fully localized in both **English** and **German** (100% translation coverage). 
+
+Want to contribute by translating KoalaSnippets into your language? We make it extremely simple and type-safe! 
+
+Please check out our detailed **[i18n Translation & Contribution Guide](src/features/core/i18n/README.md)** to see how to add a new language in a few quick steps.
+
 ## 🔐 Security
 
 - Passwords hashed with **Argon2id + Salt + Pepper**

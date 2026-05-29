@@ -62,6 +62,55 @@ export interface Translations {
   clearAll: string;
   collection: string;
   searchLabel: string;
+  visibility: string;
+  creator: string;
+  creatorModeInclude: string;
+  creatorModeExclude: string;
+  help: string;
+  helpTitle: string;
+  helpSubtitle: string;
+  helpTutorial: string;
+  helpTutorialDesc: string;
+  helpInteractiveMock: string;
+  helpInteractiveMockDesc: string;
+  helpShortcuts: string;
+  helpShortcutsDesc: string;
+  helpSearchCommands: string;
+  helpSearchCommandsDesc: string;
+  helpMockPreviewDensity: string;
+  helpMockCompactDensity: string;
+  helpMockTableRowView: string;
+  helpMockTitle: string;
+  helpMockDesc: string;
+  helpMockCopiedToast: string;
+  helpMockFavAddToast: string;
+  helpMockFavRemToast: string;
+  helpMockPinAddToast: string;
+  helpMockPinRemToast: string;
+  helpMockTagToast: string;
+  helpMockLangToast: string;
+  helpShortcutGroupGeneral: string;
+  helpShortcutGroupNavigation: string;
+  helpShortcutGroupActions: string;
+  helpSearchCommandHeaderPrefix: string;
+  helpSearchCommandHeaderDesc: string;
+  helpSearchCommandHeaderExample: string;
+  helpShortcutCommandPalette: string;
+  helpShortcutFocusSearch: string;
+  helpShortcutShowShortcuts: string;
+  helpShortcutClearSearch: string;
+  helpShortcutNextSnippet: string;
+  helpShortcutPrevSnippet: string;
+  helpShortcutOpenSnippet: string;
+  helpShortcutOpenTrash: string;
+  helpShortcutNewSnippet: string;
+  helpShortcutDuplicateSnippet: string;
+  helpShortcutToggleFavorite: string;
+  helpShortcutTogglePin: string;
+  helpShortcutDeleteSnippet: string;
+  helpShortcutSaveSnippet: string;
+  helpShortcutFormatCode: string;
+
 
   // Table headers
   headerTitle: string;
@@ -148,6 +197,56 @@ export interface Translations {
   cmdEditSnippet: string;
   cmdEditSnippetDesc: string;
   densitySet: string;
+
+  // New Search Filter Badge labels
+  filterPinned: string;
+  filterUnpinned: string;
+  filterFavorited: string;
+  filterUnfavorited: string;
+  filterMinLines: string;
+  filterMaxLines: string;
+  filterBefore: string;
+  filterAfter: string;
+  filterMinFiles: string;
+  filterTitle: string;
+
+  // Help Page: Visibility Guide
+  helpVisibilityPrivateDesc: string;
+  helpVisibilitySharedDesc: string;
+  helpVisibilityPublicDesc: string;
+
+  // Help Page: Import Guide
+  helpImportSectionTitle: string;
+  helpImportSectionDesc: string;
+  helpImportDragDrop: string;
+  helpImportDragDropDesc: string;
+  helpImportFromUrlDesc: string;
+  helpImportMockLabel: string;
+  helpImportMockPlaceholder: string;
+  helpImportMockButton: string;
+  helpImportMockButtonFetching: string;
+  helpImportMockToastSuccess: string;
+  helpImportMockToastError: string;
+
+  // Help Page: FAQ Accordion
+  helpFaqTitle: string;
+  helpFaqSubtitle: string;
+  helpFaqQ1: string;
+  helpFaqA1: string;
+  helpFaqQ2: string;
+  helpFaqA2: string;
+  helpFaqQ3: string;
+  helpFaqA3: string;
+  helpFaqQ4: string;
+  helpFaqA4: string;
+
+  // Help Page: Table of Contents / Jump Navigation
+  helpTocMockup: string;
+  helpTocShortcuts: string;
+  helpTocCommands: string;
+  helpTocVisibility: string;
+  helpTocImport: string;
+  helpTocFaq: string;
 }
 
 export const SUPPORTED_LOCALES: Locale[] = ["en", "de"];

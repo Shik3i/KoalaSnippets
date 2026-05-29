@@ -34,6 +34,7 @@ import {
   PanelLeftOpen,
   Star,
   Languages,
+  HelpCircle,
 } from "lucide-react";
 import { useI18n, type Locale, LOCALE_LABELS } from "@/features/core/i18n";
 
@@ -49,9 +50,6 @@ interface SidebarProps {
 const navItems = [
   { href: "/", labelKey: "home" as const, icon: Home },
   { href: "/dashboard", labelKey: "mySnippets" as const, icon: FileCode },
-  { href: "/favorites", labelKey: "favorites" as const, icon: Star },
-  { href: "/dashboard/trash", labelKey: "trash" as const, icon: Trash2 },
-  { href: "/public", labelKey: "publicExplorer" as const, icon: Globe },
   { href: "/tools", labelKey: "devTools" as const, icon: Wrench },
   { href: "/stats", labelKey: "statistics" as const, icon: BarChart3 },
 ];
@@ -73,6 +71,12 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
       return localStorage.getItem("koalasnippets_sidebar_collapsed") === "true";
     }
     return false;
+  });
+  const [mySnippetsExpanded, setMySnippetsExpanded] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("koalasnippets_mysnippets_expanded") !== "false";
+    }
+    return true;
   });
   const [controlsExpanded, setControlsExpanded] = useState(() => {
     if (typeof window !== "undefined") {
@@ -193,12 +197,84 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
         <div className="flex-1 overflow-y-auto">
         <nav className={cn("space-y-1", collapsed ? "p-1.5" : "p-3")}>
           {navItems.map((item) => {
-            if ((item.href === "/dashboard" || item.href === "/dashboard/trash") && !isAuthenticated) {
+            if (item.href === "/dashboard" && !isAuthenticated) {
               return null;
             }
             const Icon = item.icon;
             const isActive = pathname === item.href;
             const label = t[item.labelKey];
+
+            if (item.href === "/dashboard") {
+              return (
+                <div key={item.href} className="space-y-1">
+                  <div className="flex items-center justify-between group/my-snippets w-full gap-1">
+                    <Link
+                      href={item.href}
+                      title={collapsed ? label : undefined}
+                      className={cn(
+                        "flex-1 flex items-center gap-3 rounded-md text-sm transition-colors",
+                        collapsed ? "justify-center px-2 py-2" : "px-3 py-2",
+                        isActive
+                          ? "bg-accent text-accent-foreground font-medium"
+                          : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                      )}
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <Icon size={16} suppressHydrationWarning />
+                      {!collapsed && label}
+                    </Link>
+                    {!collapsed && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground shrink-0"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const next = !mySnippetsExpanded;
+                          setMySnippetsExpanded(next);
+                          localStorage.setItem("koalasnippets_mysnippets_expanded", String(next));
+                        }}
+                        aria-label={mySnippetsExpanded ? "Collapse My Snippets" : "Expand My Snippets"}
+                      >
+                        {mySnippetsExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                      </Button>
+                    )}
+                  </div>
+                  {mySnippetsExpanded && !collapsed && (
+                    <div className="pl-6 space-y-1">
+                      <Link
+                        href="/favorites"
+                        className={cn(
+                          "flex items-center gap-3 rounded-md text-sm transition-colors px-3 py-1.5",
+                          pathname === "/favorites"
+                            ? "bg-accent text-accent-foreground font-medium"
+                            : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                        )}
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        <Star size={14} className="text-amber-500 fill-amber-500/10" suppressHydrationWarning />
+                        {t.favorites}
+                      </Link>
+                      <Link
+                        href="/dashboard/trash"
+                        className={cn(
+                          "flex items-center gap-3 rounded-md text-sm transition-colors px-3 py-1.5",
+                          pathname === "/dashboard/trash"
+                            ? "bg-accent text-accent-foreground font-medium"
+                            : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                        )}
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        <Trash2 size={14} suppressHydrationWarning />
+                        {t.trash}
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
             return (
               <Link
                 key={item.href}
@@ -496,6 +572,14 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
               >
                 <Palette size={16} suppressHydrationWarning />
               </Link>
+              <Link
+                href="/help"
+                title="Help & Shortcuts"
+                className="flex items-center justify-center w-full py-2 rounded-md text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
+                onClick={() => setMobileOpen(false)}
+              >
+                <HelpCircle size={16} suppressHydrationWarning />
+              </Link>
               {isAuthenticated ? (
                 <>
                   <Link
@@ -577,6 +661,19 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
                   >
                     <Palette size={16} suppressHydrationWarning />
                     {t.appearanceSettings}
+                  </Link>
+                  <Link
+                    href="/help"
+                    className={cn(
+                      "flex items-center gap-3 rounded-md text-sm transition-colors px-3 py-2",
+                      pathname === "/help"
+                        ? "bg-accent text-accent-foreground font-medium"
+                        : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                    )}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <HelpCircle size={16} suppressHydrationWarning />
+                    {t.help}
                   </Link>
                   {isAuthenticated ? (
                     <>

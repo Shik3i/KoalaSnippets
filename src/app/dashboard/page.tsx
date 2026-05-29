@@ -7,7 +7,7 @@ import { GlobalDropzone } from "@/features/core/components/global-dropzone";
 import { DashboardClient } from "./_dashboard-client";
 import { highlightCode } from "@/features/snippets/utils/shiki";
 import { db } from "@/db";
-import { snippets, snippetFiles, userFavorites } from "@/db/schema";
+import { snippets, snippetFiles, userFavorites, users } from "@/db/schema";
 import { eq, and, inArray, sql, isNull, isNotNull } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { buildSnippetConditions } from "@/features/snippets/utils/filters";
@@ -22,6 +22,17 @@ interface DashboardSearchParams {
   tags?: string;
   language?: string;
   filterMode?: string;
+  visibility?: string;
+  author?: string;
+  authorMode?: string;
+  pinned?: string;
+  favorited?: string;
+  minLines?: string;
+  maxLines?: string;
+  before?: string;
+  after?: string;
+  minFiles?: string;
+  title?: string;
 }
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<DashboardSearchParams> }) {
@@ -30,7 +41,26 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     redirect("/login?expired=1");
   }
 
-  const { q, includeCode, sort, collection, tags, language, filterMode } = await searchParams;
+  const {
+    q,
+    includeCode,
+    sort,
+    collection,
+    tags,
+    language,
+    filterMode,
+    visibility,
+    author,
+    authorMode,
+    pinned,
+    favorited,
+    minLines,
+    maxLines,
+    before,
+    after,
+    minFiles,
+    title,
+  } = await searchParams;
   const sortMode = (["newest", "oldest", "alphabetical", "size-asc", "size-desc"].includes(sort ?? "") ? sort : "newest") as "newest" | "oldest" | "alphabetical" | "size-asc" | "size-desc";
 
   const baseQuery = db.select().from(snippets);
@@ -43,7 +73,27 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     collection,
     filterMode,
     authorId: session.user.id,
+    visibility: (visibility === "PUBLIC" || visibility === "PRIVATE" || visibility === "SHARED") ? visibility : undefined,
+    authorUsername: author,
+    authorUsernameMode: (authorMode === "exclude" ? "exclude" : "include"),
+    pinned,
+    favorited,
+    minLines,
+    maxLines,
+    before,
+    after,
+    minFiles,
+    title,
+    currentUserId: session.user.id,
   });
+
+  const activeAuthorsQuery = await db
+    .selectDistinct({ username: users.username })
+    .from(users)
+    .innerJoin(snippets, eq(snippets.authorId, users.id))
+    .where(isNull(snippets.deletedAt))
+    .all();
+  const availableAuthors = activeAuthorsQuery.map(a => a.username).sort();
 
   const orderBy =
     sortMode === "oldest"
@@ -152,6 +202,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <DashboardClient
           sidebarTags={sidebarTags}
           sidebarLanguages={sidebarLanguages}
+          availableAuthors={availableAuthors}
           sortMode={sortMode}
           viewMode={viewMode}
           resultCount={highlightedSnippets.length}

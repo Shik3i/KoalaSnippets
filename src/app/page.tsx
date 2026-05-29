@@ -11,8 +11,8 @@ import { buildSnippetConditions } from "@/features/snippets/utils/filters";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage({ searchParams }: { searchParams: Promise<{ q?: string; includeCode?: string; sort?: string; tags?: string; language?: string; filterMode?: string }> }) {
-  const { q, includeCode, sort, tags, language, filterMode } = await searchParams;
+export default async function HomePage({ searchParams }: { searchParams: Promise<{ q?: string; includeCode?: string; sort?: string; tags?: string; language?: string; filterMode?: string; visibility?: string; author?: string; authorMode?: string; pinned?: string; favorited?: string; minLines?: string; maxLines?: string; before?: string; after?: string; minFiles?: string; title?: string }> }) {
+  const { q, includeCode, sort, tags, language, filterMode, visibility, author, authorMode, pinned, favorited, minLines, maxLines, before, after, minFiles, title } = await searchParams;
   const session = await getSession();
 
   const baseQuery = db.select({
@@ -45,7 +45,27 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     tags,
     language,
     filterMode,
+    visibility: (visibility === "PUBLIC" || visibility === "PRIVATE" || visibility === "SHARED") ? visibility : undefined,
+    authorUsername: author,
+    authorUsernameMode: (authorMode === "exclude" ? "exclude" : "include"),
+    pinned,
+    favorited,
+    minLines,
+    maxLines,
+    before,
+    after,
+    minFiles,
+    title,
+    currentUserId: session?.user?.id,
   });
+
+  const activeAuthorsQuery = await db
+    .selectDistinct({ username: users.username })
+    .from(users)
+    .innerJoin(snippets, eq(snippets.authorId, users.id))
+    .where(isNull(snippets.deletedAt))
+    .all();
+  const availableAuthors = activeAuthorsQuery.map(a => a.username).sort();
 
   const sortMode = (["newest", "oldest", "alphabetical", "size-asc", "size-desc"].includes(sort ?? "") ? sort : "newest") as "newest" | "oldest" | "alphabetical" | "size-asc" | "size-desc";
 
@@ -136,7 +156,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <SnippetSearchHeader availableTags={sidebarTags} availableLanguages={sidebarLanguages} sort={sortMode} viewMode={viewMode} resultCount={highlightedSnippets.length} />
+        <SnippetSearchHeader availableTags={sidebarTags} availableLanguages={sidebarLanguages} availableAuthors={availableAuthors} isAuthenticated={!!session} sort={sortMode} viewMode={viewMode} resultCount={highlightedSnippets.length} />
         <DashboardContent
           snippets={highlightedSnippets.map((s) => ({
             id: (s as Record<string, unknown>).id as string,

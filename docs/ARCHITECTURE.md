@@ -147,16 +147,17 @@ KoalaSnippets uses a lightweight, zero-dependency i18n system based on React Con
 ```
 src/features/core/i18n/
   types.ts              # Locale type, Translations interface, constants
-  locales/en.ts         # English translation strings (44 keys)
-  locales/de.ts         # German translation strings (44 keys)
+  locales/en.ts         # English translation strings (fully typed, complete coverage)
+  locales/de.ts         # German translation strings (fully typed, complete coverage)
   context.tsx            # I18nProvider (Context) + useI18n() hook
   index.ts              # Barrel exports
+  README.md             # Guide on adding new translations
 ```
 
 ### Design Principles
 
-- **Typed translations:** The `Translations` interface in `types.ts` is the single source of truth. Both `en.ts` and `de.ts` must satisfy every key. Unit tests enforce this at build time.
-- **Extensible:** Adding a new language requires only a new locale file + a one-line entry in `types.ts`.
+- **Typed translations:** The `Translations` interface in `types.ts` is the single source of truth. Both `en.ts` and `de.ts` must satisfy every key. Unit tests enforce this at build time. Currently, **English** and **German** are 100% supported.
+- **Extensible:** Adding a new language is fully guided in [i18n/README.md](file:///Users/koala/Documents/KoalaSnippets/src/features/core/i18n/README.md) and requires registering the dictionary in the provider.
 - **Persistence:** Language preference is stored in `localStorage` (`koalasnippets_locale`). On first visit, the browser's `navigator.language` is detected.
 - **Zero bundle bloat:** All locale files are tree-shakable TypeScript constants. No external i18n library.
 
@@ -177,7 +178,7 @@ The `I18nProvider` wraps the entire app in `src/app/layout.tsx`.
 
 ### Server-Side Search (FTS-style)
 
-Search is performed server-side via Drizzle parameterized `LIKE` queries. The `SnippetSearchHeader` client component debounces input (300ms) and updates URL search params (`?q=...&includeCode=...`), triggering a server re-render.
+Search is performed server-side via Drizzle parameterized SQLite queries. The `SnippetSearchHeader` client component debounces input (300ms) and parses power search commands directly, updating URL search params (e.g. `?q=...&pinned=...&favorited=...&minLines=...&maxLines=...&before=...&after=...&minFiles=...&title=...`), triggering an optimized server-side re-render.
 
 | Toggle Off | Searches: `title`, `language`, `tags` |
 | Toggle On  | Also searches: `code` field |

@@ -7,6 +7,7 @@ import { DashboardContent } from "@/features/snippets/components/dashboard-conte
 interface DashboardClientProps {
   sidebarTags: string[];
   sidebarLanguages: string[];
+  availableAuthors?: string[];
   sortMode: "newest" | "oldest" | "alphabetical" | "size-asc" | "size-desc";
   viewMode: "grid" | "table";
   resultCount: number;
@@ -31,6 +32,7 @@ interface DashboardClientProps {
 export function DashboardClient({
   sidebarTags,
   sidebarLanguages,
+  availableAuthors = [],
   sortMode,
   viewMode,
   resultCount,
@@ -45,6 +47,8 @@ export function DashboardClient({
       <SnippetSearchHeader
         availableTags={sidebarTags}
         availableLanguages={sidebarLanguages}
+        availableAuthors={availableAuthors}
+        isAuthenticated={true}
         sort={sortMode}
         viewMode={viewMode}
         resultCount={resultCount}

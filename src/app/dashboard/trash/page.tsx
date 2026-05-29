@@ -130,7 +130,7 @@ export default async function TrashPage({ searchParams }: { searchParams: Promis
           <h2 className="text-destructive font-semibold">🗑️ Trash Bin</h2>
           <p className="text-sm text-destructive/80">These snippets are soft-deleted. They will not appear in the main dashboard or public explorer.</p>
         </div>
-        <SnippetSearchHeader availableTags={sidebarTags} availableLanguages={sidebarLanguages} sort={sortMode} viewMode={viewMode} resultCount={highlightedSnippets.length} />
+        <SnippetSearchHeader availableTags={sidebarTags} availableLanguages={sidebarLanguages} isAuthenticated={true} sort={sortMode} viewMode={viewMode} resultCount={highlightedSnippets.length} />
         <DashboardContent
           snippets={highlightedSnippets.map((s) => ({
             id: (s as Record<string, unknown>).id as string,

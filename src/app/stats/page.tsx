@@ -39,7 +39,9 @@ export default async function StatsPage() {
               <span>KoalaSnippets</span>
               {process.env.NEXT_PUBLIC_APP_VERSION && (
                 <span className="font-mono tabular-nums bg-muted/50 px-2 py-0.5 rounded border border-border">
-                  v{process.env.NEXT_PUBLIC_APP_VERSION}
+                  {process.env.NEXT_PUBLIC_APP_VERSION.startsWith("v")
+                    ? process.env.NEXT_PUBLIC_APP_VERSION
+                    : `v${process.env.NEXT_PUBLIC_APP_VERSION}`}
                 </span>
               )}
             </a>

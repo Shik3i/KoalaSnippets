@@ -16,6 +16,23 @@ const ALL_KEYS = [
   "createFirst", "importFromUrl", "browsePublic", "trashEmpty",
   "trashEmptyDesc", "expandSidebar", "collapseSidebar",
   "expandControls", "collapseControls", "toggleLanguage", "close", "version",
+  "visibility", "creator", "creatorModeInclude", "creatorModeExclude",
+  "help", "helpTitle", "helpSubtitle", "helpTutorial", "helpTutorialDesc",
+  "helpInteractiveMock", "helpInteractiveMockDesc", "helpShortcuts",
+  "helpShortcutsDesc", "helpSearchCommands", "helpSearchCommandsDesc",
+  "filterPinned", "filterUnpinned", "filterFavorited", "filterUnfavorited",
+  "filterMinLines", "filterMaxLines", "filterBefore", "filterAfter",
+  "filterMinFiles", "filterTitle",
+  "helpVisibilityPrivateDesc", "helpVisibilitySharedDesc", "helpVisibilityPublicDesc",
+  "helpImportSectionTitle", "helpImportSectionDesc", "helpImportDragDrop",
+  "helpImportDragDropDesc", "helpImportFromUrlDesc", "helpImportMockLabel",
+  "helpImportMockPlaceholder", "helpImportMockButton", "helpImportMockButtonFetching",
+  "helpImportMockToastSuccess", "helpImportMockToastError",
+  "helpFaqTitle", "helpFaqSubtitle",
+  "helpFaqQ1", "helpFaqA1", "helpFaqQ2", "helpFaqA2",
+  "helpFaqQ3", "helpFaqA3", "helpFaqQ4", "helpFaqA4",
+  "helpTocMockup", "helpTocShortcuts", "helpTocCommands",
+  "helpTocVisibility", "helpTocImport", "helpTocFaq",
 ] as const;
 
 function getKeys(obj: Record<string, unknown>): string[] {
