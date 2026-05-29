@@ -79,7 +79,7 @@ export function applyGfsRetention(): number {
   for (const backup of backups) {
     const ageDays = (now.getTime() - backup.date.getTime()) / (1000 * 60 * 60 * 24);
 
-    if (ageDays < 1) {
+    if (ageDays < GFS_RULES.daily) {
       if (dailyBackups.length === 0) {
         dailyBackups.push(backup);
       } else {
