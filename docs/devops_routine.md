@@ -12,12 +12,12 @@ npm run lint
 ```
 **Action**: If the linter fails, **FIX THE ERRORS** before proceeding. Do not ignore linter warnings unless strictly necessary and documented.
 
-### B. Production Build Check
-The most critical step is ensuring the Next.js application can build for production without errors. Next.js does strict TypeScript checking during the build.
+### B. Production Build Check (MANDATORY — EVERY PUSH)
+The most critical step is ensuring the Next.js application can build for production without errors. Next.js does strict TypeScript checking during the build. **This catches errors that `npm run typecheck` alone may miss** (e.g., missing module declarations when `.next` doesn't exist).
 ```bash
-AUTH_PEPPER=dummy_pepper_for_build npm run build
+rm -rf .next && npm run build
 ```
-*(Note: `AUTH_PEPPER` is required by the environment validation during build).*
+*(Note: `AUTH_PEPPER` is required by the environment validation during build. Set it if not in `.env`.)*
 
 **Action**: **READ THE BUILD OUTPUT!**
 - If the build fails (e.g., TypeScript errors, missing modules, conflicting types), **DO NOT PUSH**. Fix the errors and rebuild.

@@ -11,8 +11,11 @@ env:
 
 jobs:
   validate:
-    name: Lint, Typecheck & Test
+    name: Lint, Build & Test
     runs-on: ubuntu-latest
+    env:
+      AUTH_PEPPER: ci-test-pepper-do-not-use
+      SESSION_SECRET: 0000000000000000000000000000000000000000000000000000000000000000
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -29,8 +32,8 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Typecheck
-        run: npm run typecheck
+      - name: Clean-slate build (catches TS, missing modules, build-time errors)
+        run: rm -rf .next && npm run build
 
       - name: Test
         run: npm test
