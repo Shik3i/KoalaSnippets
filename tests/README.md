@@ -9,6 +9,15 @@ Tests run via Node.js native test runner (`node --test`) with TypeScript support
 npm test
 ```
 
+**Important:** `npm test` transpiles TypeScript but does NOT type-check it. Use `npm run typecheck` (or `npm run validate` for all checks) to catch TypeScript errors.
+
+## Full Quality Pipeline
+
+```bash
+npm run validate   # lint + typecheck + test (all must pass)
+npm run build      # production build (catches additional build-time errors)
+```
+
 ## Directory Structure
 
 ```

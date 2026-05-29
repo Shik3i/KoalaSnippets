@@ -81,6 +81,16 @@ src/
 - No secrets in commits. Ever.
 - `.env` files are gitignored. `.env.example` is provided.
 
+### Pre-Push Quality Gate (MANDATORY)
+Before **every** commit and push, ALL of these must pass with 0 errors:
+```bash
+npm run lint          # ESLint — 0 errors
+npm run typecheck     # tsc --noEmit — 0 errors
+npm test              # All tests green
+```
+`npm test` uses `tsx` which transpiles but does NOT type-check. Only `tsc` (via `typecheck` or `build`) catches TypeScript errors. **Never skip `typecheck`.**
+For release tags, additionally run `npm run build` (Clean-Slate) as documented in `docs/devops_routine.md`.
+
 ### Release & Tag Policy (CRITICAL)
 - **NEVER bump `package.json` version or push a `git tag` without the user explicitly requesting it.**
 - Documentation-only changes (`.md` files) do not require a new version or tag — just commit and push.

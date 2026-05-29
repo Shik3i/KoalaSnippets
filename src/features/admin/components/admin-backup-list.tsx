@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, RefreshCw, HardDrive } from "lucide-react";
+import { Download, RefreshCw, HardDrive, RotateCcw, Copy, Check } from "lucide-react";
 
 interface BackupFile {
   filename: string;
@@ -23,6 +23,8 @@ export function AdminBackupList() {
   const [backups, setBackups] = useState<BackupFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [triggering, setTriggering] = useState(false);
+  const [restoreFilename, setRestoreFilename] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const fetchBackups = useCallback(() => {
     fetch("/api/admin/backups")
@@ -57,6 +59,23 @@ export function AdminBackupList() {
 
   const handleDownload = (filename: string) => {
     window.open(`/api/admin/backups?download=${encodeURIComponent(filename)}`, "_blank");
+  };
+
+  const getRestoreCommand = (filename: string) => {
+    return `# 1. Docker-Container stoppen
+docker compose stop koalasnippets
+
+# 2. Backup überschreibt die Live-Datenbank
+cp ./backups/${filename} ./data/koalasnippets.db
+
+# 3. Container neu starten
+docker compose start koalasnippets`;
+  };
+
+  const handleCopyCommand = (filename: string) => {
+    navigator.clipboard.writeText(getRestoreCommand(filename));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   if (loading) {
@@ -110,19 +129,65 @@ export function AdminBackupList() {
                       {mounted ? new Date(backup.createdAt).toLocaleString() : ""}
                     </td>
                     <td className="py-2.5 px-3 text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDownload(backup.filename)}
-                        aria-label={`Download backup ${backup.filename}`}
-                      >
-                        <Download size={14} suppressHydrationWarning />
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDownload(backup.filename)}
+                          aria-label={`Download backup ${backup.filename}`}
+                        >
+                          <Download size={14} suppressHydrationWarning />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setRestoreFilename(restoreFilename === backup.filename ? null : backup.filename)}
+                          aria-label={`Restore backup ${backup.filename}`}
+                        >
+                          <RotateCcw size={14} suppressHydrationWarning />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+        {restoreFilename && (
+          <div className="mt-4 p-4 rounded-lg border border-border bg-muted/30 space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-medium flex items-center gap-2">
+                <RotateCcw size={14} className="text-primary" suppressHydrationWarning />
+                Restore: {restoreFilename}
+              </h4>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleCopyCommand(restoreFilename)}
+                  className="gap-1.5"
+                >
+                  {copied ? <Check size={12} /> : <Copy size={12} />}
+                  {copied ? "Copied!" : "Copy Command"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setRestoreFilename(null)}
+                  aria-label="Close"
+                >
+                  ×
+                </Button>
+              </div>
+            </div>
+            <pre className="text-xs font-mono text-emerald-400 bg-black/40 p-3 rounded overflow-x-auto leading-relaxed border border-emerald-500/10 whitespace-pre">
+              {getRestoreCommand(restoreFilename)}
+            </pre>
+            <p className="text-[11px] text-muted-foreground">
+              Führe diesen Befehl auf dem Server aus, wo auch die Docker-Compose-Datei liegt. Das aktuelle Backup wird automatisch vor der Überschreibung erstellt.
+            </p>
           </div>
         )}
       </CardContent>

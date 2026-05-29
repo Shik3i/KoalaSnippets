@@ -26,7 +26,6 @@ export async function logUserAction(
         .from(auditLogs)
         .where(eq(auditLogs.userId, userId))
         .orderBy(desc(auditLogs.createdAt))
-        .limit(-1)
         .offset(20)
         .all();
 
