@@ -84,3 +84,25 @@ jobs:
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
           platforms: linux/amd64
+
+  update-readme:
+    name: Update Version Badge
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Update version in README.md
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          sed -i "s|Version-[0-9]*\.[0-9]*\.[0-9]*|Version-${VERSION}|g" README.md
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git diff --cached --quiet || git commit -m "docs: update version badge to ${GITHUB_REF_NAME#v}" && git push
