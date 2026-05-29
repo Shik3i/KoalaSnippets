@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, RefreshCw, HardDrive, RotateCcw, Copy, Check } from "lucide-react";
+import { HardDrive, RotateCcw, Copy, Check, ChevronDown, ChevronRight, Download, RefreshCw } from "lucide-react";
 
 interface BackupFile {
   filename: string;
@@ -23,8 +23,8 @@ export function AdminBackupList() {
   const [backups, setBackups] = useState<BackupFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [triggering, setTriggering] = useState(false);
-  const [restoreFilename, setRestoreFilename] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+  const [expandedRestore, setExpandedRestore] = useState<string | null>(null);
 
   const fetchBackups = useCallback(() => {
     fetch("/api/admin/backups")
@@ -65,17 +65,20 @@ export function AdminBackupList() {
     return `# 1. Docker-Container stoppen
 docker compose stop koalasnippets
 
-# 2. Backup überschreibt die Live-Datenbank
+# 2. Aktuelle DB sichern (optional)
+cp ./data/koalasnippets.db ./data/koalasnippets.db.bak
+
+# 3. Backup überschreibt die Live-Datenbank
 cp ./backups/${filename} ./data/koalasnippets.db
 
-# 3. Container neu starten
+# 4. Container neu starten
 docker compose start koalasnippets`;
   };
 
   const handleCopyCommand = (filename: string) => {
     navigator.clipboard.writeText(getRestoreCommand(filename));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopied(filename);
+    setTimeout(() => setCopied(null), 2000);
   };
 
   if (loading) {
@@ -122,72 +125,66 @@ docker compose start koalasnippets`;
               </thead>
               <tbody>
                 {backups.map((backup) => (
-                  <tr key={backup.filename} className="border-b border-border/50">
-                    <td className="py-2.5 px-3 font-mono text-xs">{backup.filename}</td>
-                    <td className="py-2.5 px-3 text-muted-foreground">{formatBytes(backup.size)}</td>
-                    <td className="py-2.5 px-3 text-muted-foreground">
-                      {mounted ? new Date(backup.createdAt).toLocaleString() : ""}
-                    </td>
-                    <td className="py-2.5 px-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDownload(backup.filename)}
-                          aria-label={`Download backup ${backup.filename}`}
-                        >
-                          <Download size={14} suppressHydrationWarning />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setRestoreFilename(restoreFilename === backup.filename ? null : backup.filename)}
-                          aria-label={`Restore backup ${backup.filename}`}
-                        >
-                          <RotateCcw size={14} suppressHydrationWarning />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
+                  <>
+                    <tr key={backup.filename} className="border-b border-border/50">
+                      <td className="py-2.5 px-3 font-mono text-xs">{backup.filename}</td>
+                      <td className="py-2.5 px-3 text-muted-foreground">{formatBytes(backup.size)}</td>
+                      <td className="py-2.5 px-3 text-muted-foreground">
+                        {mounted ? new Date(backup.createdAt).toLocaleString() : ""}
+                      </td>
+                      <td className="py-2.5 px-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDownload(backup.filename)}
+                            aria-label={`Download backup ${backup.filename}`}
+                          >
+                            <Download size={14} suppressHydrationWarning />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setExpandedRestore(expandedRestore === backup.filename ? null : backup.filename)}
+                            className="gap-1.5 text-xs"
+                          >
+                            <RotateCcw size={12} suppressHydrationWarning />
+                            Restore
+                            {expandedRestore === backup.filename
+                              ? <ChevronDown size={12} />
+                              : <ChevronRight size={12} />
+                            }
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                    {expandedRestore === backup.filename && (
+                      <tr key={`${backup.filename}-restore`} className="border-b border-border/50">
+                        <td colSpan={4} className="p-0">
+                          <div className="px-4 py-3 bg-muted/20">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs text-muted-foreground">Server-Befehl (im Docker-Compose-Verzeichnis ausführen):</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleCopyCommand(backup.filename)}
+                                className="gap-1 text-xs h-7"
+                              >
+                                {copied === backup.filename ? <Check size={11} /> : <Copy size={11} />}
+                                {copied === backup.filename ? "Kopiert!" : "Kopieren"}
+                              </Button>
+                            </div>
+                            <pre className="text-[11px] font-mono text-emerald-400 bg-black/40 p-3 rounded overflow-x-auto leading-relaxed border border-emerald-500/10 whitespace-pre">
+                              {getRestoreCommand(backup.filename)}
+                            </pre>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
-        {restoreFilename && (
-          <div className="mt-4 p-4 rounded-lg border border-border bg-muted/30 space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium flex items-center gap-2">
-                <RotateCcw size={14} className="text-primary" suppressHydrationWarning />
-                Restore: {restoreFilename}
-              </h4>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleCopyCommand(restoreFilename)}
-                  className="gap-1.5"
-                >
-                  {copied ? <Check size={12} /> : <Copy size={12} />}
-                  {copied ? "Copied!" : "Copy Command"}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => setRestoreFilename(null)}
-                  aria-label="Close"
-                >
-                  ×
-                </Button>
-              </div>
-            </div>
-            <pre className="text-xs font-mono text-emerald-400 bg-black/40 p-3 rounded overflow-x-auto leading-relaxed border border-emerald-500/10 whitespace-pre">
-              {getRestoreCommand(restoreFilename)}
-            </pre>
-            <p className="text-[11px] text-muted-foreground">
-              Führe diesen Befehl auf dem Server aus, wo auch die Docker-Compose-Datei liegt. Das aktuelle Backup wird automatisch vor der Überschreibung erstellt.
-            </p>
           </div>
         )}
       </CardContent>
