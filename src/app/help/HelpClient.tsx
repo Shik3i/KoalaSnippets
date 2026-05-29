@@ -18,9 +18,7 @@ import {
   LayoutGrid,
   Table,
   User,
-  Tags,
   Code,
-  ArrowRight,
   Pin,
   Sparkles,
   Info,
@@ -55,6 +53,14 @@ function drawMatrixRain() {
     drops[x]++;
   });
 }`;
+
+function KbdKey({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="px-1.5 py-0.5 text-[11px] font-mono font-semibold bg-muted border border-border rounded shadow-sm text-foreground min-w-[20px] text-center inline-block">
+      {children}
+    </kbd>
+  );
+}
 
 export function HelpClient({
   sidebarTags,
@@ -135,7 +141,7 @@ export function HelpClient({
       setCopied(true);
       addToast(t.helpMockCopiedToast, "success");
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch {
       addToast("Failed to copy code", "error");
     }
   };
@@ -152,21 +158,13 @@ export function HelpClient({
     addToast(nextPin ? t.helpMockPinAddToast : t.helpMockPinRemToast, "success");
   };
 
-  const handleTagClick = (tag: string) => {
+  const handleTagClick = () => {
     addToast(t.helpMockTagToast, "info");
   };
 
   const handleLangClick = () => {
     addToast(t.helpMockLangToast, "info");
   };
-
-  function KbdKey({ children }: { children: React.ReactNode }) {
-    return (
-      <kbd className="px-1.5 py-0.5 text-[11px] font-mono font-semibold bg-muted border border-border rounded shadow-sm text-foreground min-w-[20px] text-center inline-block">
-        {children}
-      </kbd>
-    );
-  }
 
   const shortcutGroups = [
     {
@@ -808,7 +806,7 @@ export function HelpClient({
                       Authenticate curl requests or custom tools by including your personal token in the HTTP <code className="bg-muted px-1 rounded">Authorization</code> header:
                     </p>
                     <pre className="text-[10px] font-mono text-emerald-400 bg-black/40 p-3 rounded overflow-x-auto leading-relaxed border border-emerald-500/10">
-                      curl -H "Authorization: Bearer ks_your_api_key_here" \
+                      curl -H &quot;Authorization: Bearer ks_your_api_key_here&quot; \
   https://snippets.koala/api/snippets
                     </pre>
                   </div>

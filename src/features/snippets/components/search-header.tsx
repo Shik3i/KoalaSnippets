@@ -477,8 +477,8 @@ function AuthorDropdown({
 
 function parseSearchCommands(text: string) {
   let cleanText = text;
-  let parsedTags: string[] = [];
-  let parsedLangs: string[] = [];
+  const parsedTags: string[] = [];
+  const parsedLangs: string[] = [];
   let parsedVisibility: string | null = null;
   let parsedAuthor: string | null = null;
   let parsedAuthorMode: "include" | "exclude" | null = null;

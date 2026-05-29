@@ -15,7 +15,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   Home,
   FileCode,
-  Globe,
   ChevronRight,
   ChevronDown,
   ChevronUp,
