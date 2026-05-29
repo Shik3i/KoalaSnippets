@@ -4,6 +4,24 @@ import { useState } from "react";
 import { Copy, Check, Binary, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+function utf8ToBase64(str: string): string {
+  const bytes = new TextEncoder().encode(str);
+  let binary = "";
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+function base64ToUtf8(str: string): string {
+  const binary = atob(str);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+}
+
 export default function Base64Page() {
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
@@ -15,9 +33,9 @@ export default function Base64Page() {
     setError("");
     try {
       if (mode === "encode") {
-        setOutput(btoa(input));
+        setOutput(utf8ToBase64(input));
       } else {
-        setOutput(atob(input));
+        setOutput(base64ToUtf8(input));
       }
     } catch {
       setError(mode === "decode" ? "Invalid Base64 string. Check the input." : "Encoding failed.");

@@ -272,6 +272,8 @@ const en: Translations = {
   editedYesterday: "Yesterday",
   editedToday: "Today",
   justNow: "Just now",
+  updatedAgo: "Updated {time}",
+  createdAgo: "Created {time}",
 };
 
 export default en;

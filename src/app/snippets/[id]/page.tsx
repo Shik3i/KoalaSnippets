@@ -194,6 +194,7 @@ export default async function SnippetDetailPage({ params, searchParams }: PagePr
               forkedFromTitle={snippet.forkedFromTitle as string | undefined}
               backUrl={backUrl}
               showLineNumbers={showLineNumbers}
+              collectionId={snippet.collectionId as string | null}
             />
           )}
         </div>

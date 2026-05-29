@@ -1,5 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { Sidebar } from "@/features/core/components/sidebar";
+import { getSession } from "@/features/auth/utils/session";
 import { PublicStatsCards } from "@/features/core/components/public-stats-cards";
 import { getPublicStats } from "@/features/core/utils/stats";
 import { Github } from "lucide-react";
@@ -20,10 +21,11 @@ const getCachedStats = unstable_cache(
 
 export default async function StatsPage() {
   const stats = await getCachedStats();
+  const session = await getSession();
 
   return (
     <div className="flex h-screen">
-      <Sidebar isAuthenticated={false} isAdmin={false} />
+      <Sidebar isAuthenticated={!!session} isAdmin={session?.user?.role === "ADMIN"} />
 
       <div className="flex-1 overflow-auto p-6 md:p-8">
         <div className="max-w-6xl mx-auto">

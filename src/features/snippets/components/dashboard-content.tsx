@@ -24,6 +24,7 @@ interface SnippetData {
   tags: string[] | null;
   visibility: "PRIVATE" | "SHARED" | "PUBLIC";
   createdAt: Date | string;
+  updatedAt?: Date | string;
   highlightedCode?: string;
   authorUsername?: string;
   totalLines: number;
@@ -279,7 +280,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
         </div>
       </div>
 
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-3 sm:p-4">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-3 sm:p-4 pb-24">
         {isInitialLoading ? (
           viewMode === "table" ? (
             /* Table skeleton */
@@ -454,6 +455,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
                         tags={s.tags ?? undefined}
                         visibility={s.visibility}
                         createdAt={s.createdAt}
+                        updatedAt={s.updatedAt}
                         snippetDensity={density}
                         highlightedCode={s.highlightedCode}
                         selected={selectedIds.has(s.id)}

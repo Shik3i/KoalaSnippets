@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Diff, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -11,43 +11,75 @@ interface DiffLine {
   lineNumB?: number;
 }
 
-function computeDiff(oldText: string, newText: string): DiffLine[] {
-  const oldLines = oldText.split("\n");
-  const newLines = newText.split("\n");
+function lcsLength(X: string[], Y: string[]): number[] {
+  const m = X.length;
+  const n = Y.length;
+  let prevRow = new Array(n + 1).fill(0);
+  let currRow = new Array(n + 1).fill(0);
 
-  const m = oldLines.length;
-  const n = newLines.length;
-
-  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
   for (let i = 1; i <= m; i++) {
+    const temp = prevRow;
+    prevRow = currRow;
+    currRow = temp;
+    currRow[0] = 0;
+
     for (let j = 1; j <= n; j++) {
-      if (oldLines[i - 1] === newLines[j - 1]) {
-        dp[i][j] = dp[i - 1][j - 1] + 1;
+      if (X[i - 1] === Y[j - 1]) {
+        currRow[j] = prevRow[j - 1] + 1;
       } else {
-        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+        currRow[j] = Math.max(prevRow[j], currRow[j - 1]);
       }
     }
   }
+  return currRow;
+}
 
-  const result: DiffLine[] = [];
-  let i = m;
-  let j = n;
+function hirschberg(X: string[], Y: string[], offsetI: number = 0, offsetJ: number = 0): DiffLine[] {
+  const m = X.length;
+  const n = Y.length;
 
-  while (i > 0 || j > 0) {
-    if (i > 0 && j > 0 && oldLines[i - 1] === newLines[j - 1]) {
-      result.unshift({ type: "same", text: oldLines[i - 1], lineNumA: i, lineNumB: j });
-      i--;
-      j--;
-    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
-      result.unshift({ type: "added", text: newLines[j - 1], lineNumB: j });
-      j--;
-    } else if (i > 0) {
-      result.unshift({ type: "removed", text: oldLines[i - 1], lineNumA: i });
-      i--;
+  if (m === 0) {
+    return Y.map((item, index) => ({ type: "added" as const, text: item, lineNumB: offsetJ + index + 1 }));
+  } else if (n === 0) {
+    return X.map((item, index) => ({ type: "removed" as const, text: item, lineNumA: offsetI + index + 1 }));
+  } else if (m === 1) {
+    const index = Y.indexOf(X[0]);
+    if (index !== -1) {
+      const addedBefore = Y.slice(0, index).map((item, idx) => ({ type: "added" as const, text: item, lineNumB: offsetJ + idx + 1 }));
+      const same = [{ type: "same" as const, text: X[0], lineNumA: offsetI + 1, lineNumB: offsetJ + index + 1 }];
+      const addedAfter = Y.slice(index + 1).map((item, idx) => ({ type: "added" as const, text: item, lineNumB: offsetJ + index + 2 + idx }));
+      return [...addedBefore, ...same, ...addedAfter];
+    } else {
+      const removed = [{ type: "removed" as const, text: X[0], lineNumA: offsetI + 1 }];
+      const added = Y.map((item, idx) => ({ type: "added" as const, text: item, lineNumB: offsetJ + idx + 1 }));
+      return [...removed, ...added];
     }
   }
 
-  return result;
+  const xMid = Math.floor(m / 2);
+  const scoreL = lcsLength(X.slice(0, xMid), Y);
+  const scoreR = lcsLength(X.slice(xMid).reverse(), Y.slice().reverse());
+
+  let yMid = 0;
+  let maxScore = -1;
+  for (let j = 0; j <= n; j++) {
+    const score = scoreL[j] + scoreR[n - j];
+    if (score > maxScore) {
+      maxScore = score;
+      yMid = j;
+    }
+  }
+
+  return [
+    ...hirschberg(X.slice(0, xMid), Y.slice(0, yMid), offsetI, offsetJ),
+    ...hirschberg(X.slice(xMid), Y.slice(yMid), offsetI + xMid, offsetJ + yMid)
+  ];
+}
+
+function computeDiff(oldText: string, newText: string): DiffLine[] {
+  const oldLines = oldText.split("\n");
+  const newLines = newText.split("\n");
+  return hirschberg(oldLines, newLines);
 }
 
 function DiffView({ lines }: { lines: DiffLine[] }) {
@@ -77,8 +109,21 @@ function DiffView({ lines }: { lines: DiffLine[] }) {
 export default function DiffCheckerPage() {
   const [left, setLeft] = useState("");
   const [right, setRight] = useState("");
+  const [debouncedLeft, setDebouncedLeft] = useState("");
+  const [debouncedRight, setDebouncedRight] = useState("");
 
-  const diff = useMemo(() => computeDiff(left, right), [left, right]);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedLeft(left);
+      setDebouncedRight(right);
+    }, 200);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [left, right]);
+
+  const diff = useMemo(() => computeDiff(debouncedLeft, debouncedRight), [debouncedLeft, debouncedRight]);
   const hasInput = left || right;
 
   return (

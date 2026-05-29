@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/features/core/utils/utils";
+import { cn, formatRelativeTime } from "@/features/core/utils/utils";
 import { useI18n } from "@/features/core/i18n";
 
 interface RecentSnippet {
@@ -76,22 +76,3 @@ export function RecentlyEdited() {
   );
 }
 
-function formatRelativeTime(dateStr: string, t: ReturnType<typeof useI18n>["t"]): string {
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  const diffMs = now - then;
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) {
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    if (diffHours === 0) {
-      const diffMinutes = Math.floor(diffMs / (1000 * 60));
-      if (diffMinutes < 5) return t.justNow;
-      return `${diffMinutes}m ago`;
-    }
-    return `${diffHours}h ago`;
-  }
-  if (diffDays === 1) return t.editedYesterday;
-  if (diffDays < 7) return t.editedXDaysAgo.replace("{days}", String(diffDays));
-  return new Date(dateStr).toLocaleDateString();
-}

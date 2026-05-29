@@ -4,10 +4,19 @@ import { useState } from "react";
 import { Copy, Check, FileKey } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+function base64ToUtf8(str: string): string {
+  const binary = atob(str);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+}
+
 function base64UrlDecode(str: string): string {
   str = str.replace(/-/g, "+").replace(/_/g, "/");
   while (str.length % 4) str += "=";
-  return atob(str);
+  return base64ToUtf8(str);
 }
 
 function tryParseJson(s: string): Record<string, unknown> | null {

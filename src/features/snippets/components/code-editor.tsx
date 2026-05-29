@@ -71,6 +71,17 @@ export const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>
       const selectionEnd = textarea.selectionEnd;
       const val = localValue;
 
+      // Handle Ctrl+S / Cmd+S save race-condition by immediately flushing the timeout
+      const isMac = typeof window !== "undefined" && navigator.platform.toUpperCase().includes("MAC");
+      const modifier = isMac ? e.metaKey : e.ctrlKey;
+      if (modifier && e.key.toLowerCase() === "s") {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+          onChange(val);
+        }
+      }
+
       if (e.key === "Tab") {
         e.preventDefault();
         const tabChar = "  "; // 2 spaces

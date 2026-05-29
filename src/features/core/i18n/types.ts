@@ -272,6 +272,8 @@ export interface Translations {
   editedYesterday: string;
   editedToday: string;
   justNow: string;
+  updatedAgo: string;
+  createdAgo: string;
 }
 
 export const SUPPORTED_LOCALES: Locale[] = ["en", "de"];

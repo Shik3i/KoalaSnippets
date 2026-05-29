@@ -11,6 +11,7 @@ const shortcuts = [
   { keys: ["⌘⇧N", "CtrlShiftN"], description: "New Snippet" },
   { keys: ["⌘⇧D", "CtrlShiftD"], description: "Duplicate Snippet" },
   { keys: ["⌘⇧T", "CtrlShiftT"], description: "Open Trash" },
+  { keys: ["⌘⇧H", "CtrlShiftH"], description: "Cycle Theme" },
   { keys: ["⌘G", "CtrlG"], description: "Go to Line (in snippet view)" },
   { keys: ["/"], description: "Focus search" },
   { keys: ["J"], description: "Next snippet (grid/table)" },
@@ -57,7 +58,9 @@ function ShortcutRow({ shortcut }: { shortcut: (typeof shortcuts)[number] }) {
                       ? (isMac ? "⌘⇧D" : "Ctrl+Shift+D")
                       : key === "⌘⇧T" || key === "CtrlShiftT"
                         ? (isMac ? "⌘⇧T" : "Ctrl+Shift+T")
-                        : key;
+                        : key === "⌘⇧H" || key === "CtrlShiftH"
+                          ? (isMac ? "⌘⇧H" : "Ctrl+Shift+H")
+                          : key;
           return (
             <span key={key} className="flex items-center gap-1.5">
               {i > 0 && <span className="text-muted-foreground/50 text-xs">or</span>}

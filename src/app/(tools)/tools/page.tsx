@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Fingerprint,
   Key,
@@ -245,7 +245,29 @@ function JsonTool() {
   );
 }
 
-function base64UrlDecode(str: string): string { str = str.replace(/-/g, "+").replace(/_/g, "/"); while (str.length % 4) str += "="; return atob(str); }
+function utf8ToBase64(str: string): string {
+  const bytes = new TextEncoder().encode(str);
+  let binary = "";
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+function base64ToUtf8(str: string): string {
+  const binary = atob(str);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+}
+
+function base64UrlDecode(str: string): string {
+  str = str.replace(/-/g, "+").replace(/_/g, "/");
+  while (str.length % 4) str += "=";
+  return base64ToUtf8(str);
+}
 function tryParseJson(s: string): Record<string, unknown> | null { try { return JSON.parse(s); } catch { return null; } }
 
 function JwtTool() {
@@ -295,7 +317,7 @@ function Base64Tool() {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
 
-  const handleConvert = () => { setError(""); try { if (mode === "encode") setOutput(btoa(input)); else setOutput(atob(input)); } catch { setError(mode === "decode" ? "Invalid Base64 string." : "Encoding failed."); setOutput(""); } };
+  const handleConvert = () => { setError(""); try { if (mode === "encode") setOutput(utf8ToBase64(input)); else setOutput(base64ToUtf8(input)); } catch { setError(mode === "decode" ? "Invalid Base64 string." : "Encoding failed."); setOutput(""); } };
 
   return (
     <div className="space-y-4">
@@ -320,25 +342,95 @@ function Base64Tool() {
 
 interface DiffLine { type: "same" | "added" | "removed"; text: string; lineNumA?: number; lineNumB?: number; }
 
-function computeDiff(oldText: string, newText: string): DiffLine[] {
-  const oldLines = oldText.split("\n"), newLines = newText.split("\n");
-  const m = oldLines.length, n = newLines.length;
-  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
-  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) dp[i][j] = oldLines[i-1] === newLines[j-1] ? dp[i-1][j-1] + 1 : Math.max(dp[i-1][j], dp[i][j-1]);
-  const result: DiffLine[] = [];
-  let i = m, j = n;
-  while (i > 0 || j > 0) {
-    if (i > 0 && j > 0 && oldLines[i-1] === newLines[j-1]) { result.unshift({ type: "same", text: oldLines[i-1], lineNumA: i, lineNumB: j }); i--; j--; }
-    else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) { result.unshift({ type: "added", text: newLines[j-1], lineNumB: j }); j--; }
-    else if (i > 0) { result.unshift({ type: "removed", text: oldLines[i-1], lineNumA: i }); i--; }
+function lcsLength(X: string[], Y: string[]): number[] {
+  const m = X.length;
+  const n = Y.length;
+  let prevRow = new Array(n + 1).fill(0);
+  let currRow = new Array(n + 1).fill(0);
+
+  for (let i = 1; i <= m; i++) {
+    const temp = prevRow;
+    prevRow = currRow;
+    currRow = temp;
+    currRow[0] = 0;
+
+    for (let j = 1; j <= n; j++) {
+      if (X[i - 1] === Y[j - 1]) {
+        currRow[j] = prevRow[j - 1] + 1;
+      } else {
+        currRow[j] = Math.max(prevRow[j], currRow[j - 1]);
+      }
+    }
   }
-  return result;
+  return currRow;
+}
+
+function hirschberg(X: string[], Y: string[], offsetI: number = 0, offsetJ: number = 0): DiffLine[] {
+  const m = X.length;
+  const n = Y.length;
+
+  if (m === 0) {
+    return Y.map((item, index) => ({ type: "added" as const, text: item, lineNumB: offsetJ + index + 1 }));
+  } else if (n === 0) {
+    return X.map((item, index) => ({ type: "removed" as const, text: item, lineNumA: offsetI + index + 1 }));
+  } else if (m === 1) {
+    const index = Y.indexOf(X[0]);
+    if (index !== -1) {
+      const addedBefore = Y.slice(0, index).map((item, idx) => ({ type: "added" as const, text: item, lineNumB: offsetJ + idx + 1 }));
+      const same = [{ type: "same" as const, text: X[0], lineNumA: offsetI + 1, lineNumB: offsetJ + index + 1 }];
+      const addedAfter = Y.slice(index + 1).map((item, idx) => ({ type: "added" as const, text: item, lineNumB: offsetJ + index + 2 + idx }));
+      return [...addedBefore, ...same, ...addedAfter];
+    } else {
+      const removed = [{ type: "removed" as const, text: X[0], lineNumA: offsetI + 1 }];
+      const added = Y.map((item, idx) => ({ type: "added" as const, text: item, lineNumB: offsetJ + idx + 1 }));
+      return [...removed, ...added];
+    }
+  }
+
+  const xMid = Math.floor(m / 2);
+  const scoreL = lcsLength(X.slice(0, xMid), Y);
+  const scoreR = lcsLength(X.slice(xMid).reverse(), Y.slice().reverse());
+
+  let yMid = 0;
+  let maxScore = -1;
+  for (let j = 0; j <= n; j++) {
+    const score = scoreL[j] + scoreR[n - j];
+    if (score > maxScore) {
+      maxScore = score;
+      yMid = j;
+    }
+  }
+
+  return [
+    ...hirschberg(X.slice(0, xMid), Y.slice(0, yMid), offsetI, offsetJ),
+    ...hirschberg(X.slice(xMid), Y.slice(yMid), offsetI + xMid, offsetJ + yMid)
+  ];
+}
+
+function computeDiff(oldText: string, newText: string): DiffLine[] {
+  const oldLines = oldText.split("\n");
+  const newLines = newText.split("\n");
+  return hirschberg(oldLines, newLines);
 }
 
 function DiffTool() {
   const [left, setLeft] = useState("");
   const [right, setRight] = useState("");
-  const diff = useMemo(() => computeDiff(left, right), [left, right]);
+  const [debouncedLeft, setDebouncedLeft] = useState("");
+  const [debouncedRight, setDebouncedRight] = useState("");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedLeft(left);
+      setDebouncedRight(right);
+    }, 200);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [left, right]);
+
+  const diff = useMemo(() => computeDiff(debouncedLeft, debouncedRight), [debouncedLeft, debouncedRight]);
   const hasInput = left || right;
 
   return (

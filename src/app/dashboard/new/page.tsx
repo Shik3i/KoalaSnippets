@@ -30,6 +30,7 @@ interface DuplicateData {
   files: { filename: string; code: string; language: string }[];
   tags: string[];
   visibility: "PRIVATE" | "SHARED" | "PUBLIC";
+  collectionId?: string | null;
 }
 
 function readDuplicateData(): DuplicateData | null {
@@ -99,12 +100,14 @@ export default function NewSnippetPage({
   const [error, setError] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
   const [showMinimap, setShowMinimap] = useState(false);
+  const [collections, setCollections] = useState<{ id: string; name: string }[]>([]);
+  const [collectionId, setCollectionId] = useState<string | null>(initialData?.collectionId ?? null);
 
   const activeCode = files[activeTab]?.code ?? "";
   const isLongFile = activeCode.split('\n').length > 50;
 
   const draftKey = isEditing && editId ? `draft_edit_${editId}` : "draft_new_snippet";
-  const currentData = useMemo(() => ({ title, description, files, tags, visibility }), [title, description, files, tags, visibility]);
+  const currentData = useMemo(() => ({ title, description, files, tags, visibility, collectionId }), [title, description, files, tags, visibility, collectionId]);
   const { hasDraft, loadDraft, clearDraft } = useLocalStorageDraft(draftKey, currentData, 3000);
 
   const handleRestoreDraft = () => {
@@ -115,6 +118,7 @@ export default function NewSnippetPage({
       if (draft.files) setFiles(draft.files);
       if (draft.tags) setTags(draft.tags);
       if (draft.visibility) setVisibility(draft.visibility);
+      if (draft.collectionId !== undefined) setCollectionId(draft.collectionId);
       addToast("Draft restored", "success");
     }
     clearDraft();
@@ -139,6 +143,7 @@ export default function NewSnippetPage({
         if (data.files?.length) setFiles(data.files);
         if (data.tags) setTags(data.tags);
         if (data.visibility) setVisibility(data.visibility);
+        if (data.collectionId) setCollectionId(data.collectionId);
       }, 0);
     }
 
@@ -170,6 +175,13 @@ export default function NewSnippetPage({
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    fetch("/api/collections")
+      .then((r) => r.json())
+      .then((data) => setCollections(data.collections ?? []))
+      .catch(() => {});
+  }, []);
+
   // Removed duplicate toast useEffect
 
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
@@ -184,7 +196,7 @@ export default function NewSnippetPage({
       const url = isEditing && editId ? `/api/snippets/${editId}` : "/api/snippets";
       const method = isEditing && editId ? "PUT" : "POST";
 
-      const payload: Record<string, unknown> = { title, description, files, tags: tags.map((t) => t.toLowerCase()), visibility };
+      const payload: Record<string, unknown> = { title, description, files, tags: tags.map((t) => t.toLowerCase()), visibility, collectionId };
       if (password) payload.password = password;
       if (expiresAt) payload.expiresAt = new Date(expiresAt).toISOString();
       if (ignoreDuplicate) payload.ignoreDuplicate = true;
@@ -471,6 +483,26 @@ export default function NewSnippetPage({
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="collection">Collection (optional)</Label>
+                  <select
+                    id="collection"
+                    value={collectionId ?? ""}
+                    onChange={(e) => setCollectionId(e.target.value || null)}
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    aria-label="Snippet collection"
+                  >
+                    <option value="">None / Keine Sammlung</option>
+                    {collections.map((col) => (
+                      <option key={col.id} value={col.id}>
+                        {col.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label htmlFor="visibility">Visibility</Label>
                   <select
                     id="visibility"
@@ -484,20 +516,7 @@ export default function NewSnippetPage({
                     <option value="PUBLIC">Public</option>
                   </select>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password Protection (optional)</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Leave blank for no password"
-                    autoComplete="new-password"
-                  />
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="expiresAt">Expiration Date (optional)</Label>
                   <Input
@@ -507,6 +526,18 @@ export default function NewSnippetPage({
                     onChange={(e) => setExpiresAt(e.target.value)}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password Protection (optional)</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Leave blank for no password"
+                  autoComplete="new-password"
+                />
               </div>
 
               <div className="space-y-2">

@@ -46,6 +46,20 @@ function saveSearchHistory(query: string) {
   }
 }
 
+function fuzzyMatch(query: string, target: string): boolean {
+  let qIdx = 0;
+  let tIdx = 0;
+  const qLen = query.length;
+  const tLen = target.length;
+  while (qIdx < qLen && tIdx < tLen) {
+    if (query[qIdx] === target[tIdx]) {
+      qIdx++;
+    }
+    tIdx++;
+  }
+  return qIdx === qLen;
+}
+
 export function CommandPalette() {
   const router = useRouter();
   const pathname = usePathname();
@@ -188,12 +202,14 @@ export function CommandPalette() {
   const filteredCommands = [...historyItems, ...currentCommands].filter((cmd) => {
     const q = query.toLowerCase().trim();
     if (!q) return true;
-    return cmd.value.startsWith(q) || cmd.label.toLowerCase().includes(q);
+    const fuzzyValueMatch = fuzzyMatch(q, cmd.value.toLowerCase());
+    const labelMatch = cmd.label.toLowerCase().includes(q);
+    return fuzzyValueMatch || labelMatch;
   }).sort((a, b) => {
     const q = query.toLowerCase().trim();
     if (!q) return 0;
-    const aStarts = a.value.startsWith(q) ? 1 : 0;
-    const bStarts = b.value.startsWith(q) ? 1 : 0;
+    const aStarts = a.value.startsWith(q) || a.label.toLowerCase().startsWith(q) ? 1 : 0;
+    const bStarts = b.value.startsWith(q) || b.label.toLowerCase().startsWith(q) ? 1 : 0;
     return bStarts - aStarts;
   });
 

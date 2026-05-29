@@ -9,7 +9,7 @@ import KoalaFolder from "../../../../public/KoalaFolder.png";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/features/core/utils/utils";
 import { useRecentSnippets } from "@/features/core/hooks/use-recent-snippets";
-import { MobileFAB } from "@/features/core/components/mobile-fab";
+import { MobileNavToggle } from "@/features/core/components/mobile-nav-toggle";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -757,6 +757,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
           </div>
           )}
         </div>
+        <MobileNavToggle isOpen={mobileOpen} onClick={() => setMobileOpen(!mobileOpen)} />
       </aside>
 
       {mobileOpen && (
@@ -766,7 +767,6 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
           aria-hidden="true"
         />
       )}
-      <MobileFAB onToggleMenu={() => setMobileOpen(!mobileOpen)} mobileOpen={mobileOpen} />
     </>
   );
 }

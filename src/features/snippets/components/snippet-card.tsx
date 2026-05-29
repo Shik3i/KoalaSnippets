@@ -5,7 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import KoalaFile from "../../../../public/KoalaFile.png";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/features/core/utils/utils";
+import { cn, formatRelativeTime } from "@/features/core/utils/utils";
+import { useI18n } from "@/features/core/i18n";
 import { VISIBILITY_CONFIG } from "@/features/snippets/utils/constants";
 import { SafeZone } from "@/components/ui/safe-zone";
 import { ContextMenu } from "@/components/ui/context-menu";
@@ -21,6 +22,7 @@ interface SnippetCardProps {
   tags?: string[];
   visibility: "PRIVATE" | "SHARED" | "PUBLIC";
   createdAt: Date | string;
+  updatedAt?: Date | string;
   snippetDensity?: "compact" | "preview" | "full";
   highlightedCode?: string;
   selected?: boolean;
@@ -40,6 +42,7 @@ export function SnippetCard({
   tags,
   visibility,
   createdAt,
+  updatedAt,
   snippetDensity = "preview",
   highlightedCode,
   selected = false,
@@ -52,6 +55,7 @@ export function SnippetCard({
 }: SnippetCardProps) {
   const VisIcon = VISIBILITY_CONFIG[visibility].icon;
   const { addToast } = useToast();
+  const { t } = useI18n();
   const hasAnimated = useRef(false);
   const [shouldAnimate, setShouldAnimate] = useState(false);
 
@@ -128,9 +132,11 @@ export function SnippetCard({
     }
   }, [id, addToast]);
 
-  const dateStr = new Date(createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'numeric', year: 'numeric' });
-  const timeStr = new Date(createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-  const dateDisplay = `Vom ${dateStr}, ${timeStr}`;
+  const targetDate = updatedAt || createdAt;
+  const timeAgoStr = formatRelativeTime(targetDate, t);
+  const relativeDisplay = updatedAt
+    ? t.updatedAgo.replace("{time}", timeAgoStr)
+    : t.createdAgo.replace("{time}", timeAgoStr);
 
   const estimatedReadingTime = Math.max(1, Math.ceil(totalLines / 50));
 
@@ -248,7 +254,7 @@ export function SnippetCard({
           </span>
         )}
         <span className="text-xs text-muted-foreground truncate">
-          {dateDisplay}{authorUsername ? ` • Erstellt von ${authorUsername}` : ""}
+          {relativeDisplay}{authorUsername ? ` • ${t.creator}: ${authorUsername}` : ""}
         </span>
       </div>
 

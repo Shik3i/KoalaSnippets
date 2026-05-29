@@ -34,6 +34,7 @@ const ALL_KEYS = [
   "helpTocMockup", "helpTocShortcuts", "helpTocCommands",
   "helpTocVisibility", "helpTocImport", "helpTocFaq",
   "helpTocApiKeys", "helpApiKeysTitle",
+  "updatedAgo", "createdAgo",
 ] as const;
 
 function getKeys(obj: Record<string, unknown>): string[] {

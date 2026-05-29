@@ -296,11 +296,26 @@ site_statistics (
 
 ### Indexes
 
-- `snippets(author_id)` - Fast lookup of user's snippets
-- `snippets(visibility)` - Fast filtering by visibility
-- `snippets(share_token)` - Fast token lookup for shared links
-- `sessions(token_hash)` - Fast session validation
-- `sessions(user_id)` - Fast user session lookup
+The following indexes are explicitly declared in the database schema (`src/db/schema.ts`) to optimize query execution times:
+
+- **snippets**
+  - `snippet_created_at_idx` on `createdAt` - Optimizes default dashboard sorting.
+  - `snippet_updated_at_idx` on `updatedAt` - Optimizes recently edited list queries.
+  - `snippet_author_created_at_idx` on `(authorId, createdAt)` - Speeds up author-specific snippet listings.
+  - `snippet_visibility_idx` on `visibility` - Optimizes public explorer database filters.
+  - `snippet_collection_idx` on `collectionId` - Optimizes queries filtering snippets by collection.
+- **collections**
+  - `collection_user_idx` on `userId` - Speeds up collection retrievals in the sidebar.
+- **user_favorites**
+  - `favorite_user_idx` on `userId` - Optimizes user favorite listings.
+  - `favorite_snippet_idx` on `snippetId` - Speeds up favorite checks and counts.
+  - `favorite_user_snippet_unique` (Unique) on `(userId, snippetId)` - Enforces constraint and speeds up lookup.
+- **snippet_files**
+  - `file_snippet_idx` on `snippetId` - Speeds up snippet file loading.
+  - `file_language_idx` on `language` - Speeds up language-based search and filter queries.
+- **api_keys**
+  - `api_key_user_idx` on `userId` - Speeds up API key listing for users.
+  - `api_key_token_hash_idx` on `tokenHash` - Speeds up authentication via API keys.
 
 ### SQLite Hardening (WAL Mode & Parameters)
 

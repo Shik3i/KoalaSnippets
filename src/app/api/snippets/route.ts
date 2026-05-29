@@ -215,7 +215,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
     }
 
-    const { title, description, code, language, tags, visibility, files, password, expiresAt } = parsed.data;
+    const { title, description, code, language, tags, visibility, files, password, expiresAt, collectionId } = parsed.data;
 
     let totalChars = 0;
     let totalLines = 0;
@@ -277,6 +277,7 @@ export async function POST(request: Request) {
         contentHash,
         passwordHash,
         expiresAt: validExpiresDate,
+        collectionId: collectionId ?? null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };

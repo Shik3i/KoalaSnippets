@@ -1,10 +1,28 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 
+function base64ToUtf8(str: string): string {
+  const binary = atob(str);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+}
+
 function base64UrlDecode(str: string): string {
   str = str.replace(/-/g, "+").replace(/_/g, "/");
   while (str.length % 4) str += "=";
-  return atob(str);
+  return base64ToUtf8(str);
+}
+
+function utf8ToBase64(str: string): string {
+  const bytes = new TextEncoder().encode(str);
+  let binary = "";
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
 }
 
 function tryParseJson(s: string): Record<string, unknown> | null {
@@ -124,6 +142,13 @@ describe("Base64 encode/decode (btoa/atob)", () => {
 
   it("errors on invalid base64 input", () => {
     assert.throws(() => atob("!!!not-valid-base64!!!"));
+  });
+
+  it("handles complex Unicode characters roundtrip natively", () => {
+    const original = "German: äöüÄÖÜß, Symbol: €, Emoji: 🚀, Asian: 日本語";
+    const encoded = utf8ToBase64(original);
+    const decoded = base64ToUtf8(encoded);
+    assert.strictEqual(decoded, original);
   });
 });
 

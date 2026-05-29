@@ -26,6 +26,7 @@ interface SnippetDetailClientProps {
   forkedFromTitle?: string;
   backUrl?: string;
   showLineNumbers?: boolean;
+  collectionId?: string | null;
 }
 
 export function SnippetDetailClient(props: SnippetDetailClientProps) {
@@ -65,6 +66,7 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
       files: props.files.map(f => ({ filename: f.filename, code: f.code, language: f.language })),
       tags: props.tags ?? [],
       visibility: props.visibility,
+      collectionId: props.collectionId,
     };
     sessionStorage.setItem("edit_snippet", JSON.stringify(editData));
     router.push("/dashboard/new");
@@ -77,6 +79,7 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
       files: props.files.map(f => ({ filename: f.filename, code: f.code, language: f.language })),
       tags: props.tags ?? [],
       visibility: props.visibility,
+      collectionId: props.collectionId,
     };
     sessionStorage.setItem("duplicate_snippet", JSON.stringify(duplicateData));
     router.push("/dashboard/new");

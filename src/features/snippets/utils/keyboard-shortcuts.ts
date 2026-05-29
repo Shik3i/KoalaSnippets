@@ -12,6 +12,7 @@ interface UseKeyboardShortcutsOptions {
   onToggleFavorite?: () => void;
   onTogglePin?: () => void;
   onNewSnippet?: () => void;
+  onToggleTheme?: () => void;
 }
 
 export function useKeyboardShortcuts({
@@ -23,6 +24,7 @@ export function useKeyboardShortcuts({
   onToggleFavorite,
   onTogglePin,
   onNewSnippet,
+  onToggleTheme,
 }: UseKeyboardShortcutsOptions = {}) {
   const router = useRouter();
 
@@ -75,6 +77,11 @@ export function useKeyboardShortcuts({
         router.push("/dashboard/trash");
       }
 
+      if (modifier && e.shiftKey && e.key.toLowerCase() === "h") {
+        e.preventDefault();
+        onToggleTheme?.();
+      }
+
       if (e.altKey && e.key.toLowerCase() === "n") {
         e.preventDefault();
         router.push("/dashboard/new");
@@ -111,7 +118,7 @@ export function useKeyboardShortcuts({
         window.dispatchEvent(new CustomEvent("toggle-shortcut-help"));
       }
     },
-    [searchInputRef, onSave, onFormat, onDelete, onDuplicate, onToggleFavorite, onTogglePin, onNewSnippet, router],
+    [searchInputRef, onSave, onFormat, onDelete, onDuplicate, onToggleFavorite, onTogglePin, onNewSnippet, onToggleTheme, router],
   );
 
   useEffect(() => {

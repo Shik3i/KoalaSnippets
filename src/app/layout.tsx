@@ -6,6 +6,7 @@ import { GlobalDropzone } from "@/features/core/components/global-dropzone";
 import { ShortcutHelpOverlay } from "@/features/core/components/shortcut-help-overlay";
 import { ReferrerTracker } from "@/features/core/components/breadcrumb";
 import { I18nProvider } from "@/features/core/i18n";
+import { ThemeShortcutHandler } from "@/features/core/components/theme-shortcut-handler";
 import { getSession } from "@/features/auth/utils/session";
 import { db } from "@/db";
 import { siteSettings } from "@/db/schema";
@@ -81,6 +82,7 @@ export default async function RootLayout({
             <CommandPalette />
             <ShortcutHelpOverlay />
             <GlobalDropzone />
+            <ThemeShortcutHandler />
           </I18nProvider>
         </ToastProvider>
       </body>
