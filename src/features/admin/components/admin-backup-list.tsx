@@ -65,11 +65,13 @@ export function AdminBackupList() {
     return `# 1. Container stoppen
 docker compose stop koalasnippets
 
-# 2. Backup aus dem Volume in die Datenbank kopieren
-docker cp koalasnippets-backups:/app/backups/${filename} /tmp/restore.db
-docker cp /tmp/restore.db koalasnippets-data:/koalasnippets.db
+# 2. WAL/SHM-Reste der alten DB entfernen (verhindert Korruption!)
+rm -f ./data/koalasnippets.db-wal ./data/koalasnippets.db-shm
 
-# 3. Container neu starten
+# 3. Backup überschreibt Live-Datenbank
+cp ./backups/${filename} ./data/koalasnippets.db
+
+# 4. Container neu starten
 docker compose start koalasnippets`;
   };
 
