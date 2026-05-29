@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Search, Plus, Settings, Shield, Home, FileCode, Command, ArrowRight, Moon, Copy, Pencil, Wrench, Upload, LayoutGrid } from "lucide-react";
+import { Search, Plus, Settings, Shield, Home, FileCode, Command, ArrowRight, Moon, Copy, Pencil, Wrench, Upload, LayoutGrid, Clock } from "lucide-react";
 import { cn } from "@/features/core/utils/utils";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
@@ -19,6 +19,33 @@ interface SnippetResult {
   updatedAt: string;
 }
 
+const SEARCH_HISTORY_KEY = "koalasnippets_search_history";
+const MAX_HISTORY_ITEMS = 5;
+
+function getSearchHistory(): string[] {
+  try {
+    const raw = localStorage.getItem(SEARCH_HISTORY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed.slice(0, MAX_HISTORY_ITEMS);
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+function saveSearchHistory(query: string) {
+  try {
+    const trimmed = query.trim();
+    if (!trimmed || trimmed.startsWith("/")) return;
+    const history = getSearchHistory().filter((q) => q !== trimmed);
+    history.unshift(trimmed);
+    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history.slice(0, MAX_HISTORY_ITEMS)));
+  } catch {
+    // localStorage may be unavailable
+  }
+}
+
 export function CommandPalette() {
   const router = useRouter();
   const pathname = usePathname();
@@ -29,6 +56,7 @@ export function CommandPalette() {
   const [snippets, setSnippets] = useState<SnippetResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
   const commands = useMemo(() => [
     { label: t.cmdCreateSnippet, value: "/new", href: "/dashboard/new", description: t.cmdCreateSnippetDesc, icon: Plus },
@@ -55,6 +83,7 @@ export function CommandPalette() {
         setActiveIndex(0);
         setSnippets([]);
         setLoading(false);
+        setSearchHistory(getSearchHistory());
       }
       return next;
     });
@@ -83,6 +112,7 @@ export function CommandPalette() {
       setActiveIndex(0);
       setSnippets([]);
       setLoading(false);
+      setSearchHistory(getSearchHistory());
     };
 
     window.addEventListener("open-command-palette", handleOpenPalette);
@@ -147,7 +177,15 @@ export function CommandPalette() {
     ];
   }
 
-  const filteredCommands = currentCommands.filter((cmd) => {
+  const historyItems = query.trim().length === 0 ? searchHistory.map((q) => ({
+    label: q,
+    value: `history:${q}`,
+    action: "searchHistory",
+    description: "",
+    icon: Clock,
+  })) : [];
+
+  const filteredCommands = [...historyItems, ...currentCommands].filter((cmd) => {
     const q = query.toLowerCase().trim();
     if (!q) return true;
     return cmd.value.startsWith(q) || cmd.label.toLowerCase().includes(q);
@@ -168,6 +206,12 @@ export function CommandPalette() {
     setIsOpen(false);
     
     if ("action" in item) {
+      if (item.action === "searchHistory") {
+        setQuery(item.label);
+        setActiveIndex(0);
+        setLoading(true);
+        return;
+      }
       if (item.action === "toggleTheme") {
         const html = document.documentElement;
         const isLight = Array.from(html.classList).some((c) => c === "light" || c.startsWith("theme-light"));
@@ -206,10 +250,9 @@ export function CommandPalette() {
     }
 
     if ("href" in item && typeof item.href === "string") {
-      // It is a command
       router.push(item.href);
     } else if ("id" in item) {
-      // It is a snippet
+      saveSearchHistory(query);
       router.push(`/snippets/${item.id}`);
     }
   };

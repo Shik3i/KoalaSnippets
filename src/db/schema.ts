@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, index, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
 
 export interface UserPreferences {
@@ -44,6 +44,7 @@ export const snippets = sqliteTable("snippets", {
   forkedFromId: text("forked_from_id"),
 }, (table) => [
   index("snippet_created_at_idx").on(table.createdAt),
+  index("snippet_updated_at_idx").on(table.updatedAt),
   index("snippet_author_created_at_idx").on(table.authorId, table.createdAt),
   index("snippet_visibility_idx").on(table.visibility),
   index("snippet_collection_idx").on(table.collectionId)
@@ -80,7 +81,8 @@ export const userFavorites = sqliteTable("user_favorites", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 }, (table) => [
   index("favorite_user_idx").on(table.userId),
-  index("favorite_snippet_idx").on(table.snippetId)
+  index("favorite_snippet_idx").on(table.snippetId),
+  uniqueIndex("favorite_user_snippet_unique").on(table.userId, table.snippetId)
 ]);
 
 export const snippetFiles = sqliteTable("snippet_files", {

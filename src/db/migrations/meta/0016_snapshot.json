@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "40f13e1d-a8ef-482d-8e3a-b38dffd8f897",
-  "prevId": "16628d66-646e-4a34-a2b6-c2856bb100a5",
+  "id": "29a9f58c-e427-4ad1-a03b-ac075a1b568f",
+  "prevId": "40f13e1d-a8ef-482d-8e3a-b38dffd8f897",
   "tables": {
     "api_keys": {
       "name": "api_keys",
@@ -698,6 +698,13 @@
           ],
           "isUnique": false
         },
+        "snippet_updated_at_idx": {
+          "name": "snippet_updated_at_idx",
+          "columns": [
+            "updated_at"
+          ],
+          "isUnique": false
+        },
         "snippet_author_created_at_idx": {
           "name": "snippet_author_created_at_idx",
           "columns": [
@@ -799,6 +806,14 @@
             "snippet_id"
           ],
           "isUnique": false
+        },
+        "favorite_user_snippet_unique": {
+          "name": "favorite_user_snippet_unique",
+          "columns": [
+            "user_id",
+            "snippet_id"
+          ],
+          "isUnique": true
         }
       },
       "foreignKeys": {
@@ -878,7 +893,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'{\"appTheme\":\"theme-midnight\",\"snippetDensity\":\"preview\",\"syntaxTheme\":\"github-dark\",\"bgPattern\":\"matrix\"}'"
+          "default": "'{\"appTheme\":\"theme-midnight\",\"snippetDensity\":\"preview\",\"syntaxTheme\":\"github-dark\",\"bgPattern\":\"matrix\",\"showLineNumbers\":true}'"
         }
       },
       "indexes": {

@@ -10,7 +10,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "test": "cross-env AUTH_PEPPER=test-pepper-for-unit-tests-only-do-not-use-in-production SESSION_SECRET=0000000000000000000000000000000000000000000000000000000000000000 node --test --import tsx tests/**/*.test.ts"
+    "test": "cross-env AUTH_PEPPER=test-pepper-for-unit-tests-only-do-not-use-in-production SESSION_SECRET=0000000000000000000000000000000000000000000000000000000000000000 node --test --import tsx tests/**/*.test.ts",
+    "test:coverage": "cross-env AUTH_PEPPER=test-pepper-for-unit-tests-only-do-not-use-in-production SESSION_SECRET=0000000000000000000000000000000000000000000000000000000000000000 c8 node --import tsx --test tests/**/*.test.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
@@ -36,6 +37,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "c8": "^10",
     "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",

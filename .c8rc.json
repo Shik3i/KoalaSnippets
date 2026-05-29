@@ -1,0 +1,13 @@
+{
+  "include": ["src/**/*.{ts,tsx}"],
+  "exclude": [
+    "src/db/migrations/**",
+    "src/**/*.d.ts"
+  ],
+  "reporter": ["text", "lcov"],
+  "thresholds": {
+    "lines": 60,
+    "branches": 60,
+    "functions": 60
+  }
+}
