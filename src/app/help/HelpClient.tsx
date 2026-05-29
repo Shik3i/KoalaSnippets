@@ -591,6 +591,166 @@ export function HelpClient({
                   </div>
                 </div>
               </div>
+
+              {/* Visibility Guide Section (Relocated Vertically to Left Column) */}
+              <div
+                id="visibility-section"
+                className="scroll-animate opacity-0 translate-y-8 transition-all duration-700 ease-out bg-card/25 backdrop-blur-md rounded-2xl border border-border/60 p-6 space-y-6 shadow-xl"
+              >
+                <div className="space-y-1">
+                  <h2 className="text-xl font-extrabold flex items-center gap-2">
+                    <Lock size={20} className="text-primary" />
+                    {t.visibility || "Visibility"} Guide
+                  </h2>
+                  <p className="text-xs text-muted-foreground">
+                    Understand who can see, share, and fork your code snippets.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-4">
+                  {/* Private card */}
+                  <div className="bg-card/40 border border-border/50 rounded-xl p-5 hover:border-primary/20 transition-colors flex flex-col gap-4 shadow-sm relative group overflow-hidden">
+                    <div className="absolute top-0 right-0 p-3 text-red-500/10 group-hover:text-red-500/20 transition-colors">
+                      <Lock size={64} />
+                    </div>
+                    <div className="flex items-center gap-2 text-red-500 font-bold text-sm">
+                      <span className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
+                        🔒
+                      </span>
+                      {t.visibilityPrivate}
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed flex-1">
+                      {t.helpVisibilityPrivateDesc}
+                    </p>
+                  </div>
+
+                  {/* Shared card */}
+                  <div className="bg-card/40 border border-border/50 rounded-xl p-5 hover:border-primary/20 transition-colors flex flex-col gap-4 shadow-sm relative group overflow-hidden">
+                    <div className="absolute top-0 right-0 p-3 text-blue-500/10 group-hover:text-blue-500/20 transition-colors">
+                      <Link2 size={64} />
+                    </div>
+                    <div className="flex items-center gap-2 text-blue-500 font-bold text-sm">
+                      <span className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                        🔗
+                      </span>
+                      {t.visibilityShared}
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed flex-1">
+                      {t.helpVisibilitySharedDesc}
+                    </p>
+                  </div>
+
+                  {/* Public card */}
+                  <div className="bg-card/40 border border-border/50 rounded-xl p-5 hover:border-primary/20 transition-colors flex flex-col gap-4 shadow-sm relative group overflow-hidden">
+                    <div className="absolute top-0 right-0 p-3 text-emerald-500/10 group-hover:text-emerald-500/20 transition-colors">
+                      <Globe size={64} />
+                    </div>
+                    <div className="flex items-center gap-2 text-emerald-500 font-bold text-sm">
+                      <span className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                        🌐
+                      </span>
+                      {t.visibilityPublic}
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed flex-1">
+                      {t.helpVisibilityPublicDesc}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Import Guide Section (Relocated to Left Column) */}
+              <div
+                id="import-section"
+                className="scroll-animate opacity-0 translate-y-8 transition-all duration-700 ease-out bg-card/25 backdrop-blur-md rounded-2xl border border-border/60 p-6 space-y-6 shadow-xl"
+              >
+                <div className="space-y-1">
+                  <h2 className="text-xl font-extrabold flex items-center gap-2">
+                    <Download size={20} className="text-primary" />
+                    {t.helpImportSectionTitle}
+                  </h2>
+                  <p className="text-xs text-muted-foreground">
+                    {t.helpImportSectionDesc}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-6">
+                  {/* Written Guide */}
+                  <div className="space-y-4 text-xs text-muted-foreground leading-relaxed">
+                    <div className="space-y-2">
+                      <h3 className="font-bold text-foreground text-sm">{t.helpImportDragDrop}</h3>
+                      <p>{t.helpImportDragDropDesc}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="font-bold text-foreground text-sm">2. Fetch & Import from URL</h3>
+                      <p>{t.helpImportFromUrlDesc}</p>
+                    </div>
+                  </div>
+
+                  {/* Interactive URL Import Box Mockup */}
+                  <div className="bg-card/50 border border-border/50 rounded-xl p-5 space-y-4 shadow-sm">
+                    <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wider">
+                      <Sparkles size={14} />
+                      {t.helpImportMockLabel}
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={importUrl}
+                          onChange={(e) => setImportUrl(e.target.value)}
+                          placeholder={t.helpImportMockPlaceholder}
+                          className="flex-1 h-8 px-2.5 text-xs bg-muted/50 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary font-mono text-foreground"
+                        />
+                        <button
+                          onClick={handleSimulatedImport}
+                          disabled={isImporting}
+                          className="h-8 px-4 bg-primary text-primary-foreground font-semibold text-xs rounded hover:bg-primary/95 transition-colors flex items-center justify-center shrink-0 select-none"
+                        >
+                          {isImporting ? t.helpImportMockButtonFetching : t.helpImportMockButton}
+                        </button>
+                      </div>
+                      {/* Presets */}
+                      <div className="flex flex-wrap gap-1.5 pt-1 items-center">
+                        <span className="text-[10px] text-muted-foreground">Try presets:</span>
+                        <button
+                          onClick={() => setImportUrl("raw.githubusercontent.com/matrix-rain.js")}
+                          className="text-[9px] font-mono bg-muted/80 text-muted-foreground hover:text-foreground px-2 py-0.5 rounded border border-border/80 hover:bg-muted select-none"
+                        >
+                          matrix-rain.js
+                        </button>
+                        <button
+                          onClick={() => setImportUrl("raw.githubusercontent.com/matrix-rain.css")}
+                          className="text-[9px] font-mono bg-muted/80 text-muted-foreground hover:text-foreground px-2 py-0.5 rounded border border-border/80 hover:bg-muted select-none"
+                        >
+                          matrix-rain.css
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Import Result simulated preview */}
+                    {isImporting && (
+                      <div className="h-28 flex items-center justify-center border border-border/50 rounded bg-muted/10">
+                        <div className="w-5 h-5 border border-primary border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
+                    {importResult && (
+                      <div className="border border-emerald-500/30 rounded bg-emerald-500/5 p-3 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex items-center justify-between text-xs font-semibold text-emerald-600">
+                          <span className="truncate flex items-center gap-1.5">
+                            📦 Simulated Import: {importResult.title}
+                          </span>
+                          <span className="text-[10px] font-mono bg-emerald-500/10 px-2 py-0.5 rounded">
+                            {importResult.language}
+                          </span>
+                        </div>
+                        <pre className="text-[10px] font-mono text-emerald-400 bg-black/40 p-2 rounded max-h-24 overflow-y-auto leading-relaxed border border-emerald-500/10">
+                          {importResult.code}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Shortcuts & Search Commands (Right 2 columns) */}
@@ -687,166 +847,6 @@ export function HelpClient({
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Visibility Guide Section */}
-          <div
-            id="visibility-section"
-            className="scroll-animate opacity-0 translate-y-8 transition-all duration-700 ease-out bg-card/25 backdrop-blur-md rounded-2xl border border-border/60 p-6 space-y-6 shadow-xl"
-          >
-            <div className="space-y-1">
-              <h2 className="text-xl font-extrabold flex items-center gap-2">
-                <Lock size={20} className="text-primary" />
-                {t.visibility || "Visibility"} Guide
-              </h2>
-              <p className="text-xs text-muted-foreground">
-                Understand who can see, share, and fork your code snippets.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Private card */}
-              <div className="bg-card/40 border border-border/50 rounded-xl p-5 hover:border-primary/20 transition-colors flex flex-col gap-4 shadow-sm relative group overflow-hidden">
-                <div className="absolute top-0 right-0 p-3 text-red-500/10 group-hover:text-red-500/20 transition-colors">
-                  <Lock size={64} />
-                </div>
-                <div className="flex items-center gap-2 text-red-500 font-bold text-sm">
-                  <span className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
-                    🔒
-                  </span>
-                  {t.visibilityPrivate}
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed flex-1">
-                  {t.helpVisibilityPrivateDesc}
-                </p>
-              </div>
-
-              {/* Shared card */}
-              <div className="bg-card/40 border border-border/50 rounded-xl p-5 hover:border-primary/20 transition-colors flex flex-col gap-4 shadow-sm relative group overflow-hidden">
-                <div className="absolute top-0 right-0 p-3 text-blue-500/10 group-hover:text-blue-500/20 transition-colors">
-                  <Link2 size={64} />
-                </div>
-                <div className="flex items-center gap-2 text-blue-500 font-bold text-sm">
-                  <span className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                    🔗
-                  </span>
-                  {t.visibilityShared}
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed flex-1">
-                  {t.helpVisibilitySharedDesc}
-                </p>
-              </div>
-
-              {/* Public card */}
-              <div className="bg-card/40 border border-border/50 rounded-xl p-5 hover:border-primary/20 transition-colors flex flex-col gap-4 shadow-sm relative group overflow-hidden">
-                <div className="absolute top-0 right-0 p-3 text-emerald-500/10 group-hover:text-emerald-500/20 transition-colors">
-                  <Globe size={64} />
-                </div>
-                <div className="flex items-center gap-2 text-emerald-500 font-bold text-sm">
-                  <span className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
-                    🌐
-                  </span>
-                  {t.visibilityPublic}
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed flex-1">
-                  {t.helpVisibilityPublicDesc}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Import Guide Section */}
-          <div
-            id="import-section"
-            className="scroll-animate opacity-0 translate-y-8 transition-all duration-700 ease-out bg-card/25 backdrop-blur-md rounded-2xl border border-border/60 p-6 space-y-6 shadow-xl"
-          >
-            <div className="space-y-1">
-              <h2 className="text-xl font-extrabold flex items-center gap-2">
-                <Download size={20} className="text-primary" />
-                {t.helpImportSectionTitle}
-              </h2>
-              <p className="text-xs text-muted-foreground">
-                {t.helpImportSectionDesc}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Written Guide */}
-              <div className="space-y-4 text-xs text-muted-foreground leading-relaxed">
-                <div className="space-y-2">
-                  <h3 className="font-bold text-foreground text-sm">{t.helpImportDragDrop}</h3>
-                  <p>{t.helpImportDragDropDesc}</p>
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-bold text-foreground text-sm">2. Fetch & Import from URL</h3>
-                  <p>{t.helpImportFromUrlDesc}</p>
-                </div>
-              </div>
-
-              {/* Interactive URL Import Box Mockup */}
-              <div className="bg-card/50 border border-border/50 rounded-xl p-5 space-y-4 shadow-sm">
-                <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wider">
-                  <Sparkles size={14} />
-                  {t.helpImportMockLabel}
-                </div>
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={importUrl}
-                      onChange={(e) => setImportUrl(e.target.value)}
-                      placeholder={t.helpImportMockPlaceholder}
-                      className="flex-1 h-8 px-2.5 text-xs bg-muted/50 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary font-mono text-foreground"
-                    />
-                    <button
-                      onClick={handleSimulatedImport}
-                      disabled={isImporting}
-                      className="h-8 px-4 bg-primary text-primary-foreground font-semibold text-xs rounded hover:bg-primary/95 transition-colors flex items-center justify-center shrink-0 select-none"
-                    >
-                      {isImporting ? t.helpImportMockButtonFetching : t.helpImportMockButton}
-                    </button>
-                  </div>
-                  {/* Presets */}
-                  <div className="flex flex-wrap gap-1.5 pt-1 items-center">
-                    <span className="text-[10px] text-muted-foreground">Try presets:</span>
-                    <button
-                      onClick={() => setImportUrl("raw.githubusercontent.com/matrix-rain.js")}
-                      className="text-[9px] font-mono bg-muted/80 text-muted-foreground hover:text-foreground px-2 py-0.5 rounded border border-border/80 hover:bg-muted select-none"
-                    >
-                      matrix-rain.js
-                    </button>
-                    <button
-                      onClick={() => setImportUrl("raw.githubusercontent.com/matrix-rain.css")}
-                      className="text-[9px] font-mono bg-muted/80 text-muted-foreground hover:text-foreground px-2 py-0.5 rounded border border-border/80 hover:bg-muted select-none"
-                    >
-                      matrix-rain.css
-                    </button>
-                  </div>
-                </div>
-
-                {/* Import Result simulated preview */}
-                {isImporting && (
-                  <div className="h-28 flex items-center justify-center border border-border/50 rounded bg-muted/10">
-                    <div className="w-5 h-5 border border-primary border-t-transparent rounded-full animate-spin" />
-                  </div>
-                )}
-                {importResult && (
-                  <div className="border border-emerald-500/30 rounded bg-emerald-500/5 p-3 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-center justify-between text-xs font-semibold text-emerald-600">
-                      <span className="truncate flex items-center gap-1.5">
-                        📦 Simulated Import: {importResult.title}
-                      </span>
-                      <span className="text-[10px] font-mono bg-emerald-500/10 px-2 py-0.5 rounded">
-                        {importResult.language}
-                      </span>
-                    </div>
-                    <pre className="text-[10px] font-mono text-emerald-400 bg-black/40 p-2 rounded max-h-24 overflow-y-auto leading-relaxed border border-emerald-500/10">
-                      {importResult.code}
-                    </pre>
-                  </div>
-                )}
               </div>
             </div>
           </div>
