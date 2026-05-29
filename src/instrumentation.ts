@@ -6,17 +6,8 @@ export async function register() {
       console.log("[db] Running automated database migrations...");
       const { migrate } = await import("drizzle-orm/better-sqlite3/migrator");
       const { db } = await import("@/db");
-
-      const { sql } = await import("drizzle-orm");
-      const { snippets: s } = await import("@/db/schema");
-      const before = db.select({ c: sql`count(*)` }).from(s).get() as { c: number };
-      console.log(`[debug] Before migration: ${before.c} snippets`);
-
       migrate(db, { migrationsFolder: "./src/db/migrations" });
       console.log("[db] Database migrations applied successfully.");
-
-      const after = db.select({ c: sql`count(*)` }).from(s).get() as { c: number };
-      console.log(`[debug] After migration: ${after.c} snippets`);
     } catch (err) {
       console.error("[db] Migration failed:", err);
       try {

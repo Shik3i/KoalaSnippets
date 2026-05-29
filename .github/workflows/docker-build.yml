@@ -32,6 +32,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Migration safety check (blocks DROP TABLE)
+        run: npm run check:migrations
+
       - name: Clean-slate build (catches TS, missing modules, build-time errors)
         run: rm -rf .next && npm run build
 

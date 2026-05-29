@@ -13,7 +13,7 @@ function getDb() {
     const resolvedPath = path.resolve(process.cwd(), dbPath);
     const sqlite = new Database(resolvedPath);
     sqlite.pragma("journal_mode = WAL");
-    sqlite.pragma("foreign_keys = ON");
+    sqlite.pragma("foreign_keys = OFF");
     sqlite.pragma("busy_timeout = 5000");
     sqlite.pragma("synchronous = NORMAL");
     globalForDb.conn = drizzle(sqlite, { schema });

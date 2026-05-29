@@ -67,5 +67,19 @@ npm run build
   ```
 - **Deployment**: Migrations are automatically applied on the production server via `src/instrumentation.ts` when the Next.js server starts. No manual `db:migrate` is required on the server.
 
+### ⚠️ CRITICAL: Migration Safety (READ BEFORE GENERATING)
+Drizzle wraps migrations in SQL transactions. In SQLite, `PRAGMA foreign_keys=OFF` is a **NO-OP inside transactions**. This caused production data loss (snippets cascade-deleted on every startup).
+
+**MANDATORY RULES:**
+1. **NEVER use `DROP TABLE` in a migration** — Drizzle's `migrate()` runs inside a transaction, so `PRAGMA foreign_keys=OFF` won't prevent cascade deletes
+2. **NEVER recreate tables** (CREATE new → INSERT → DROP old → RENAME) — same transaction/pragma issue
+3. **If `drizzle-kit generate` produces `DROP TABLE`**: Open the SQL file and MANUALLY remove it. Keep only additive operations (CREATE INDEX, ALTER TABLE ADD COLUMN, etc.)
+4. **Test every migration locally** before committing:
+   ```bash
+   rm -rf data .next && npm run build && npm run start
+   # Then verify: docker exec koalasnippets node -e "..." or check logs
+   ```
+5. **Never trust `drizzle-kit generate` blindly** — it may detect false "schema drift" and generate unnecessary table recreations that destroy data
+
 ---
 **Agent Reminder**: Always follow this routine implicitly. Your core directive is to maintain a stable, production-ready codebase.

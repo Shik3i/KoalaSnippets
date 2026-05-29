@@ -25,6 +25,22 @@ These rules MUST be followed by any AI agent working on this codebase.
 - Schema changes go through Drizzle migrations only (`drizzle-kit generate`).
 - The SQLite database file location is defined by `DATABASE_URL` env var.
 
+### ⚠️ CRITICAL: Drizzle Migration Safety (READ THIS)
+Drizzle wraps migrations in SQL transactions. In SQLite, `PRAGMA foreign_keys=OFF` is a **NO-OP inside transactions** — it has no effect. This means:
+- `DROP TABLE` with ON DELETE CASCADE will **cascade-delete ALL referenced data** (snippets, sessions, favorites, etc.)
+- `PRAGMA foreign_keys=OFF` does NOT prevent this inside a transaction
+- Drizzle's `migrate()` runs each migration SQL file inside a transaction
+
+**PROTECTION:** We set `foreign_keys = OFF` in `src/db/index.ts` to prevent cascade deletes entirely. FK integrity is handled at the application level.
+
+**RULES FOR MIGRATIONS:**
+1. **NEVER use `DROP TABLE` in a migration** — even with foreign_keys=OFF, it's bad practice
+2. **NEVER recreate tables** (`CREATE new → INSERT → DROP old → RENAME`) — use `ALTER TABLE` instead
+3. **Only use additive operations**: `CREATE INDEX`, `ALTER TABLE ADD COLUMN`, `ALTER TABLE ADD CONSTRAINT`
+4. **If `drizzle-kit generate` produces a `DROP TABLE`**: MANUALLY edit the SQL file to remove it
+5. **Test every migration locally** before pushing: `npm run build && npm run start`
+6. **Never trust `drizzle-kit generate` blindly** — it may detect false "schema drift" and generate unnecessary table recreations
+
 ### Shiki Syntax Highlighting (Lazy-Loaded)
 - Shiki runs server-side only. No client-side highlighting.
 - Use React Server Components or secure API routes to fetch/render highlighted code.
