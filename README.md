@@ -6,7 +6,7 @@
 
 **The cure for Notepad++ tab hell — a self-hosted snippet manager for all those unnamed code files.**
 
-[![Version](https://img.shields.io/badge/Version-1.13.2-blue?style=for-the-badge)](https://github.com/Shik3i/KoalaSnippets/pkgs/container/koalasnippets)
+[![Version](https://img.shields.io/badge/Version-1.13.5-blue?style=for-the-badge)](https://github.com/Shik3i/KoalaSnippets/pkgs/container/koalasnippets)
 [![Docker Image](https://img.shields.io/badge/GHCR-Latest-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://github.com/Shik3i/KoalaSnippets/pkgs/container/koalasnippets)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/Shik3i/KoalaSnippets/docker-build.yml?style=for-the-badge&logo=github&label=Build)](https://github.com/Shik3i/KoalaSnippets/actions)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
