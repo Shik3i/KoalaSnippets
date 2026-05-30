@@ -62,22 +62,12 @@ async function _getSession() {
   const expiresAtMs = session.expiresAt.getTime();
   if (expiresAtMs - now < SESSION_REFRESH_WINDOW_MS) {
     const newExpiresAt = new Date(now + SESSION_DURATION_DAYS * 24 * 60 * 60 * 1000);
-    const newToken = generateSessionToken();
-    const newTokenHash = hashSessionToken(newToken);
-    const newSessionId = crypto.randomUUID();
 
-    await db.transaction(async (tx) => {
-      await tx.delete(sessions).where(eq(sessions.id, session.id));
-      await tx.insert(sessions).values({
-        id: newSessionId,
-        userId: session.userId,
-        tokenHash: newTokenHash,
-        expiresAt: newExpiresAt,
-        createdAt: new Date(),
-      });
-    });
+    await db.update(sessions)
+      .set({ expiresAt: newExpiresAt })
+      .where(eq(sessions.id, session.id));
 
-    cookieStore.set(SESSION_COOKIE_NAME, newToken, {
+    cookieStore.set(SESSION_COOKIE_NAME, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

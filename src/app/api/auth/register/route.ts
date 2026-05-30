@@ -21,10 +21,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Registration is disabled" }, { status: 403 });
   }
 
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  const ips = forwardedFor ? forwardedFor.split(",") : [];
-  const ip = ips.length > 0 ? ips[0].trim() : "unknown";
-  const limit = checkRateLimit(`register:${ip}`, 3, 60 * 60 * 1000);
+  const clientIp = request.headers.get("x-real-ip") || 
+                   request.headers.get("x-forwarded-for")?.split(",").pop()?.trim() || 
+                   "unknown";
+  const limit = checkRateLimit(`register:${clientIp}`, 3, 60 * 60 * 1000);
 
   if (!limit.allowed) {
     return NextResponse.json(

@@ -42,6 +42,16 @@ export async function register() {
         await logCrash(err instanceof Error ? err : new Error(String(err)), "/seed");
       } catch { /* ignore secondary crash */ }
     }
+
+    try {
+      console.log("[db] Activating runtime foreign key constraints...");
+      const { db } = await import("@/db");
+      const { sql } = await import("drizzle-orm");
+      db.run(sql`PRAGMA foreign_keys = ON`);
+      console.log("[db] Runtime foreign key constraints activated successfully.");
+    } catch (err) {
+      console.error("[db] Failed to activate foreign key constraints:", err);
+    }
   }
 }
 

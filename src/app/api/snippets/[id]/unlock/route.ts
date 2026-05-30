@@ -29,10 +29,10 @@ export async function POST(
       return NextResponse.json({ error: "Password is required" }, { status: 400 });
     }
 
-    const forwardedFor = request.headers.get("x-forwarded-for");
-    const ips = forwardedFor ? forwardedFor.split(",") : [];
-    const ip = ips.length > 0 ? ips[0].trim() : "unknown";
-    const limit = checkRateLimit(`unlock:${id}:${ip}`, 5, 15 * 60 * 1000);
+    const clientIp = request.headers.get("x-real-ip") || 
+                     request.headers.get("x-forwarded-for")?.split(",").pop()?.trim() || 
+                     "unknown";
+    const limit = checkRateLimit(`unlock:${id}:${clientIp}`, 5, 15 * 60 * 1000);
 
     if (!limit.allowed) {
       return NextResponse.json(
