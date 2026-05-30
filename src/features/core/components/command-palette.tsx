@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Search, Plus, Settings, Shield, Home, FileCode, Command, ArrowRight, Moon, Copy, Pencil, Wrench, Upload, LayoutGrid, Clock } from "lucide-react";
+import { Search, Plus, Settings, Shield, Home, FileCode, Command, ArrowRight, Moon, Copy, Pencil, Wrench, Upload, LayoutGrid, Clock, Fingerprint, Key, Diff, Hash, Braces, FileKey, Binary, Regex, Link2, Palette, Image as ImageIcon, Sliders, Database } from "lucide-react";
 import { cn } from "@/features/core/utils/utils";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
@@ -76,6 +76,21 @@ export function CommandPalette() {
     { label: t.cmdCreateSnippet, value: "/new", href: "/dashboard/new", description: t.cmdCreateSnippetDesc, icon: Plus },
     { label: t.cmdToggleTheme, value: "/theme", action: "toggleTheme", description: t.cmdToggleThemeDesc, icon: Moon },
     { label: t.cmdDevTools, value: "/tools", href: "/tools", description: t.cmdDevToolsDesc, icon: Wrench },
+    { label: t.cmdToolUuid, value: "/uuid", href: "/tools?tool=uuid", description: t.cmdToolUuidDesc, icon: Fingerprint },
+    { label: t.cmdToolPassword, value: "/password", href: "/tools?tool=password", description: t.cmdToolPasswordDesc, icon: Key },
+    { label: t.cmdToolDiff, value: "/diff", href: "/tools?tool=diff", description: t.cmdToolDiffDesc, icon: Diff },
+    { label: t.cmdToolHash, value: "/hash", href: "/tools?tool=hash", description: t.cmdToolHashDesc, icon: Hash },
+    { label: t.cmdToolJson, value: "/json", href: "/tools?tool=json", description: t.cmdToolJsonDesc, icon: Braces },
+    { label: t.cmdToolJwt, value: "/jwt", href: "/tools?tool=jwt", description: t.cmdToolJwtDesc, icon: FileKey },
+    { label: t.cmdToolBase64, value: "/base64", href: "/tools?tool=base64", description: t.cmdToolBase64Desc, icon: Binary },
+    { label: t.cmdToolRegex, value: "/regex", href: "/tools?tool=regex", description: t.cmdToolRegexDesc, icon: Regex },
+    { label: t.cmdToolTimestamp, value: "/timestamp", href: "/tools?tool=timestamp", description: t.cmdToolTimestampDesc, icon: Clock },
+    { label: t.cmdToolUrl, value: "/url", href: "/tools?tool=url", description: t.cmdToolUrlDesc, icon: Link2 },
+    { label: t.cmdToolColor, value: "/color", href: "/tools?tool=color", description: t.cmdToolColorDesc, icon: Palette },
+    { label: t.cmdToolImage, value: "/image", href: "/tools?tool=image", description: t.cmdToolImageDesc, icon: ImageIcon },
+    { label: t.cmdToolCron, value: "/cron", href: "/tools?tool=cron", description: t.cmdToolCronDesc, icon: Clock },
+    { label: t.cmdToolShadow, value: "/shadow", href: "/tools?tool=shadow", description: t.cmdToolShadowDesc, icon: Sliders },
+    { label: t.cmdToolSql, value: "/sql", href: "/tools?tool=sql", description: t.cmdToolSqlDesc, icon: Database },
     { label: t.cmdImport, value: "/import", action: "openImport", description: t.cmdImportDesc, icon: Upload },
     { label: t.cmdDensityCompact, value: "/density compact", action: "density-compact", description: t.cmdDensityCompactDesc, icon: LayoutGrid },
     { label: t.cmdDensityPreview, value: "/density preview", action: "density-preview", description: t.cmdDensityPreviewDesc, icon: LayoutGrid },

@@ -1,5 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
+import { translateCron } from "../../src/features/tools/components/cron-tool";
+import { formatSqlString } from "../../src/features/tools/components/sql-formatter-tool";
 
 function base64ToUtf8(str: string): string {
   const binary = atob(str);
@@ -200,5 +202,52 @@ describe("Password entropy calculation", () => {
 
   it("weak < 60 bits", () => {
     assert.ok(calcEntropy(10, 8) < 60);
+  });
+});
+
+describe("Cron translation parser", () => {
+  it("translates standard wildcard expression", () => {
+    const res = translateCron("* * * * *");
+    assert.strictEqual(res.valid, true);
+    assert.strictEqual(res.translation, "At every minute every day.");
+  });
+
+  it("translates minute step values", () => {
+    const res = translateCron("*/5 * * * *");
+    assert.strictEqual(res.valid, true);
+    assert.strictEqual(res.translation, "At every 5 minutes starting from 0 every day.");
+  });
+
+  it("translates complex days and hours expressions", () => {
+    const res = translateCron("15 14 * * 1-5");
+    assert.strictEqual(res.valid, true);
+    assert.ok(res.translation.includes("14:15"));
+    assert.ok(res.translation.includes("Monday through Friday"));
+  });
+
+  it("rejects invalid cron expressions", () => {
+    const r1 = translateCron("invalid expression");
+    assert.strictEqual(r1.valid, false);
+    const r2 = translateCron("*/99 * * * *");
+    assert.strictEqual(r2.valid, false);
+  });
+});
+
+describe("SQL Formatter", () => {
+  it("capitalizes core keywords and formats select statements", () => {
+    const raw = "select id,name from users where status='active' limit 10";
+    const formatted = formatSqlString(raw);
+    assert.ok(formatted.includes("SELECT"));
+    assert.ok(formatted.includes("FROM"));
+    assert.ok(formatted.includes("WHERE"));
+    assert.ok(formatted.includes("LIMIT"));
+    assert.ok(formatted.includes("\n"));
+  });
+
+  it("formats joins and handles indentations", () => {
+    const raw = "select * from a join b on a.id = b.id";
+    const formatted = formatSqlString(raw);
+    assert.ok(formatted.includes("JOIN"));
+    assert.ok(formatted.includes("ON"));
   });
 });

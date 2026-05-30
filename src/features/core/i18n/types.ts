@@ -274,6 +274,36 @@ export interface Translations {
   justNow: string;
   updatedAgo: string;
   createdAgo: string;
+  cmdToolUuid: string;
+  cmdToolUuidDesc: string;
+  cmdToolPassword: string;
+  cmdToolPasswordDesc: string;
+  cmdToolDiff: string;
+  cmdToolDiffDesc: string;
+  cmdToolHash: string;
+  cmdToolHashDesc: string;
+  cmdToolJson: string;
+  cmdToolJsonDesc: string;
+  cmdToolJwt: string;
+  cmdToolJwtDesc: string;
+  cmdToolBase64: string;
+  cmdToolBase64Desc: string;
+  cmdToolRegex: string;
+  cmdToolRegexDesc: string;
+  cmdToolTimestamp: string;
+  cmdToolTimestampDesc: string;
+  cmdToolUrl: string;
+  cmdToolUrlDesc: string;
+  cmdToolColor: string;
+  cmdToolColorDesc: string;
+  cmdToolImage: string;
+  cmdToolImageDesc: string;
+  cmdToolCron: string;
+  cmdToolCronDesc: string;
+  cmdToolShadow: string;
+  cmdToolShadowDesc: string;
+  cmdToolSql: string;
+  cmdToolSqlDesc: string;
 }
 
 export const SUPPORTED_LOCALES: Locale[] = ["en", "de"];

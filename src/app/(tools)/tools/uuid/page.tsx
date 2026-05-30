@@ -1,35 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Copy, Check, Fingerprint } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Fingerprint } from "lucide-react";
+import { UuidTool } from "@/features/tools/components";
 
 export default function UuidGeneratorPage() {
-  const [count, setCount] = useState(1);
-  const [format, setFormat] = useState<"plain" | "sql" | "json">("plain");
-  const [output, setOutput] = useState("");
-  const [copied, setCopied] = useState(false);
-
-  const generate = () => {
-    const uuids: string[] = [];
-    for (let i = 0; i < count; i++) {
-      uuids.push(crypto.randomUUID());
-    }
-    if (format === "sql") {
-      setOutput(uuids.map((id) => `'${id}'`).join(",\n  ") + ";");
-    } else if (format === "json") {
-      setOutput(JSON.stringify(uuids, null, 2));
-    } else {
-      setOutput(uuids.join("\n"));
-    }
-  };
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(output);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   return (
     <div className="flex-1 overflow-auto">
       <div className="p-6 md:p-8 max-w-3xl mx-auto w-full">
@@ -39,31 +13,7 @@ export default function UuidGeneratorPage() {
           </div>
           <h1 className="text-2xl font-bold">UUID Generator</h1>
         </div>
-        <div className="space-y-4">
-          <div className="flex flex-wrap gap-4 items-end">
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1">Count</label>
-              <input type="number" min={1} max={100} value={count} onChange={(e) => setCount(Math.max(1, Math.min(100, parseInt(e.target.value) || 1)))} className="w-20 px-3 py-2 bg-card border border-border rounded-lg text-sm" />
-            </div>
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1">Format</label>
-              <select value={format} onChange={(e) => setFormat(e.target.value as typeof format)} className="px-3 py-2 bg-card border border-border rounded-lg text-sm">
-                <option value="plain">Plain Text</option>
-                <option value="sql">SQL Values</option>
-                <option value="json">JSON Array</option>
-              </select>
-            </div>
-            <Button onClick={generate}>Generate</Button>
-          </div>
-          {output && (
-            <div className="relative">
-              <textarea readOnly value={output} rows={Math.min(20, output.split("\n").length)} className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg font-mono text-sm resize-none" />
-              <Button variant="ghost" size="icon" onClick={handleCopy} className="absolute top-2 right-2" aria-label="Copy">
-                {copied ? <Check size={14} /> : <Copy size={14} />}
-              </Button>
-            </div>
-          )}
-        </div>
+        <UuidTool />
       </div>
     </div>
   );

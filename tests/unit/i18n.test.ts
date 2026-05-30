@@ -35,6 +35,14 @@ const ALL_KEYS = [
   "helpTocVisibility", "helpTocImport", "helpTocFaq",
   "helpTocApiKeys", "helpApiKeysTitle",
   "updatedAgo", "createdAgo",
+  "cmdToolUuid", "cmdToolUuidDesc", "cmdToolPassword", "cmdToolPasswordDesc",
+  "cmdToolDiff", "cmdToolDiffDesc", "cmdToolHash", "cmdToolHashDesc",
+  "cmdToolJson", "cmdToolJsonDesc", "cmdToolJwt", "cmdToolJwtDesc",
+  "cmdToolBase64", "cmdToolBase64Desc", "cmdToolRegex", "cmdToolRegexDesc",
+  "cmdToolTimestamp", "cmdToolTimestampDesc", "cmdToolUrl", "cmdToolUrlDesc",
+  "cmdToolColor", "cmdToolColorDesc", "cmdToolImage", "cmdToolImageDesc",
+  "cmdToolCron", "cmdToolCronDesc", "cmdToolShadow", "cmdToolShadowDesc",
+  "cmdToolSql", "cmdToolSqlDesc",
 ] as const;
 
 function getKeys(obj: Record<string, unknown>): string[] {
