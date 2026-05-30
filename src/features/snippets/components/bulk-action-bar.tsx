@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { useToast } from "@/components/ui/toast";
@@ -18,8 +18,11 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const { addToast } = useToast();
   const { t } = useI18n();
+  const isSubmitting = useRef(false);
 
   const performBulk = async (action: string, visibility?: "PRIVATE" | "PUBLIC") => {
+    if (isSubmitting.current) return;
+    isSubmitting.current = true;
     setLoading(true);
     try {
       const res = await fetch("/api/snippets/bulk", {
@@ -54,6 +57,7 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
       addToast(t.errorOccurred, "error");
     } finally {
       setLoading(false);
+      isSubmitting.current = false;
     }
   };
 

@@ -3,7 +3,6 @@
 import { useState, useRef, useMemo } from "react";
 import { Copy, Check, Upload, Image as ImageIcon, Download, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useLocalStorageState } from "../hooks/use-local-storage-state";
 
 export function ImageConverterTool() {
   const [activeTab, setActiveTab] = useState<"encode" | "decode">("encode");

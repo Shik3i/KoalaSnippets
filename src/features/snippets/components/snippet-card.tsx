@@ -75,6 +75,8 @@ export function SnippetCard({
   const [copyingCode, setCopyingCode] = useState(false);
   const [pinned, setPinned] = useState(isPinned);
   const [favorited, setFavorited] = useState(isFavorited);
+  const isTogglingFavorite = useRef(false);
+  const isTogglingPin = useRef(false);
 
   const handleSaveTags = useCallback(async () => {
     if (savingRef.current) return;
@@ -94,7 +96,7 @@ export function SnippetCard({
       savingRef.current = false;
       setSavingTags(false);
     }
-  }, [id, localTags]);
+  }, [id, localTags, addToast]);
 
   const handleCopyCode = useCallback(async () => {
     if (!highlightedCode) return;
@@ -114,6 +116,8 @@ export function SnippetCard({
   const toggleFavorite = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isTogglingFavorite.current) return;
+    isTogglingFavorite.current = true;
     try {
       const method = favorited ? "DELETE" : "POST";
       const res = await fetch(`/api/snippets/${id}/favorite`, { method });
@@ -123,12 +127,16 @@ export function SnippetCard({
       }
     } catch {
       addToast("Failed to update favorite", "error");
+    } finally {
+      isTogglingFavorite.current = false;
     }
   }, [favorited, id, addToast]);
 
   const togglePin = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isTogglingPin.current) return;
+    isTogglingPin.current = true;
     try {
       const res = await fetch(`/api/snippets/${id}/pin`, { method: "POST" });
       if (res.ok) {
@@ -138,6 +146,8 @@ export function SnippetCard({
       }
     } catch {
       addToast("Failed to update pin", "error");
+    } finally {
+      isTogglingPin.current = false;
     }
   }, [id, addToast]);
 

@@ -125,6 +125,8 @@ export function DetailView({
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [pinned, setPinned] = useState(isPinned);
   const [favorited, setFavorited] = useState(isFavorited);
+  const isTogglingFavorite = useRef(false);
+  const isTogglingPin = useRef(false);
   const { addToast } = useToast();
   const VisIcon = VISIBILITY_CONFIG[visibility].icon;
   const { addRecentSnippet } = useRecentSnippets();
@@ -140,6 +142,8 @@ export function DetailView({
   }, [id, title, addRecentSnippet]);
 
   const toggleFavorite = useCallback(async () => {
+    if (isTogglingFavorite.current) return;
+    isTogglingFavorite.current = true;
     try {
       const method = favorited ? "DELETE" : "POST";
       const res = await fetch(`/api/snippets/${id}/favorite`, { method });
@@ -149,10 +153,14 @@ export function DetailView({
       }
     } catch {
       addToast("Failed to update favorite", "error");
+    } finally {
+      isTogglingFavorite.current = false;
     }
   }, [favorited, id, addToast]);
 
   const togglePin = useCallback(async () => {
+    if (isTogglingPin.current) return;
+    isTogglingPin.current = true;
     try {
       const res = await fetch(`/api/snippets/${id}/pin`, { method: "POST" });
       if (res.ok) {
@@ -162,6 +170,8 @@ export function DetailView({
       }
     } catch {
       addToast("Failed to update pin", "error");
+    } finally {
+      isTogglingPin.current = false;
     }
   }, [id, addToast]);
 

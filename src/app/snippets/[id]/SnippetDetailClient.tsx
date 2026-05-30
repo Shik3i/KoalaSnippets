@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { DetailView } from "@/features/core/components/detail-view";
 import { useToast } from "@/components/ui/toast";
@@ -34,8 +34,12 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
   const { addToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const isTogglingFavorite = useRef(false);
+  const isTogglingPin = useRef(false);
 
   const handleToggleFavorite = async () => {
+    if (isTogglingFavorite.current) return;
+    isTogglingFavorite.current = true;
     try {
       const method = props.isFavorited ? "DELETE" : "POST";
       const res = await fetch(`/api/snippets/${props.id}/favorite`, { method });
@@ -44,10 +48,14 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
       }
     } catch {
       addToast("Failed to update favorite", "error");
+    } finally {
+      isTogglingFavorite.current = false;
     }
   };
 
   const handleTogglePin = async () => {
+    if (isTogglingPin.current) return;
+    isTogglingPin.current = true;
     try {
       const res = await fetch(`/api/snippets/${props.id}/pin`, { method: "POST" });
       if (res.ok) {
@@ -55,6 +63,8 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
       }
     } catch {
       addToast("Failed to update pin", "error");
+    } finally {
+      isTogglingPin.current = false;
     }
   };
 

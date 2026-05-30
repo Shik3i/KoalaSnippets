@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/features/core/utils/utils";
@@ -41,6 +41,8 @@ export function SnippetTableRow({
   const { addToast } = useToast();
   const [pinned, setPinned] = useState(isPinned);
   const [favorited, setFavorited] = useState(isFavorited);
+  const isTogglingFavorite = useRef(false);
+  const isTogglingPin = useRef(false);
 
   const visibilityConfig = {
     PRIVATE: { icon: Lock, label: t.visibilityPrivate, color: "text-muted-foreground" },
@@ -53,6 +55,8 @@ export function SnippetTableRow({
   const toggleFavorite = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isTogglingFavorite.current) return;
+    isTogglingFavorite.current = true;
     try {
       const method = favorited ? "DELETE" : "POST";
       const res = await fetch(`/api/snippets/${id}/favorite`, { method });
@@ -62,12 +66,16 @@ export function SnippetTableRow({
       }
     } catch {
       addToast(t.failedToUpdateFavorite, "error");
+    } finally {
+      isTogglingFavorite.current = false;
     }
   }, [favorited, id, addToast, t]);
 
   const togglePin = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isTogglingPin.current) return;
+    isTogglingPin.current = true;
     try {
       const res = await fetch(`/api/snippets/${id}/pin`, { method: "POST" });
       if (res.ok) {
@@ -77,6 +85,8 @@ export function SnippetTableRow({
       }
     } catch {
       addToast(t.failedToUpdatePin, "error");
+    } finally {
+      isTogglingPin.current = false;
     }
   }, [id, addToast, t]);
 
