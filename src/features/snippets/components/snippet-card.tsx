@@ -364,7 +364,7 @@ export function SnippetCard({
 
       {snippetDensity !== "compact" && highlightedCode && (
         <div
-          className="mt-3 rounded-md border border-border bg-muted/20 text-[11px] max-h-40 overflow-y-auto leading-normal [&>pre]:!bg-transparent [&>pre]:!p-2 [&>pre]:!m-0 [&>pre]:overflow-x-auto select-text font-mono [&_span]:!bg-transparent"
+          className="mt-3 rounded-md border border-border bg-muted/20 text-[11px] max-h-40 overflow-y-auto leading-normal [&>pre]:!bg-transparent [&>pre]:!p-2 [&>pre]:!m-0 [&>pre]:overflow-x-hidden select-text font-mono [&_span]:!bg-transparent"
           style={{ fontFamily: "var(--font-jetbrains), monospace" }}
           dangerouslySetInnerHTML={{ __html: highlightedCode }}
           onClick={(e) => {
