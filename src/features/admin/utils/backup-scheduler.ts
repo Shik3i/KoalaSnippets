@@ -3,10 +3,12 @@ import { cleanupExpiredSessions } from "@/features/auth/utils/session";
 
 const BACKUP_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
-let backupInterval: NodeJS.Timeout | null = null;
+const globalForBackup = globalThis as unknown as {
+  backupInterval?: NodeJS.Timeout;
+};
 
 export function startBackupScheduler() {
-  if (backupInterval) {
+  if (globalForBackup.backupInterval) {
     return;
   }
 
@@ -20,7 +22,7 @@ export function startBackupScheduler() {
     console.error("[backup] Initial backup failed:", err);
   }
 
-  backupInterval = setInterval(() => {
+  globalForBackup.backupInterval = setInterval(() => {
     try {
       runWalCheckpoint();
       const result = runBackupWithRetention();
@@ -33,9 +35,9 @@ export function startBackupScheduler() {
 }
 
 export function stopBackupScheduler() {
-  if (backupInterval) {
-    clearInterval(backupInterval);
-    backupInterval = null;
+  if (globalForBackup.backupInterval) {
+    clearInterval(globalForBackup.backupInterval);
+    delete globalForBackup.backupInterval;
     console.log("[backup] Backup scheduler stopped");
   }
 }

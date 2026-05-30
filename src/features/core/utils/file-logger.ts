@@ -85,8 +85,13 @@ function handleExit() {
   flushLogs();
 }
 
-if (typeof process !== "undefined") {
+const globalForLogger = globalThis as unknown as {
+  listenersRegistered?: boolean;
+};
+
+if (typeof process !== "undefined" && !globalForLogger.listenersRegistered) {
   process.on("exit", handleExit);
   process.on("SIGINT", () => { flushLogs(); process.exit(); });
   process.on("SIGTERM", () => { flushLogs(); process.exit(); });
+  globalForLogger.listenersRegistered = true;
 }

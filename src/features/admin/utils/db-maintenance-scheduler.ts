@@ -2,10 +2,12 @@ import { runDbMaintenance } from "./db-maintenance";
 
 const MAINTENANCE_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 
-let maintenanceInterval: NodeJS.Timeout | null = null;
+const globalForMaintenance = globalThis as unknown as {
+  maintenanceInterval?: NodeJS.Timeout;
+};
 
 export function startDbMaintenanceScheduler() {
-  if (maintenanceInterval) {
+  if (globalForMaintenance.maintenanceInterval) {
     return;
   }
 
@@ -23,7 +25,7 @@ export function startDbMaintenanceScheduler() {
     console.error("[db-maintenance] Initial maintenance failed:", err);
   }
 
-  maintenanceInterval = setInterval(() => {
+  globalForMaintenance.maintenanceInterval = setInterval(() => {
     try {
       const result = runDbMaintenance();
       const status = [
@@ -39,9 +41,9 @@ export function startDbMaintenanceScheduler() {
 }
 
 export function stopDbMaintenanceScheduler() {
-  if (maintenanceInterval) {
-    clearInterval(maintenanceInterval);
-    maintenanceInterval = null;
+  if (globalForMaintenance.maintenanceInterval) {
+    clearInterval(globalForMaintenance.maintenanceInterval);
+    delete globalForMaintenance.maintenanceInterval;
     console.log("[db-maintenance] Maintenance scheduler stopped");
   }
 }

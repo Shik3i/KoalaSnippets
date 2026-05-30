@@ -158,8 +158,12 @@ export async function PUT(
       snippetUpdates.shareToken = null;
     }
 
-    if (snippetUpdates.password) {
-      snippetUpdates.passwordHash = await hashPassword(snippetUpdates.password as string);
+    if ('password' in snippetUpdates) {
+      if (snippetUpdates.password === "" || snippetUpdates.password === null) {
+        snippetUpdates.passwordHash = null;
+      } else {
+        snippetUpdates.passwordHash = await hashPassword(snippetUpdates.password as string);
+      }
     }
     delete snippetUpdates.password;
 

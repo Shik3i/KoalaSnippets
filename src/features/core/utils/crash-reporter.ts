@@ -20,13 +20,7 @@ export async function logCrash(error: unknown, route?: string, userId?: string, 
       stackTrace: stack,
       userId: userId || null,
       route: route || null,
-      metadata: metadata ? (() => {
-        try {
-          return JSON.stringify(metadata);
-        } catch {
-          return '{"error":"Circular or invalid JSON metadata"}';
-        }
-      })() : null,
+      metadata: metadata || null,
       createdAt: new Date(),
     }).run();
   } catch (dbErr) {
