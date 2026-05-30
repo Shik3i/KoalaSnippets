@@ -106,6 +106,7 @@ npm test              # All tests green
 ```
 `npm test` uses `tsx` which transpiles but does NOT type-check. Only `tsc` (via `typecheck` or `build`) catches TypeScript errors. **Never skip `typecheck`.**
 For release tags, additionally run `npm run build` (Clean-Slate) as documented in `docs/devops_routine.md`.
+Furthermore, if you performed any package operations (installing/updating/removing dependencies), always run `npm install --save-optional @emnapi/core@1.10.0 @emnapi/runtime@1.10.0` to prevent Windows/macOS hosts from pruning cross-platform optional dependencies from `package-lock.json` (which will crash the Linux runner on `npm ci`). Verify lockfile integrity with a local `npm ci` check.
 
 ### Release & Tag Policy (CRITICAL)
 - **NEVER bump `package.json` version or push a `git tag` without the user explicitly requesting it.**

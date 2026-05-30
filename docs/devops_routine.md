@@ -47,6 +47,15 @@ npm run build
 - Page-Komponente führt DB-Query aus statt `force-dynamic` zu nutzen
 - `data/` oder `backups/` Verzeichnis wird erwartet aber ist nicht im Dockerfile angelegt
 
+### D. Cross-Platform Lockfile Sync Check (MANDATORY ON WINDOWS/MAC)
+If you installed, updated, or removed any packages locally, your host OS (Windows/macOS) may have pruned optional dependencies required by the Linux CI/CD runner (specifically `@emnapi/core` and `@emnapi/runtime` used by Tailwind oxide compiler WASM fallback).
+- **Rule**: `@emnapi/core` and `@emnapi/runtime` must always be preserved inside `package.json` under `optionalDependencies` and locked in `package-lock.json`.
+- **Action**: After executing any package operations (`npm install`, `npm update`), always run:
+  ```bash
+  npm install --save-optional @emnapi/core@1.10.0 @emnapi/runtime@1.10.0
+  ```
+  to force npm to keep these in the lockfile, and run a local `npm ci` clean install check to ensure the lockfile remains fully in sync before committing.
+
 ## 2. Commit & Push Guidelines
 - **Granular Commits**: Use conventional commits (`feat:`, `fix:`, `refactor:`, `docs:`).
 - **Atomic Changes**: Commit logical chunks of work together.
