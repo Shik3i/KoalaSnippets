@@ -33,84 +33,84 @@ export async function GET(
   try {
     const snippet = await db.select().from(snippets).where(eq(snippets.id, id)).get();
 
-  if (!snippet) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-
-  const isOwner = session && snippet.authorId === session.user.id;
-
-  // Enforce soft-delete restrictions: non-owners cannot access soft-deleted snippets.
-  if (snippet.deletedAt && !isOwner) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-
-  if (snippet.expiresAt && new Date() > snippet.expiresAt && !isOwner) {
-    return NextResponse.json({ error: "Snippet has expired" }, { status: 410 });
-  }
-
-  if (!isOwner) {
-    if (snippet.visibility === "PRIVATE") {
+    if (!snippet) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    if (snippet.visibility === "SHARED") {
-      if (!token || !snippet.shareToken || !constantTimeCompare(snippet.shareToken, token)) {
+    const isOwner = session && snippet.authorId === session.user.id;
+
+    // Enforce soft-delete restrictions: non-owners cannot access soft-deleted snippets.
+    if (snippet.deletedAt && !isOwner) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    if (snippet.expiresAt && new Date() > snippet.expiresAt && !isOwner) {
+      return NextResponse.json({ error: "Snippet has expired" }, { status: 410 });
+    }
+
+    if (!isOwner) {
+      if (snippet.visibility === "PRIVATE") {
         return NextResponse.json({ error: "Not found" }, { status: 404 });
       }
-    }
-  }
 
-  // Enforce password protection: mask files and code details for non-owners until they unlock it via the unlock API.
-  if (snippet.passwordHash && !isOwner) {
-    return NextResponse.json({
+      if (snippet.visibility === "SHARED") {
+        if (!token || !snippet.shareToken || !constantTimeCompare(snippet.shareToken, token)) {
+          return NextResponse.json({ error: "Not found" }, { status: 404 });
+        }
+      }
+    }
+
+    // Enforce password protection: mask files and code details for non-owners until they unlock it via the unlock API.
+    if (snippet.passwordHash && !isOwner) {
+      return NextResponse.json({
+        id: snippet.id,
+        title: snippet.title,
+        description: snippet.description,
+        code: "",
+        language: "plaintext",
+        files: [],
+        tags: snippet.tags,
+        visibility: snippet.visibility,
+        shareToken: snippet.visibility === "SHARED" ? snippet.shareToken : undefined,
+        createdAt: snippet.createdAt,
+        updatedAt: snippet.updatedAt,
+        deletedAt: snippet.deletedAt,
+        isOwner: false,
+        isPasswordProtected: true,
+      });
+    }
+
+    const files = await db.select().from(snippetFiles).where(eq(snippetFiles.snippetId, id)).all();
+    const mainFile = files.length > 0 ? files[0] : null;
+
+    const etag = generateETag(snippet.updatedAt, token ?? "");
+
+    if (isNotModified(_request, etag)) {
+      return notModifiedResponse(etag);
+    }
+
+    const response = NextResponse.json({
       id: snippet.id,
       title: snippet.title,
       description: snippet.description,
-      code: "",
-      language: "plaintext",
-      files: [],
+      code: mainFile?.code ?? "",
+      language: mainFile?.language ?? "plaintext",
+      files: files.map(f => ({
+        id: f.id,
+        filename: f.filename,
+        code: f.code,
+        language: f.language
+      })),
       tags: snippet.tags,
       visibility: snippet.visibility,
       shareToken: snippet.visibility === "SHARED" ? snippet.shareToken : undefined,
       createdAt: snippet.createdAt,
       updatedAt: snippet.updatedAt,
       deletedAt: snippet.deletedAt,
-      isOwner: false,
-      isPasswordProtected: true,
+      isOwner: session?.user.id === snippet.authorId,
     });
-  }
-
-  const files = await db.select().from(snippetFiles).where(eq(snippetFiles.snippetId, id)).all();
-  const mainFile = files.length > 0 ? files[0] : null;
-
-  const etag = generateETag(snippet.updatedAt, token ?? "");
-
-  if (isNotModified(_request, etag)) {
-    return notModifiedResponse(etag);
-  }
-
-  const response = NextResponse.json({
-    id: snippet.id,
-    title: snippet.title,
-    description: snippet.description,
-    code: mainFile?.code ?? "",
-    language: mainFile?.language ?? "plaintext",
-    files: files.map(f => ({
-      id: f.id,
-      filename: f.filename,
-      code: f.code,
-      language: f.language
-    })),
-    tags: snippet.tags,
-    visibility: snippet.visibility,
-    shareToken: snippet.visibility === "SHARED" ? snippet.shareToken : undefined,
-    createdAt: snippet.createdAt,
-    updatedAt: snippet.updatedAt,
-    deletedAt: snippet.deletedAt,
-    isOwner: session?.user.id === snippet.authorId,
-  });
-  setETag(response, etag);
-  return response;
+    setETag(response, etag);
+    return response;
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

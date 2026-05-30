@@ -36,28 +36,139 @@ export async function GET(request: Request) {
 
   try {
     if (recent && session) {
-    const whereClause = and(
-      eq(snippets.authorId, session.user.id),
-      isNull(snippets.deletedAt)
-    );
+      const whereClause = and(
+        eq(snippets.authorId, session.user.id),
+        isNull(snippets.deletedAt)
+      );
 
-    const recentResults = await db.select().from(snippets)
-      .where(whereClause)
-      .orderBy(desc(snippets.updatedAt))
-      .limit(5)
-      .all();
+      const recentResults = await db.select().from(snippets)
+        .where(whereClause)
+        .orderBy(desc(snippets.updatedAt))
+        .limit(5)
+        .all();
 
-    const recentIds = recentResults.map(s => s.id);
-    const recentFiles = recentIds.length > 0
-      ? await db.select().from(snippetFiles).where(inArray(snippetFiles.snippetId, recentIds)).all()
+      const recentIds = recentResults.map(s => s.id);
+      const recentFiles = recentIds.length > 0
+        ? await db.select().from(snippetFiles).where(inArray(snippetFiles.snippetId, recentIds)).all()
+        : [];
+
+      const recentFavs = session ? await db.select().from(userFavorites).where(and(eq(userFavorites.userId, session.user.id), inArray(userFavorites.snippetId, recentIds))).all() : [];
+      const recentFavoriteSet = new Set(recentFavs.map(f => f.snippetId));
+
+      return NextResponse.json({
+        snippets: recentResults.map((s) => {
+          const sFiles = recentFiles.filter(f => f.snippetId === s.id);
+          return {
+            id: s.id,
+            title: s.title,
+            description: s.description,
+            language: sFiles[0]?.language ?? "plaintext",
+            tags: s.tags,
+            visibility: s.visibility,
+            totalLines: s.totalLines,
+            isPinned: s.isPinned,
+            isFavorited: recentFavoriteSet.has(s.id),
+            createdAt: s.createdAt,
+            updatedAt: s.updatedAt,
+          };
+        }),
+        page: 1,
+        hasMore: false,
+      });
+    }
+
+    const baseQuery = db.select().from(snippets);
+
+    const conditions = [];
+    conditions.push(isNull(snippets.deletedAt));
+
+    if (visibility === "PUBLIC") {
+      conditions.push(eq(snippets.visibility, "PUBLIC"));
+      conditions.push(or(isNull(snippets.expiresAt), gt(snippets.expiresAt, new Date()))!);
+    } else if (session) {
+      conditions.push(eq(snippets.authorId, session.user.id));
+    }
+
+    if (tagsParam) {
+      const tagsList = tagsParam.split(",").map(t => t.trim().toLowerCase()).filter(t => t.length > 0);
+      for (const tag of tagsList) {
+        conditions.push(like(snippets.tags, `%${escapeLike(tag)}%`));
+      }
+    }
+
+    const includeCode = searchParams.get("includeCode") === "true";
+
+    if (query) {
+      const escapedQuery = escapeLike(query);
+      
+      const fileSubquery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
+        .where(
+          includeCode
+            ? or(
+                like(snippetFiles.language, `%${escapedQuery}%`),
+                like(snippetFiles.code, `%${escapedQuery}%`)
+              )
+            : like(snippetFiles.language, `%${escapedQuery}%`)
+        );
+      
+      const searchConditions = [
+        like(snippets.title, `%${escapedQuery}%`),
+        like(snippets.tags, `%${escapedQuery}%`),
+        inArray(snippets.id, fileSubquery),
+      ];
+
+      conditions.push(or(...searchConditions)!);
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    let orderByCondition = desc(snippets.createdAt);
+    if (sort === "title") {
+      orderByCondition = order === "asc" ? sql`${snippets.title} collate nocase asc` : sql`${snippets.title} collate nocase desc`;
+    } else if (sort === "totalLines") {
+      orderByCondition = order === "asc" ? sql`${snippets.totalLines} asc` : sql`${snippets.totalLines} desc`;
+    } else {
+      orderByCondition = order === "asc" ? sql`${snippets.isPinned} asc, ${snippets.createdAt} asc` : sql`${snippets.isPinned} desc, ${snippets.createdAt} desc`;
+    }
+
+    const results = await (whereClause
+      ? baseQuery.where(whereClause).orderBy(orderByCondition).limit(PAGE_SIZE).offset(offset)
+      : baseQuery.orderBy(orderByCondition).limit(PAGE_SIZE).offset(offset)
+    ).all();
+
+    const snippetIds = results.map(s => s.id);
+    const files = snippetIds.length > 0 
+      ? await db.select().from(snippetFiles).where(inArray(snippetFiles.snippetId, snippetIds)).all()
       : [];
 
-    const recentFavs = session ? await db.select().from(userFavorites).where(and(eq(userFavorites.userId, session.user.id), inArray(userFavorites.snippetId, recentIds))).all() : [];
-    const recentFavoriteSet = new Set(recentFavs.map(f => f.snippetId));
+    const favoriteSet = new Set<string>();
+    if (session && snippetIds.length > 0) {
+      const favs = await db.select().from(userFavorites).where(and(eq(userFavorites.userId, session.user.id), inArray(userFavorites.snippetId, snippetIds))).all();
+      favs.forEach(f => favoriteSet.add(f.snippetId));
+    }
 
-    return NextResponse.json({
-      snippets: recentResults.map((s) => {
-        const sFiles = recentFiles.filter(f => f.snippetId === s.id);
+    const latestUpdate = results.reduce<Date | null>(
+      (acc, s) => (!acc || s.updatedAt > acc ? s.updatedAt : acc),
+      null
+    );
+    const etag = generateETag(
+      latestUpdate ?? "",
+      visibility ?? "",
+      query,
+      tagsParam ?? "",
+      includeCode ? "1" : "0",
+      sort,
+      order,
+      String(page)
+    );
+
+    if (isNotModified(request, etag)) {
+      return notModifiedResponse(etag);
+    }
+
+    const response = NextResponse.json({
+      snippets: results.map((s) => {
+        const sFiles = files.filter(f => f.snippetId === s.id);
         return {
           id: s.id,
           title: s.title,
@@ -67,127 +178,16 @@ export async function GET(request: Request) {
           visibility: s.visibility,
           totalLines: s.totalLines,
           isPinned: s.isPinned,
-          isFavorited: recentFavoriteSet.has(s.id),
+          isFavorited: favoriteSet.has(s.id),
           createdAt: s.createdAt,
           updatedAt: s.updatedAt,
         };
       }),
-      page: 1,
-      hasMore: false,
+      page,
+      hasMore: results.length === PAGE_SIZE,
     });
-  }
-
-  const baseQuery = db.select().from(snippets);
-
-  const conditions = [];
-  conditions.push(isNull(snippets.deletedAt));
-
-  if (visibility === "PUBLIC") {
-    conditions.push(eq(snippets.visibility, "PUBLIC"));
-    conditions.push(or(isNull(snippets.expiresAt), gt(snippets.expiresAt, new Date()))!);
-  } else if (session) {
-    conditions.push(eq(snippets.authorId, session.user.id));
-  }
-
-  if (tagsParam) {
-    const tagsList = tagsParam.split(",").map(t => t.trim().toLowerCase()).filter(t => t.length > 0);
-    for (const tag of tagsList) {
-      conditions.push(like(snippets.tags, `%${escapeLike(tag)}%`));
-    }
-  }
-
-  const includeCode = searchParams.get("includeCode") === "true";
-
-  if (query) {
-    const escapedQuery = escapeLike(query);
-    
-    const fileSubquery = db.select({ snippetId: snippetFiles.snippetId }).from(snippetFiles)
-      .where(
-        includeCode
-          ? or(
-              like(snippetFiles.language, `%${escapedQuery}%`),
-              like(snippetFiles.code, `%${escapedQuery}%`)
-            )
-          : like(snippetFiles.language, `%${escapedQuery}%`)
-      );
-    
-    const searchConditions = [
-      like(snippets.title, `%${escapedQuery}%`),
-      like(snippets.tags, `%${escapedQuery}%`),
-      inArray(snippets.id, fileSubquery),
-    ];
-
-    conditions.push(or(...searchConditions)!);
-  }
-
-  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-
-  let orderByCondition = desc(snippets.createdAt);
-  if (sort === "title") {
-    orderByCondition = order === "asc" ? sql`${snippets.title} collate nocase asc` : sql`${snippets.title} collate nocase desc`;
-  } else if (sort === "totalLines") {
-    orderByCondition = order === "asc" ? sql`${snippets.totalLines} asc` : sql`${snippets.totalLines} desc`;
-  } else {
-    orderByCondition = order === "asc" ? sql`${snippets.isPinned} asc, ${snippets.createdAt} asc` : sql`${snippets.isPinned} desc, ${snippets.createdAt} desc`;
-  }
-
-  const results = await (whereClause
-    ? baseQuery.where(whereClause).orderBy(orderByCondition).limit(PAGE_SIZE).offset(offset)
-    : baseQuery.orderBy(orderByCondition).limit(PAGE_SIZE).offset(offset)
-  ).all();
-
-  const snippetIds = results.map(s => s.id);
-  const files = snippetIds.length > 0 
-    ? await db.select().from(snippetFiles).where(inArray(snippetFiles.snippetId, snippetIds)).all()
-    : [];
-
-  const favoriteSet = new Set<string>();
-  if (session && snippetIds.length > 0) {
-    const favs = await db.select().from(userFavorites).where(and(eq(userFavorites.userId, session.user.id), inArray(userFavorites.snippetId, snippetIds))).all();
-    favs.forEach(f => favoriteSet.add(f.snippetId));
-  }
-
-  const latestUpdate = results.reduce<Date | null>(
-    (acc, s) => (!acc || s.updatedAt > acc ? s.updatedAt : acc),
-    null
-  );
-  const etag = generateETag(
-    latestUpdate ?? "",
-    visibility ?? "",
-    query,
-    tagsParam ?? "",
-    includeCode ? "1" : "0",
-    sort,
-    order,
-    String(page)
-  );
-
-  if (isNotModified(request, etag)) {
-    return notModifiedResponse(etag);
-  }
-
-  const response = NextResponse.json({
-    snippets: results.map((s) => {
-      const sFiles = files.filter(f => f.snippetId === s.id);
-      return {
-        id: s.id,
-        title: s.title,
-        description: s.description,
-        language: sFiles[0]?.language ?? "plaintext",
-        tags: s.tags,
-        visibility: s.visibility,
-        totalLines: s.totalLines,
-        isPinned: s.isPinned,
-        isFavorited: favoriteSet.has(s.id),
-        createdAt: s.createdAt,
-        updatedAt: s.updatedAt,
-      };
-    }),
-    page,
-    hasMore: results.length === PAGE_SIZE,
-  });
-  setETag(response, etag);
-  return response;
+    setETag(response, etag);
+    return response;
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
