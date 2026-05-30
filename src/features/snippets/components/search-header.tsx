@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, useSyncExternalStore } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { Code, Command, Filter, X, ChevronDown, Check, Download, UserCheck, UserX, User, HelpCircle } from "lucide-react";
+import { Code, Filter, X, ChevronDown, Check, Download, UserCheck, UserX, User, HelpCircle } from "lucide-react";
 import Image from "next/image";
 import KoalaSuche from "../../../../public/KoalaSuche.png";
 import { Badge } from "@/components/ui/badge";
@@ -639,6 +639,11 @@ export function SnippetSearchHeader({
 }: SnippetSearchHeaderProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const isMac = useSyncExternalStore(
+    () => () => {},
+    () => /Mac|iPod|iPhone|iPad/.test(navigator.platform),
+    () => false
+  );
   const router = useRouter();
   const { t, locale } = useI18n();
   const resolvedPlaceholder = placeholder ?? t.searchSnippets;
@@ -910,7 +915,7 @@ export function SnippetSearchHeader({
             placeholder={activePlaceholder}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="pl-10 h-9 pr-14 w-full border-0 shadow-none focus-visible:ring-0 bg-muted/40 backdrop-blur-sm"
+            className="pl-10 h-9 pr-20 w-full border-0 shadow-none focus-visible:ring-0 bg-muted/40 backdrop-blur-sm"
             aria-label={t.searchSnippets}
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
@@ -932,10 +937,10 @@ export function SnippetSearchHeader({
                   onClick={() => {
                     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
                   }}
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30 px-1.5 py-0.5 rounded transition-colors"
+                  className="flex items-center gap-0.5 text-[10px] font-mono text-muted-foreground hover:text-foreground hover:bg-muted/30 px-1.5 py-0.5 rounded border border-border bg-muted/20 transition-colors h-5 font-semibold shrink-0"
                   aria-label="Open Command Palette"
                 >
-                  <Command size={14} suppressHydrationWarning />
+                  {isMac ? "⌘K" : locale === "de" ? "Strg+K" : "Ctrl+K"}
                 </button>
               </>
             )}
