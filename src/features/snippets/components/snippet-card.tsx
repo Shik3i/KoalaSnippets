@@ -13,6 +13,7 @@ import { ContextMenu } from "@/components/ui/context-menu";
 import { useToast } from "@/components/ui/toast";
 import { LinkIcon, Loader2, Pencil, Trash2, X, Copy, Check, Star, Pin } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 
 interface SnippetCardProps {
   id: string;
@@ -77,6 +78,22 @@ export function SnippetCard({
   const [favorited, setFavorited] = useState(isFavorited);
   const isTogglingFavorite = useRef(false);
   const isTogglingPin = useRef(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
+  const handleConfirmDelete = async () => {
+    setDeleteConfirmOpen(false);
+    try {
+      const res = await fetch(`/api/snippets/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        addToast("Snippet moved to trash", "info", { label: "Undo", onClick: () => fetch(`/api/snippets/${id}`, { method: "PUT", body: JSON.stringify({ isRestore: true }) }) });
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        addToast("Failed to delete snippet", "error");
+      }
+    } catch {
+      addToast("Failed to delete snippet", "error");
+    }
+  };
 
   const handleSaveTags = useCallback(async () => {
     if (savingRef.current) return;
@@ -177,6 +194,7 @@ export function SnippetCard({
   const gradientClass = getLanguageGradient(language);
 
   return (
+    <>
     <SafeZone name={`SnippetCard-${id}`}>
     <ContextMenu
       options={[
@@ -193,12 +211,7 @@ export function SnippetCard({
         { label: "Edit Snippet", icon: Pencil, onClick: () => {
           window.location.href = `/snippets/${id}`;
         }},
-        { label: "Delete", icon: Trash2, variant: "destructive", onClick: () => {
-          fetch(`/api/snippets/${id}`, { method: "DELETE" }).then(() => {
-            addToast("Snippet moved to trash", "info", { label: "Undo", onClick: () => fetch(`/api/snippets/${id}`, { method: "PUT", body: JSON.stringify({ isRestore: true }) }) });
-            setTimeout(() => window.location.reload(), 2000);
-          });
-        }}
+        { label: "Delete", icon: Trash2, variant: "destructive", onClick: () => setDeleteConfirmOpen(true) }
       ]}
     >
     <Link
@@ -398,5 +411,15 @@ export function SnippetCard({
     </Link>
     </ContextMenu>
     </SafeZone>
+    <ConfirmModal
+      open={deleteConfirmOpen}
+      onClose={() => setDeleteConfirmOpen(false)}
+      onConfirm={handleConfirmDelete}
+      title="Move to Trash"
+      description="Are you sure you want to move this snippet to the trash?"
+      confirmLabel="Move to Trash"
+      variant="destructive"
+    />
+    </>
   );
 }

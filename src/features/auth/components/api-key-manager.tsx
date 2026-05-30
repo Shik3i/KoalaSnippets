@@ -68,6 +68,7 @@ export function ApiKeyManager() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!confirm("Delete this API key? This cannot be undone.")) return;
     try {
       const res = await fetch(`/api/settings/api-keys?id=${id}`, { method: "DELETE" });
       if (res.ok) {
