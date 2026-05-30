@@ -34,7 +34,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (recent && session) {
+  try {
+    if (recent && session) {
     const whereClause = and(
       eq(snippets.authorId, session.user.id),
       isNull(snippets.deletedAt)
@@ -187,6 +188,9 @@ export async function GET(request: Request) {
   });
   setETag(response, etag);
   return response;
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {

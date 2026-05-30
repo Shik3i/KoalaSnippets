@@ -12,16 +12,20 @@ export async function GET() {
     return NextResponse.json({ tags: [] });
   }
 
-  const userSnippets = await db
-    .select({ tags: snippets.tags })
-    .from(snippets)
-    .where(eq(snippets.authorId, session.user.id))
-    .all();
+  try {
+    const userSnippets = await db
+      .select({ tags: snippets.tags })
+      .from(snippets)
+      .where(eq(snippets.authorId, session.user.id))
+      .all();
 
-  const allTags = new Set<string>();
-  userSnippets.forEach((s) => {
-    s.tags?.forEach((t: string) => allTags.add(t.toLowerCase()));
-  });
+    const allTags = new Set<string>();
+    userSnippets.forEach((s) => {
+      s.tags?.forEach((t: string) => allTags.add(t.toLowerCase()));
+    });
 
-  return NextResponse.json({ tags: Array.from(allTags).sort() });
+    return NextResponse.json({ tags: Array.from(allTags).sort() });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

@@ -30,7 +30,8 @@ export async function GET(
   const url = new URL(_request.url);
   const token = url.searchParams.get("token");
 
-  const snippet = await db.select().from(snippets).where(eq(snippets.id, id)).get();
+  try {
+    const snippet = await db.select().from(snippets).where(eq(snippets.id, id)).get();
 
   if (!snippet) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -110,6 +111,9 @@ export async function GET(
   });
   setETag(response, etag);
   return response;
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function PUT(
@@ -321,27 +325,31 @@ export async function DELETE(
 
   const { id } = await params;
 
-  const snippet = await db.select().from(snippets).where(eq(snippets.id, id)).get();
-  if (!snippet || snippet.authorId !== session.user.id) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
+  try {
+    const snippet = await db.select().from(snippets).where(eq(snippets.id, id)).get();
+    if (!snippet || snippet.authorId !== session.user.id) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
 
-  if (!snippet.deletedAt) {
-    // Soft delete
-    await db.update(snippets).set({ deletedAt: new Date() }).where(eq(snippets.id, id));
-    await logUserAction(session.user.id, "DELETE", "SNIPPET", id, `Snippet "${snippet.title}" moved to trash`);
-  } else {
-    // Hard delete
-    await db.delete(snippets).where(eq(snippets.id, id));
-    await logUserAction(session.user.id, "DELETE", "SNIPPET", id, `Snippet "${snippet.title}" permanently deleted`);
-  }
+    if (!snippet.deletedAt) {
+      // Soft delete
+      await db.update(snippets).set({ deletedAt: new Date() }).where(eq(snippets.id, id));
+      await logUserAction(session.user.id, "DELETE", "SNIPPET", id, `Snippet "${snippet.title}" moved to trash`);
+    } else {
+      // Hard delete
+      await db.delete(snippets).where(eq(snippets.id, id));
+      await logUserAction(session.user.id, "DELETE", "SNIPPET", id, `Snippet "${snippet.title}" permanently deleted`);
+    }
 
-  if (snippet.visibility === "PUBLIC") {
-    revalidatePath("/");
-    revalidatePath("/public");
-    revalidatePath("/stats");
-    revalidatePath(`/snippets/${id}`);
-  }
+    if (snippet.visibility === "PUBLIC") {
+      revalidatePath("/");
+      revalidatePath("/public");
+      revalidatePath("/stats");
+      revalidatePath(`/snippets/${id}`);
+    }
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

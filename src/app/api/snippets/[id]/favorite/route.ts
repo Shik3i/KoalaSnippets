@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { userFavorites } from "@/db/schema";
+import { userFavorites, snippets } from "@/db/schema";
 import { getSession } from "@/features/auth/utils/session";
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -12,19 +12,28 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const { id } = await params;
 
-  const existing = await db.select().from(userFavorites).where(and(eq(userFavorites.userId, session.user.id), eq(userFavorites.snippetId, id))).get();
-  if (existing) {
-    return NextResponse.json({ error: "Already favorited" }, { status: 409 });
+  try {
+    const target = await db.select().from(snippets).where(and(eq(snippets.id, id), isNull(snippets.deletedAt))).get();
+    if (!target) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    const existing = await db.select().from(userFavorites).where(and(eq(userFavorites.userId, session.user.id), eq(userFavorites.snippetId, id))).get();
+    if (existing) {
+      return NextResponse.json({ error: "Already favorited" }, { status: 409 });
+    }
+
+    await db.insert(userFavorites).values({
+      id: crypto.randomUUID(),
+      userId: session.user.id,
+      snippetId: id,
+      createdAt: new Date(),
+    });
+
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-
-  await db.insert(userFavorites).values({
-    id: crypto.randomUUID(),
-    userId: session.user.id,
-    snippetId: id,
-    createdAt: new Date(),
-  });
-
-  return NextResponse.json({ success: true });
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -35,7 +44,10 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   const { id } = await params;
 
-  await db.delete(userFavorites).where(and(eq(userFavorites.userId, session.user.id), eq(userFavorites.snippetId, id)));
-
-  return NextResponse.json({ success: true });
+  try {
+    await db.delete(userFavorites).where(and(eq(userFavorites.userId, session.user.id), eq(userFavorites.snippetId, id)));
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

@@ -21,20 +21,24 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const snippet = await db.select().from(snippets).where(eq(snippets.id, id)).get();
-  if (!snippet || snippet.authorId !== session.user.id) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  try {
+    const snippet = await db.select().from(snippets).where(eq(snippets.id, id)).get();
+    if (!snippet || snippet.authorId !== session.user.id) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    const revisions = await db.select({
+      id: snippetRevisions.id,
+      createdAt: snippetRevisions.createdAt,
+    }).from(snippetRevisions)
+      .where(eq(snippetRevisions.snippetId, id))
+      .orderBy(desc(snippetRevisions.createdAt))
+      .all();
+
+    return NextResponse.json({ revisions });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-
-  const revisions = await db.select({
-    id: snippetRevisions.id,
-    createdAt: snippetRevisions.createdAt,
-  }).from(snippetRevisions)
-    .where(eq(snippetRevisions.snippetId, id))
-    .orderBy(desc(snippetRevisions.createdAt))
-    .all();
-
-  return NextResponse.json({ revisions });
 }
 
 export async function POST(

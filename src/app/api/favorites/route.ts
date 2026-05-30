@@ -20,64 +20,68 @@ export async function GET(request: Request) {
   const page = getSafePage(searchParams.get("page"));
   const offset = (page - 1) * PAGE_SIZE;
 
-  const favorites = await db
-    .select({
-      snippetId: userFavorites.snippetId,
-      favoritedAt: userFavorites.createdAt,
-    })
-    .from(userFavorites)
-    .where(eq(userFavorites.userId, session.user.id))
-    .orderBy(desc(userFavorites.createdAt))
-    .limit(PAGE_SIZE)
-    .offset(offset);
+  try {
+    const favorites = await db
+      .select({
+        snippetId: userFavorites.snippetId,
+        favoritedAt: userFavorites.createdAt,
+      })
+      .from(userFavorites)
+      .where(eq(userFavorites.userId, session.user.id))
+      .orderBy(desc(userFavorites.createdAt))
+      .limit(PAGE_SIZE)
+      .offset(offset);
 
-  if (favorites.length === 0) {
-    const etag = generateETag("favorites", session.user.id, String(page));
+    if (favorites.length === 0) {
+      const etag = generateETag("favorites", session.user.id, String(page));
+      if (isNotModified(request, etag)) return notModifiedResponse(etag);
+      const response = NextResponse.json({ snippets: [], page, hasMore: false, total: 0 });
+      setETag(response, etag);
+      return response;
+    }
+
+    const snippetIds = favorites.map(f => f.snippetId);
+
+    const snippetResults = await db
+      .select()
+      .from(snippets)
+      .where(and(inArray(snippets.id, snippetIds), isNull(snippets.deletedAt)));
+
+    const files = snippetResults.length > 0
+      ? await db.select().from(snippetFiles).where(inArray(snippetFiles.snippetId, snippetIds)).all()
+      : [];
+
+    const latestUpdate = snippetResults.reduce<Date | null>(
+      (acc, s) => (!acc || s.updatedAt > acc ? s.updatedAt : acc),
+      null
+    );
+
+    const etag = generateETag(latestUpdate?.toISOString() ?? "", session.user.id, String(page));
     if (isNotModified(request, etag)) return notModifiedResponse(etag);
-    const response = NextResponse.json({ snippets: [], page, hasMore: false, total: 0 });
+
+    const response = NextResponse.json({
+      snippets: snippetResults.map((s) => {
+        const sFiles = files.filter(f => f.snippetId === s.id);
+        return {
+          id: s.id,
+          title: s.title,
+          description: s.description,
+          language: sFiles[0]?.language ?? "plaintext",
+          tags: s.tags,
+          visibility: s.visibility,
+          totalLines: s.totalLines,
+          createdAt: s.createdAt,
+          updatedAt: s.updatedAt,
+          isFavorited: true,
+        };
+      }),
+      page,
+      hasMore: favorites.length === PAGE_SIZE,
+      total: favorites.length,
+    });
     setETag(response, etag);
     return response;
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-
-  const snippetIds = favorites.map(f => f.snippetId);
-
-  const snippetResults = await db
-    .select()
-    .from(snippets)
-    .where(and(inArray(snippets.id, snippetIds), isNull(snippets.deletedAt)));
-
-  const files = snippetResults.length > 0
-    ? await db.select().from(snippetFiles).where(inArray(snippetFiles.snippetId, snippetIds)).all()
-    : [];
-
-  const latestUpdate = snippetResults.reduce<Date | null>(
-    (acc, s) => (!acc || s.updatedAt > acc ? s.updatedAt : acc),
-    null
-  );
-
-  const etag = generateETag(latestUpdate?.toISOString() ?? "", session.user.id, String(page));
-  if (isNotModified(request, etag)) return notModifiedResponse(etag);
-
-  const response = NextResponse.json({
-    snippets: snippetResults.map((s) => {
-      const sFiles = files.filter(f => f.snippetId === s.id);
-      return {
-        id: s.id,
-        title: s.title,
-        description: s.description,
-        language: sFiles[0]?.language ?? "plaintext",
-        tags: s.tags,
-        visibility: s.visibility,
-        totalLines: s.totalLines,
-        createdAt: s.createdAt,
-        updatedAt: s.updatedAt,
-        isFavorited: true,
-      };
-    }),
-    page,
-    hasMore: favorites.length === PAGE_SIZE,
-    total: favorites.length,
-  });
-  setETag(response, etag);
-  return response;
 }

@@ -10,11 +10,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid CSRF token or Origin" }, { status: 403 });
   }
 
-  const session = await getSession();
-  if (session) {
-    await logUserAction(session.user.id, "LOGOUT", "USER", session.user.id, `User "${session.user.username}" logged out`);
-  }
+  try {
+    const session = await getSession();
+    if (session) {
+      await logUserAction(session.user.id, "LOGOUT", "USER", session.user.id, `User "${session.user.username}" logged out`);
+    }
 
-  await deleteSession();
-  return NextResponse.json({ success: true });
+    await deleteSession();
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

@@ -12,12 +12,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const { id } = await params;
 
-  const snippet = await db.select().from(snippets).where(and(eq(snippets.id, id), eq(snippets.authorId, session.user.id))).get();
-  if (!snippet) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  try {
+    const snippet = await db.select().from(snippets).where(and(eq(snippets.id, id), eq(snippets.authorId, session.user.id))).get();
+    if (!snippet) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    await db.update(snippets).set({ isPinned: !snippet.isPinned, updatedAt: new Date() }).where(eq(snippets.id, id));
+
+    return NextResponse.json({ success: true, isPinned: !snippet.isPinned });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-
-  await db.update(snippets).set({ isPinned: !snippet.isPinned, updatedAt: new Date() }).where(eq(snippets.id, id));
-
-  return NextResponse.json({ success: true, isPinned: !snippet.isPinned });
 }

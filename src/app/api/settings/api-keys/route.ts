@@ -20,17 +20,21 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const keys = await db.select({
-    id: apiKeys.id,
-    name: apiKeys.name,
-    createdAt: apiKeys.createdAt,
-    lastUsedAt: apiKeys.lastUsedAt,
-  }).from(apiKeys)
-    .where(eq(apiKeys.userId, session.user.id))
-    .orderBy(desc(apiKeys.createdAt))
-    .all();
+  try {
+    const keys = await db.select({
+      id: apiKeys.id,
+      name: apiKeys.name,
+      createdAt: apiKeys.createdAt,
+      lastUsedAt: apiKeys.lastUsedAt,
+    }).from(apiKeys)
+      .where(eq(apiKeys.userId, session.user.id))
+      .orderBy(desc(apiKeys.createdAt))
+      .all();
 
-  return NextResponse.json({ keys });
+    return NextResponse.json({ keys });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -99,14 +103,18 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Missing key id" }, { status: 400 });
   }
 
-  const key = await db.select().from(apiKeys)
-    .where(eq(apiKeys.id, keyId)).get();
+  try {
+    const key = await db.select().from(apiKeys)
+      .where(eq(apiKeys.id, keyId)).get();
 
-  if (!key || key.userId !== session.user.id) {
-    return NextResponse.json({ error: "Key not found" }, { status: 404 });
+    if (!key || key.userId !== session.user.id) {
+      return NextResponse.json({ error: "Key not found" }, { status: 404 });
+    }
+
+    await db.delete(apiKeys).where(eq(apiKeys.id, keyId));
+
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-
-  await db.delete(apiKeys).where(eq(apiKeys.id, keyId));
-
-  return NextResponse.json({ success: true });
 }
