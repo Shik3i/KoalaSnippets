@@ -1,6 +1,6 @@
 {
   "name": "koalasnippets",
-  "version": "1.13.3",
+  "version": "1.13.4",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -52,5 +52,9 @@
   "overrides": {
     "postcss": "^8.5.10",
     "esbuild": "^0.25.0"
+  },
+  "optionalDependencies": {
+    "@emnapi/core": "1.10.0",
+    "@emnapi/runtime": "1.10.0"
   }
 }
