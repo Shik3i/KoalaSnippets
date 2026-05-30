@@ -31,7 +31,7 @@ Drizzle wraps migrations in SQL transactions. In SQLite, `PRAGMA foreign_keys=OF
 - `PRAGMA foreign_keys=OFF` does NOT prevent this inside a transaction
 - Drizzle's `migrate()` runs each migration SQL file inside a transaction
 
-**PROTECTION:** We set `foreign_keys = OFF` in `src/db/index.ts` to prevent cascade deletes entirely. FK integrity is handled at the application level.
+**PROTECTION:** We open the database connection with `foreign_keys = OFF` by default in `src/db/index.ts` to prevent cascade deletes during migrations/seeding. Once migrations and seeding are completed during the server boot phase, the runtime automatically activates `PRAGMA foreign_keys = ON` programmatically at the end of `src/instrumentation.ts:register()`. This ensures full referential integrity and automatic cascading in production.
 
 **RULES FOR MIGRATIONS:**
 1. **NEVER use `DROP TABLE` in a migration** — even with foreign_keys=OFF, it's bad practice
@@ -113,3 +113,7 @@ Furthermore, if you performed any package operations (installing/updating/removi
 - Documentation-only changes (`.md` files) do not require a new version or tag — just commit and push.
 - A tag triggers a full GitHub Actions Docker build. Wasting CI/CD resources on cosmetic changes is unacceptable.
 - Before any tag, confirm with the user: "Ready for a new release tag?"
+
+### Token Saving & Communication Style (MANDATORY)
+- **Default Communication Style:** The AI agent MUST always communicate with the user in **Caveman language** (extremely reduced token count, very direct, short phrases, e.g. "Gorg fertig. Gorg fix Bug.") to save API tokens.
+- **Exceptions:** ONLY switch back to standard language if the user explicitly requests: "Speak normally" or "Switch off caveman language". Else, keep the caveman style active at all times.
