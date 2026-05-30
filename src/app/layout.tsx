@@ -28,12 +28,44 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "KoalaSnippets",
-  description: "Self-hosted snippet management application",
+  title: {
+    default: "KoalaSnippets",
+    template: "%s | KoalaSnippets",
+  },
+  description: "The cure for Notepad++ tab hell — a self-hosted snippet manager for all those unnamed code files. Store, organize, and share code snippets with syntax highlighting, tags, and full-text search.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://snippets.koalastuff.net"),
+  openGraph: {
+    title: "KoalaSnippets",
+    description: "Self-hosted snippet manager with syntax highlighting, tags, search, and collections. Finally get rid of those thousands of unnamed files.",
+    type: "website",
+    siteName: "KoalaSnippets",
+    images: [
+      {
+        url: "/MainLogo.png",
+        width: 120,
+        height: 120,
+        alt: "KoalaSnippets Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "KoalaSnippets",
+    description: "Self-hosted snippet manager for code. Organize, tag, search, and share your code snippets.",
+    images: ["/MainLogo.png"],
+  },
   icons: {
     icon: "/favicon-v3.png",
     apple: "/apple-icon-v3.png",
     shortcut: "/favicon-v3.png",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
 };
 

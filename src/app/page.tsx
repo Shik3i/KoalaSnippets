@@ -9,7 +9,18 @@ import { eq, desc, asc, and, inArray, or, isNull, isNotNull, ne } from "drizzle-
 import { cookies } from "next/headers";
 import { buildSnippetConditions } from "@/features/snippets/utils/filters";
 
+import type { Metadata } from "next";
+
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "KoalaSnippets",
+  description: "Browse and search code snippets with syntax highlighting, tags, and filters. The self-hosted snippet manager for developers.",
+  openGraph: {
+    title: "KoalaSnippets — Code Snippet Manager",
+    description: "Browse and search code snippets with syntax highlighting, tags, and filters.",
+  },
+};
 
 export default async function HomePage({ searchParams }: { searchParams: Promise<{ q?: string; includeCode?: string; sort?: string; tags?: string; language?: string; filterMode?: string; visibility?: string; author?: string; authorMode?: string; pinned?: string; favorited?: string; minLines?: string; maxLines?: string; before?: string; after?: string; minFiles?: string; title?: string }> }) {
   const { q, includeCode, sort, tags, language, filterMode, visibility, author, authorMode, pinned, favorited, minLines, maxLines, before, after, minFiles, title } = await searchParams;

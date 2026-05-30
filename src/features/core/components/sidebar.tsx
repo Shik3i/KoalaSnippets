@@ -71,6 +71,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
   const [collectionsExpanded, setCollectionsExpanded] = useState(false);
   const [tagsExpanded, setTagsExpanded] = useState(false);
   const [recentExpanded, setRecentExpanded] = useState(false);
+  const [languagesExpanded, setLanguagesExpanded] = useState(false);
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -83,6 +84,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
       setCollectionsExpanded(localStorage.getItem("koalasnippets_collections_expanded") === "true");
       setTagsExpanded(localStorage.getItem("koalasnippets_tags_expanded") === "true");
       setRecentExpanded(localStorage.getItem("koalasnippets_recent_expanded") === "true");
+      setLanguagesExpanded(localStorage.getItem("koalasnippets_languages_expanded") === "true");
     } catch { /* ignore */ }
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
@@ -441,39 +443,52 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
         )}
 
         {languages.length > 0 && !collapsed && (
-          <div className="px-3 py-2 border-t border-border scrollbar-hide overflow-y-auto max-h-48">
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">
-              {t.languages}
-            </h3>
-            <div className="space-y-0.5">
-              {languages.map((lang) => {
-                const isActive = searchParamsObj.get("language") === lang;
-                return (
-                  <button
-                    key={lang}
-                    onClick={() => {
-                      if (onLanguageClick) {
-                        onLanguageClick(lang);
-                      } else {
-                        const params = new URLSearchParams(searchParamsObj.toString());
-                        if (isActive) params.delete("language");
-                        else params.set("language", lang);
-                        const targetPath = ["/", "/dashboard", "/public"].includes(pathname) ? pathname : "/dashboard";
-                        window.location.href = `${targetPath}?${params.toString()}`;
-                      }
-                      setMobileOpen(false);
-                    }}
-                    className={cn(
-                      "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors",
-                      isActive ? "bg-primary/20 text-primary font-medium" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-                    )}
-                  >
-                    <ChevronRight size={12} suppressHydrationWarning />
-                    {lang}
-                  </button>
-                );
-              })}
-            </div>
+          <div className="border-t border-border">
+            <button
+              onClick={() => {
+                const next = !languagesExpanded;
+                setLanguagesExpanded(next);
+                localStorage.setItem("koalasnippets_languages_expanded", String(next));
+              }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/30 transition-colors"
+            >
+              <Languages size={12} />
+              <span className="flex-1 text-left">{t.languages}</span>
+              {languagesExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            </button>
+            {languagesExpanded && (
+              <div className="px-3 pb-2 max-h-48 scrollbar-hide overflow-y-auto">
+                <div className="space-y-0.5">
+                  {languages.map((lang) => {
+                    const isActive = searchParamsObj.get("language") === lang;
+                    return (
+                      <button
+                        key={lang}
+                        onClick={() => {
+                          if (onLanguageClick) {
+                            onLanguageClick(lang);
+                          } else {
+                            const params = new URLSearchParams(searchParamsObj.toString());
+                            if (isActive) params.delete("language");
+                            else params.set("language", lang);
+                            const targetPath = ["/", "/dashboard", "/public"].includes(pathname) ? pathname : "/dashboard";
+                            window.location.href = `${targetPath}?${params.toString()}`;
+                          }
+                          setMobileOpen(false);
+                        }}
+                        className={cn(
+                          "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors",
+                          isActive ? "bg-primary/20 text-primary font-medium" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                        )}
+                      >
+                        <ChevronRight size={12} suppressHydrationWarning />
+                        {lang}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
