@@ -43,7 +43,7 @@ interface DashboardContentProps {
   onImportClose?: () => void;
 }
 
-const GRID_ITEM_HEIGHT = 220;
+const GRID_ITEM_HEIGHT = 236;
 const TABLE_ROW_HEIGHT = 44;
 
 export function DashboardContent({ snippets, viewMode, density, allowSelection = true, isTrashView = false, hasMoreInitial = false, importOpen: importOpenProp, onImportClose }: DashboardContentProps) {

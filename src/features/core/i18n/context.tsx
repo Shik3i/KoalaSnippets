@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import type { Locale, Translations } from "./types";
 import en from "./locales/en";
 import de from "./locales/de";
@@ -9,16 +9,14 @@ const LOCALES: Record<Locale, Translations> = { en, de };
 
 const STORAGE_KEY = "koalasnippets_locale";
 
-function getInitialLocale(): Locale {
-  if (typeof window === "undefined") return "en";
+function getStoredLocale(): Locale {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === "de" || stored === "en") return stored;
   } catch {
     // ignore
   }
-  const browserLang = navigator.language.slice(0, 2);
-  if (browserLang === "de") return "de";
+  if (typeof navigator !== "undefined" && navigator.language.slice(0, 2) === "de") return "de";
   return "en";
 }
 
@@ -31,7 +29,13 @@ interface I18nContextValue {
 const I18nContext = createContext<I18nContextValue | null>(null);
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(getInitialLocale);
+  const [locale, setLocaleState] = useState<Locale>("en");
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    setLocaleState(getStoredLocale());
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const setLocale = useCallback((next: Locale) => {
     setLocaleState(next);
