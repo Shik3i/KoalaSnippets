@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { Plus, Trash2, Copy, Check, Key, Eye, EyeOff } from "lucide-react";
 
 interface ApiKey {
@@ -20,6 +21,7 @@ export function ApiKeyManager() {
   const [newToken, setNewToken] = useState<string | null>(null);
   const [newTokenId, setNewTokenId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deleteKeyId, setDeleteKeyId] = useState<string | null>(null);
   const { addToast } = useToast();
 
   const fetchKeys = useCallback(async () => {
@@ -68,7 +70,7 @@ export function ApiKeyManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this API key? This cannot be undone.")) return;
+    setDeleteKeyId(null);
     try {
       const res = await fetch(`/api/settings/api-keys?id=${id}`, { method: "DELETE" });
       if (res.ok) {
@@ -151,13 +153,22 @@ export function ApiKeyManager() {
                   {key.lastUsedAt ? ` · Last used ${new Date(key.lastUsedAt).toLocaleDateString()}` : " · Never used"}
                 </p>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => handleDelete(key.id)} className="text-destructive shrink-0">
+              <Button variant="ghost" size="icon" onClick={() => setDeleteKeyId(key.id)} className="text-destructive shrink-0">
                 <Trash2 size={14} />
               </Button>
             </div>
           ))}
         </div>
       )}
+      <ConfirmModal
+        open={deleteKeyId !== null}
+        onClose={() => setDeleteKeyId(null)}
+        onConfirm={() => { if (deleteKeyId) handleDelete(deleteKeyId); }}
+        title="Delete API Key"
+        description="This API key will be permanently deleted. This action cannot be undone."
+        confirmLabel="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }

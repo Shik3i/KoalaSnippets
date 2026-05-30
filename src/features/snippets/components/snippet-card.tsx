@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import KoalaFile from "../../../../public/KoalaFile.png";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatRelativeTime } from "@/features/core/utils/utils";
@@ -57,6 +58,7 @@ export function SnippetCard({
   const VisIcon = VISIBILITY_CONFIG[visibility].icon;
   const { addToast } = useToast();
   const { t } = useI18n();
+  const router = useRouter();
   const hasAnimated = useRef(false);
   const [shouldAnimate, setShouldAnimate] = useState(false);
 
@@ -86,7 +88,7 @@ export function SnippetCard({
       const res = await fetch(`/api/snippets/${id}`, { method: "DELETE" });
       if (res.ok) {
         addToast("Snippet moved to trash", "info", { label: "Undo", onClick: () => fetch(`/api/snippets/${id}`, { method: "PUT", body: JSON.stringify({ isRestore: true }) }) });
-        setTimeout(() => window.location.reload(), 2000);
+        router.refresh();
       } else {
         addToast("Failed to delete snippet", "error");
       }
