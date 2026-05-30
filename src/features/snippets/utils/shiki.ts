@@ -49,7 +49,7 @@ const ALL_SUPPORTED_LANGUAGES: BundledLanguage[] = [
   "ini",
 ];
 
-export const SUPPORTED_LANGUAGES = [...ALL_SUPPORTED_LANGUAGES, "plaintext"] as string[];
+export const SUPPORTED_LANGUAGES = [...ALL_SUPPORTED_LANGUAGES, "plaintext", "caddyfile"] as string[];
 
 const THEME_DEFAULT = "github-dark";
 
@@ -74,18 +74,19 @@ export async function highlightCode(code: string, language: string, themeName: s
   const hl = await getHighlighter();
 
   let targetLang = "plaintext";
+  const activeLang = language === "caddyfile" ? "nginx" : language;
   
-  if (ALL_SUPPORTED_LANGUAGES.includes(language as BundledLanguage)) {
-    if (!hl.getLoadedLanguages().includes(language)) {
+  if (ALL_SUPPORTED_LANGUAGES.includes(activeLang as BundledLanguage)) {
+    if (!hl.getLoadedLanguages().includes(activeLang)) {
       try {
-        await hl.loadLanguage(language as BundledLanguage);
+        await hl.loadLanguage(activeLang as BundledLanguage);
       } catch (err) {
-        console.error(`Failed to load language: ${language}`, err);
+        console.error(`Failed to load language: ${activeLang}`, err);
       }
     }
     
-    if (hl.getLoadedLanguages().includes(language)) {
-      targetLang = language;
+    if (hl.getLoadedLanguages().includes(activeLang)) {
+      targetLang = activeLang;
     }
   }
 

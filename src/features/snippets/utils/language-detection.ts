@@ -75,6 +75,11 @@ export function detectLanguage(code: string): string | null {
 }
 
 export function detectLanguageFromFilename(filename: string): string | null {
+  const lowerName = filename.toLowerCase();
+  if (lowerName === "caddyfile" || lowerName.endsWith(".caddyfile")) {
+    return "caddyfile";
+  }
+
   const ext = filename.split('.').pop()?.toLowerCase();
   if (!ext) return null;
 
