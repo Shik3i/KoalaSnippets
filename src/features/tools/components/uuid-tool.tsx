@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocalStorageState } from "../hooks/use-local-storage-state";
+import { SaveToSnippetButton } from "./save-to-snippet-button";
+
 
 export function UuidTool() {
   const [count, setCount] = useLocalStorageState<number>("koalatools_uuid_count", 1);
@@ -55,19 +57,25 @@ export function UuidTool() {
             rows={Math.min(20, output.split("\n").length)}
             className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg font-mono text-sm resize-none focus:outline-none"
           />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={async () => {
-              await navigator.clipboard.writeText(output);
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
-            }}
-            className="absolute top-2 right-2"
-            aria-label="Copy"
-          >
-            {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
-          </Button>
+          <div className="absolute top-2 right-2 flex gap-2">
+            <SaveToSnippetButton
+              code={output}
+              language={format === "sql" ? "sql" : format === "json" ? "json" : "text"}
+              defaultTitle="generated-uuids"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={async () => {
+                await navigator.clipboard.writeText(output);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              aria-label="Copy"
+            >
+              {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+            </Button>
+          </div>
         </div>
       )}
     </div>

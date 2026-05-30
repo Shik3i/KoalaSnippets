@@ -18,6 +18,8 @@ import {
   Sliders,
   Database,
   X,
+  Keyboard,
+  Shuffle,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,6 +40,9 @@ import {
   CronTool,
   ShadowGeneratorTool,
   SqlFormatterTool,
+  JsonToTsTool,
+  YamlJsonTool,
+  KeycodeTool,
 } from "@/features/tools/components";
 
 const tools = [
@@ -56,6 +61,9 @@ const tools = [
   { id: "cron", icon: Clock, title: "Cron Expression Tool", description: "Build and explain Cron schedule expressions in human-readable terms.", color: "text-yellow-400", bgColor: "bg-yellow-500/10" },
   { id: "shadow", icon: Sliders, title: "CSS Shadow Generator", description: "Visually design CSS box-shadows and grab Tailwind v4 classes.", color: "text-red-400", bgColor: "bg-red-500/10" },
   { id: "sql", icon: Database, title: "SQL query Formatter", description: "Prettify, format, or compress SQL queries with clean tokenization.", color: "text-green-400", bgColor: "bg-green-500/10" },
+  { id: "jsontots", icon: Braces, title: "JSON to TS / Zod", description: "Generate TypeScript types or Zod schemas from JSON.", color: "text-yellow-400", bgColor: "bg-yellow-500/10" },
+  { id: "yaml", icon: Shuffle, title: "YAML <-> JSON Converter", description: "Convert YAML to JSON and JSON to YAML bidirectionally.", color: "text-orange-400", bgColor: "bg-orange-500/10" },
+  { id: "keycode", icon: Keyboard, title: "Keyboard Event Inspector", description: "Inspect JavaScript keyboard events and keycodes in real-time.", color: "text-blue-400", bgColor: "bg-blue-500/10" },
 ] as const;
 
 type ToolId = (typeof tools)[number]["id"];
@@ -76,6 +84,9 @@ const toolMeta: Record<ToolId, { icon: LucideIcon; title: string; color: string;
   cron: { icon: Clock, title: "Cron Expression Tool", color: "text-yellow-400", bgColor: "bg-yellow-500/10" },
   shadow: { icon: Sliders, title: "CSS Shadow Generator", color: "text-red-400", bgColor: "bg-red-500/10" },
   sql: { icon: Database, title: "SQL query Formatter", color: "text-green-400", bgColor: "bg-green-500/10" },
+  jsontots: { icon: Braces, title: "JSON to TS / Zod", color: "text-yellow-400", bgColor: "bg-yellow-500/10" },
+  yaml: { icon: Shuffle, title: "YAML <-> JSON Converter", color: "text-orange-400", bgColor: "bg-orange-500/10" },
+  keycode: { icon: Keyboard, title: "Keyboard Event Inspector", color: "text-blue-400", bgColor: "bg-blue-500/10" },
 };
 
 function ToolsHubContent() {
@@ -110,6 +121,9 @@ function ToolsHubContent() {
       case "cron": return <CronTool />;
       case "shadow": return <ShadowGeneratorTool />;
       case "sql": return <SqlFormatterTool />;
+      case "jsontots": return <JsonToTsTool />;
+      case "yaml": return <YamlJsonTool />;
+      case "keycode": return <KeycodeTool />;
     }
   };
 

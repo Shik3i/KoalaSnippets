@@ -304,6 +304,17 @@ const en: Translations = {
   cmdToolShadowDesc: "Visually generate CSS box-shadows",
   cmdToolSql: "SQL Query Formatter",
   cmdToolSqlDesc: "Beautify or minify SQL statements",
+  saveAsSnippet: "Save as Snippet",
+  saveAsSnippetSuccess: "Saved to Snippet draft!",
+  toolHistory: "Operation History",
+  toolHistoryClear: "Clear History",
+  toolHistoryEmpty: "No history yet",
+  cmdToolJsonToTs: "JSON to TS / Zod",
+  cmdToolJsonToTsDesc: "Generate TypeScript types or Zod schemas from JSON",
+  cmdToolYaml: "YAML <-> JSON Converter",
+  cmdToolYamlDesc: "Convert YAML to JSON and vice versa",
+  cmdToolKeycode: "Keyboard Event Inspector",
+  cmdToolKeycodeDesc: "Inspect JavaScript keyboard event keycodes",
 };
 
 export default en;

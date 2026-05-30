@@ -304,6 +304,17 @@ export interface Translations {
   cmdToolShadowDesc: string;
   cmdToolSql: string;
   cmdToolSqlDesc: string;
+  saveAsSnippet: string;
+  saveAsSnippetSuccess: string;
+  toolHistory: string;
+  toolHistoryClear: string;
+  toolHistoryEmpty: string;
+  cmdToolJsonToTs: string;
+  cmdToolJsonToTsDesc: string;
+  cmdToolYaml: string;
+  cmdToolYamlDesc: string;
+  cmdToolKeycode: string;
+  cmdToolKeycodeDesc: string;
 }
 
 export const SUPPORTED_LOCALES: Locale[] = ["en", "de"];
