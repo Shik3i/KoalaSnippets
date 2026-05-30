@@ -10,18 +10,15 @@ export function ImageConverterTool() {
   
   // Encode state
   const [dragActive, setDragActive] = useState(false);
-  const [imgDataUri, setImgDataUri] = useLocalStorageState<string>("koalatools_img_data_uri", "");
-  const [rawBase64, setRawBase64] = useLocalStorageState<string>("koalatools_img_raw_base64", "");
-  const [imgMeta, setImgMeta] = useLocalStorageState<{ name: string; type: string; size: number; w: number; h: number } | null>(
-    "koalatools_img_meta",
-    null
-  );
+  const [imgDataUri, setImgDataUri] = useState<string>("");
+  const [rawBase64, setRawBase64] = useState<string>("");
+  const [imgMeta, setImgMeta] = useState<{ name: string; type: string; size: number; w: number; h: number } | null>(null);
   const [copiedDataUri, setCopiedDataUri] = useState(false);
   const [copiedRaw, setCopiedRaw] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Decode state
-  const [inputBase64, setInputBase64] = useLocalStorageState<string>("koalatools_decode_base64", "");
+  const [inputBase64, setInputBase64] = useState<string>("");
 
   const processFile = (file: File) => {
     if (!file.type.startsWith("image/")) {

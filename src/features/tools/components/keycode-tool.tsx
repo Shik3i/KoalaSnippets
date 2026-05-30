@@ -26,7 +26,18 @@ export function KeycodeTool() {
     if (!active) return;
 
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      // 1. Intercept event in capturing phase & block any global shortcuts (Ctrl+K, Vim, etc.)
+      // Allow Escape to gracefully deactivate capturing mode (releasing keyboard lock)
+      if (e.key === "Escape") {
+        setActive(false);
+        return;
+      }
+
+      // Bypass interception for standard browser function keys (F1 - F12)
+      if (e.key.startsWith("F") && !isNaN(Number(e.key.slice(1)))) {
+        return;
+      }
+
+      // Intercept event in capturing phase & block any global shortcuts (Ctrl+K, Vim, etc.)
       e.preventDefault();
       e.stopPropagation();
 

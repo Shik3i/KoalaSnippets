@@ -203,7 +203,10 @@ export function DetailView({
   };
 
   const processedCode = activeFile ? activeFile.code.replace(VAR_REGEX, (match, key) => envVars[key] || match) : "";
-  const processedHighlightedCode = activeFile ? activeFile.highlightedCode.replace(VAR_REGEX, (match, key) => {
+  
+  // HTML-resilient regex to handle cases where Shiki splits brackets and variable names into separate span tags
+  const VAR_REGEX_HTML = /\{\s*(?:<[^>]*>)*\s*\{\s*(?:<[^>]*>)*\s*([A-Z0-9_]+)\s*(?:<[^>]*>)*\s*\}\s*(?:<[^>]*>)*\s*\}/g;
+  const processedHighlightedCode = activeFile ? activeFile.highlightedCode.replace(VAR_REGEX_HTML, (match, key) => {
     return envVars[key] ? escapeHtml(envVars[key]) : match;
   }) : "";
 

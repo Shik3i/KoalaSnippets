@@ -35,6 +35,16 @@ export function useKeyboardShortcuts({
       const isMac = navigator.platform.toUpperCase().includes("MAC");
       const modifier = isMac ? e.metaKey : e.ctrlKey;
 
+      if (isInput) {
+        // Only allow saving shortcuts (Ctrl+S or Ctrl+Enter) to trigger inside input fields
+        if (modifier && (e.key.toLowerCase() === "s" || e.key === "Enter")) {
+          if (e.key === "Enter" && !e.metaKey && !e.ctrlKey) return;
+          e.preventDefault();
+          onSave?.();
+        }
+        return;
+      }
+
       if (modifier && e.key.toLowerCase() === "k") {
         e.preventDefault();
         if (searchInputRef?.current) {

@@ -95,7 +95,9 @@ export function SnippetCard({
 
   const handleCopyCode = useCallback(async () => {
     if (!highlightedCode) return;
-    const plainText = highlightedCode.replace(/<[^>]*>/g, "");
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = highlightedCode;
+    const plainText = tempDiv.textContent || tempDiv.innerText || "";
     await navigator.clipboard.writeText(plainText);
     setCopyingCode(true);
     addToast("Code copied to clipboard", "success");
