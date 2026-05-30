@@ -34,6 +34,7 @@ import {
   Star,
   Languages,
   HelpCircle,
+  Tag,
 } from "lucide-react";
 import { useI18n, type Locale, LOCALE_LABELS } from "@/features/core/i18n";
 
@@ -502,6 +503,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
               }}
               className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/30 transition-colors"
             >
+              <Tag size={12} />
               <span className="flex-1 text-left">{t.tags}</span>
               {tagsExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>
