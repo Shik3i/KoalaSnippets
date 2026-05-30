@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Search, Plus, Settings, Shield, Home, FileCode, Command, ArrowRight, Moon, Copy, Pencil, Wrench, Upload, LayoutGrid, Clock, Fingerprint, Key, Diff, Hash, Braces, FileKey, Binary, Regex, Link2, Palette, Image as ImageIcon, Sliders, Database } from "lucide-react";
+import { Search, Plus, Settings, Shield, Home, FileCode, Command, ArrowRight, Moon, Copy, Pencil, Wrench, Upload, LayoutGrid, Clock, Fingerprint, Key, Diff, Hash, Braces, FileKey, Binary, Regex, Link2, Palette, Image as ImageIcon, Sliders, Database, Shuffle, Keyboard } from "lucide-react";
 import { cn } from "@/features/core/utils/utils";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
@@ -91,6 +91,9 @@ export function CommandPalette() {
     { label: t.cmdToolCron, value: "/cron", href: "/tools?tool=cron", description: t.cmdToolCronDesc, icon: Clock },
     { label: t.cmdToolShadow, value: "/shadow", href: "/tools?tool=shadow", description: t.cmdToolShadowDesc, icon: Sliders },
     { label: t.cmdToolSql, value: "/sql", href: "/tools?tool=sql", description: t.cmdToolSqlDesc, icon: Database },
+    { label: t.cmdToolJsonToTs, value: "/ts", href: "/tools?tool=jsontots", description: t.cmdToolJsonToTsDesc, icon: Braces },
+    { label: t.cmdToolYaml, value: "/yaml", href: "/tools?tool=yaml", description: t.cmdToolYamlDesc, icon: Shuffle },
+    { label: t.cmdToolKeycode, value: "/keycode", href: "/tools?tool=keycode", description: t.cmdToolKeycodeDesc, icon: Keyboard },
     { label: t.cmdImport, value: "/import", action: "openImport", description: t.cmdImportDesc, icon: Upload },
     { label: t.cmdDensityCompact, value: "/density compact", action: "density-compact", description: t.cmdDensityCompactDesc, icon: LayoutGrid },
     { label: t.cmdDensityPreview, value: "/density preview", action: "density-preview", description: t.cmdDensityPreviewDesc, icon: LayoutGrid },

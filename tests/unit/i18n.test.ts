@@ -43,6 +43,11 @@ const ALL_KEYS = [
   "cmdToolColor", "cmdToolColorDesc", "cmdToolImage", "cmdToolImageDesc",
   "cmdToolCron", "cmdToolCronDesc", "cmdToolShadow", "cmdToolShadowDesc",
   "cmdToolSql", "cmdToolSqlDesc",
+  "saveAsSnippet", "saveAsSnippetSuccess",
+  "toolHistory", "toolHistoryClear", "toolHistoryEmpty",
+  "cmdToolJsonToTs", "cmdToolJsonToTsDesc",
+  "cmdToolYaml", "cmdToolYamlDesc",
+  "cmdToolKeycode", "cmdToolKeycodeDesc",
 ] as const;
 
 function getKeys(obj: Record<string, unknown>): string[] {
