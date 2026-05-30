@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Clock, RotateCcw } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 interface Revision {
   id: string;
@@ -18,6 +19,7 @@ export function HistoryModal({ open, onClose, snippetId, onRestore }: HistoryMod
   const [revisions, setRevisions] = React.useState<Revision[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [restoringId, setRestoringId] = React.useState<string | null>(null);
+  const { addToast } = useToast();
 
   React.useEffect(() => {
     if (open && snippetId) {
@@ -29,6 +31,8 @@ export function HistoryModal({ open, onClose, snippetId, onRestore }: HistoryMod
           if (data.revisions) {
             setRevisions(data.revisions);
           }
+        } catch {
+          // Silently handle fetch error — UI shows empty state
         } finally {
           setLoading(false);
         }
@@ -49,7 +53,11 @@ export function HistoryModal({ open, onClose, snippetId, onRestore }: HistoryMod
       if (res.ok && data.files) {
         onRestore(data.files);
         onClose();
+      } else {
+        addToast("Failed to restore revision", "error");
       }
+    } catch {
+      addToast("Failed to restore revision", "error");
     } finally {
       setRestoringId(null);
     }

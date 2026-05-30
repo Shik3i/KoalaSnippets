@@ -81,12 +81,15 @@ export function SnippetCard({
     savingRef.current = true;
     setSavingTags(true);
     try {
-      await fetch(`/api/snippets/${id}`, {
+      const res = await fetch(`/api/snippets/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tags: localTags }),
       });
+      if (!res.ok) throw new Error("Failed to save tags");
       setEditingTags(false);
+    } catch {
+      addToast("Failed to save tags", "error");
     } finally {
       savingRef.current = false;
       setSavingTags(false);
@@ -95,13 +98,17 @@ export function SnippetCard({
 
   const handleCopyCode = useCallback(async () => {
     if (!highlightedCode) return;
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = highlightedCode;
-    const plainText = tempDiv.textContent || tempDiv.innerText || "";
-    await navigator.clipboard.writeText(plainText);
-    setCopyingCode(true);
-    addToast("Code copied to clipboard", "success");
-    setTimeout(() => setCopyingCode(false), 2000);
+    try {
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = highlightedCode;
+      const plainText = tempDiv.textContent || tempDiv.innerText || "";
+      await navigator.clipboard.writeText(plainText);
+      setCopyingCode(true);
+      addToast("Code copied to clipboard", "success");
+      setTimeout(() => setCopyingCode(false), 2000);
+    } catch {
+      addToast("Failed to copy code", "error");
+    }
   }, [highlightedCode, addToast]);
 
   const toggleFavorite = useCallback(async (e: React.MouseEvent) => {
@@ -163,10 +170,14 @@ export function SnippetCard({
     <SafeZone name={`SnippetCard-${id}`}>
     <ContextMenu
       options={[
-        { label: "Copy Link", icon: LinkIcon, onClick: () => {
-          const url = `${window.location.origin}/snippets/${id}`;
-          navigator.clipboard.writeText(url);
-          addToast("Link copied to clipboard", "success");
+        { label: "Copy Link", icon: LinkIcon, onClick: async () => {
+          try {
+            const url = `${window.location.origin}/snippets/${id}`;
+            await navigator.clipboard.writeText(url);
+            addToast("Link copied to clipboard", "success");
+          } catch {
+            addToast("Failed to copy link", "error");
+          }
         }},
         { label: "Copy Code", icon: copyingCode ? Check : Copy, onClick: handleCopyCode },
         { label: "Edit Snippet", icon: Pencil, onClick: () => {

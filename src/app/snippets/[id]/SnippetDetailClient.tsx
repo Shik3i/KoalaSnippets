@@ -43,7 +43,7 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
         router.refresh();
       }
     } catch {
-      // ignore
+      addToast("Failed to update favorite", "error");
     }
   };
 
@@ -54,7 +54,7 @@ export function SnippetDetailClient(props: SnippetDetailClientProps) {
         router.refresh();
       }
     } catch {
-      // ignore
+      addToast("Failed to update pin", "error");
     }
   };
 

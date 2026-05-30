@@ -44,6 +44,8 @@ export function PasswordPrompt({ snippet, syntaxTheme }: PasswordPromptProps) {
       } else {
         addToast(data.error || "Incorrect password", "error");
       }
+    } catch {
+      addToast("Failed to unlock snippet. Please try again.", "error");
     } finally {
       setLoading(false);
     }

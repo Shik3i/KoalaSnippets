@@ -77,7 +77,7 @@ export function AdminMetrics() {
     { icon: FileCode, label: "Total Snippets", value: mounted ? metrics.totalSnippetsCreated.toLocaleString() : "", color: "text-info" },
     { icon: Clock, label: "Uptime", value: formatUptime(metrics.uptimeSeconds), color: "text-muted-foreground" },
     { icon: Calendar, label: "Last Backup", value: metrics.lastBackup ? formatRelativeTime(metrics.lastBackup) : "Never", color: metrics.lastBackup ? "text-emerald-400" : "text-amber-400" },
-    { icon: HardDrive, label: "DB Path", value: process.env.DATABASE_URL?.replace("file:", "") ?? "./data/koalasnippets.db", color: "text-muted-foreground" },
+    { icon: HardDrive, label: "DB Path", value: "./data/koalasnippets.db", color: "text-muted-foreground" },
   ];
 
   const languageBreakdown = metrics.languageBreakdown ?? [];
