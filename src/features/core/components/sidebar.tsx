@@ -65,31 +65,27 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
   const [creatingCollection, setCreatingCollection] = useState(false);
   const [width, setWidth] = useState(240);
   const [isResizing, setIsResizing] = useState(false);
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("koalasnippets_sidebar_collapsed") === "true";
-    }
-    return false;
-  });
-  const [mySnippetsExpanded, setMySnippetsExpanded] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("koalasnippets_mysnippets_expanded") !== "false";
-    }
-    return true;
-  });
-  const [controlsExpanded, setControlsExpanded] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("koalasnippets_controls_expanded") === "true";
-    }
-    return true;
-  });
+  const [collapsed, setCollapsed] = useState(false);
+  const [mySnippetsExpanded, setMySnippetsExpanded] = useState(true);
+  const [controlsExpanded, setControlsExpanded] = useState(true);
+  const [collectionsExpanded, setCollectionsExpanded] = useState(false);
+  const [tagsExpanded, setTagsExpanded] = useState(false);
+  const [recentExpanded, setRecentExpanded] = useState(false);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    const saved = localStorage.getItem("koalasnippets_sidebar_width");
-    if (saved) {
-      setTimeout(() => setWidth(parseInt(saved, 10)), 0);
-    }
+    try {
+      const savedWidth = localStorage.getItem("koalasnippets_sidebar_width");
+      if (savedWidth) setWidth(parseInt(savedWidth, 10));
+      setCollapsed(localStorage.getItem("koalasnippets_sidebar_collapsed") === "true");
+      setMySnippetsExpanded(localStorage.getItem("koalasnippets_mysnippets_expanded") !== "false");
+      setControlsExpanded(localStorage.getItem("koalasnippets_controls_expanded") === "true");
+      setCollectionsExpanded(localStorage.getItem("koalasnippets_collections_expanded") === "true");
+      setTagsExpanded(localStorage.getItem("koalasnippets_tags_expanded") === "true");
+      setRecentExpanded(localStorage.getItem("koalasnippets_recent_expanded") === "true");
+    } catch { /* ignore */ }
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const widthRef = useRef(width);
 
@@ -193,7 +189,7 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
         <nav className={cn("space-y-1", collapsed ? "p-1.5" : "p-3")}>
           {navItems.map((item) => {
             if (item.href === "/dashboard" && !isAuthenticated) {
@@ -318,124 +314,134 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
         )}
 
         {isAuthenticated && !collapsed && (
-          <div className="px-3 py-2 border-t border-border overflow-y-auto max-h-48">
-            <div className="flex items-center justify-between mb-2 px-1">
-              <div className="flex items-center gap-1.5">
-                <Image src={KoalaFolder} alt="Collections" width={24} height={24} />
-                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  {t.collections}
-                </h3>
-              </div>
-              <button 
-                onClick={() => { setAddingCollection(true); setNewCollectionName(""); }}
-                className="text-muted-foreground hover:text-foreground"
-                aria-label={t.addCollection}
-              >
-                <PlusCircle size={14} />
-              </button>
-            </div>
-            {addingCollection && (
-              <div className="flex items-center gap-1 px-1 mb-2">
-                <input
-                  type="text"
-                  id="new-collection-name"
-                  name="collectionName"
-                  value={newCollectionName}
-                  onChange={(e) => setNewCollectionName(e.target.value)}
-                  onKeyDown={async (e) => {
-                    if (e.key === "Escape") { setAddingCollection(false); return; }
-                    if (e.key !== "Enter" || !newCollectionName.trim() || creatingCollection) return;
-                    setCreatingCollection(true);
-                    try {
-                      const res = await fetch("/api/collections", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ name: newCollectionName.trim() })
-                      });
-                      if (res.ok) {
-                        const data = await res.json();
-                        setCollections(prev => [...prev, data.collection]);
-                      }
-                    } finally {
-                      setCreatingCollection(false);
-                      setAddingCollection(false);
-                      setNewCollectionName("");
-                    }
-                  }}
-                  placeholder={t.collectionName}
-                  className="flex-1 h-7 px-2 text-[11px] bg-muted/50 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
-                  disabled={creatingCollection}
-                  autoFocus
-                />
-                <button
-                  type="button"
-                  onClick={() => { if (!creatingCollection) setAddingCollection(false); }}
-                  className="text-muted-foreground hover:text-foreground p-1 disabled:opacity-50"
-                  disabled={creatingCollection}
-                  aria-label="Cancel"
-                >
-                  {creatingCollection ? (
-                    <div className="w-3 h-3 border border-muted-foreground border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <X size={12} />
-                  )}
-                </button>
-              </div>
-            )}
-            <div className="space-y-0.5">
-              {collections.length === 0 ? (
-                <div className="text-xs text-muted-foreground px-1 py-2">{t.noCollections}</div>
-              ) : (
-                collections.map((col) => (
+          <div className="border-t border-border">
+            <button
+              onClick={() => {
+                const next = !collectionsExpanded;
+                setCollectionsExpanded(next);
+                localStorage.setItem("koalasnippets_collections_expanded", String(next));
+              }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/30 transition-colors"
+            >
+              <Image src={KoalaFolder} alt="Collections" width={16} height={16} />
+              <span className="flex-1 text-left">{t.collections}</span>
+              {collectionsExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            </button>
+            {collectionsExpanded && (
+              <div className="px-3 pb-2 max-h-48 scrollbar-hide overflow-y-auto">
+                <div className="flex items-center justify-end mb-2 px-1">
                   <button
-                    key={col.id}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      e.currentTarget.classList.add('bg-accent/80', 'ring-1', 'ring-primary');
-                    }}
-                    onDragLeave={(e) => {
-                      e.currentTarget.classList.remove('bg-accent/80', 'ring-1', 'ring-primary');
-                    }}
-                    onDrop={async (e) => {
-                      e.preventDefault();
-                      e.currentTarget.classList.remove('bg-accent/80', 'ring-1', 'ring-primary');
-                      try {
-                        const raw = e.dataTransfer.getData("application/json");
-                        if (!raw) return;
-                        const data = JSON.parse(raw);
-                        if (data.type === "snippet" && data.id) {
-                          const res = await fetch(`/api/snippets/${data.id}`, {
-                            method: "PUT",
+                    onClick={() => { setAddingCollection(true); setNewCollectionName(""); }}
+                    className="text-muted-foreground hover:text-foreground"
+                    aria-label={t.addCollection}
+                  >
+                    <PlusCircle size={14} />
+                  </button>
+                </div>
+                {addingCollection && (
+                  <div className="flex items-center gap-1 px-1 mb-2">
+                    <input
+                      type="text"
+                      id="new-collection-name"
+                      name="collectionName"
+                      value={newCollectionName}
+                      onChange={(e) => setNewCollectionName(e.target.value)}
+                      onKeyDown={async (e) => {
+                        if (e.key === "Escape") { setAddingCollection(false); return; }
+                        if (e.key !== "Enter" || !newCollectionName.trim() || creatingCollection) return;
+                        setCreatingCollection(true);
+                        try {
+                          const res = await fetch("/api/collections", {
+                            method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ collectionId: col.id })
+                            body: JSON.stringify({ name: newCollectionName.trim() })
                           });
                           if (res.ok) {
-                            window.location.reload();
+                            const data = await res.json();
+                            setCollections(prev => [...prev, data.collection]);
                           }
+                        } finally {
+                          setCreatingCollection(false);
+                          setAddingCollection(false);
+                          setNewCollectionName("");
                         }
-                      } catch { }
-                    }}
-                    onClick={() => {
-                      if (onTagClick) {
-                        onTagClick(`collection:${col.id}`);
-                      } else {
-                        window.location.href = `/dashboard?collection=${col.id}`;
-                      }
-                      setMobileOpen(false);
-                    }}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
-                  >
-                    <Image src={KoalaFolder} alt="Folder" width={16} height={16} />
-                    <span className="truncate">{col.name}</span>
-                  </button>
-                ))
-              )}
-            </div>
+                      }}
+                      placeholder={t.collectionName}
+                      className="flex-1 h-7 px-2 text-[11px] bg-muted/50 border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+                      disabled={creatingCollection}
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => { if (!creatingCollection) setAddingCollection(false); }}
+                      className="text-muted-foreground hover:text-foreground p-1 disabled:opacity-50"
+                      disabled={creatingCollection}
+                      aria-label="Cancel"
+                    >
+                      {creatingCollection ? (
+                        <div className="w-3 h-3 border border-muted-foreground border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <X size={12} />
+                      )}
+                    </button>
+                  </div>
+                )}
+                <div className="space-y-0.5">
+                  {collections.length === 0 ? (
+                    <div className="text-xs text-muted-foreground px-1 py-2">{t.noCollections}</div>
+                  ) : (
+                    collections.map((col) => (
+                      <button
+                        key={col.id}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.currentTarget.classList.add('bg-accent/80', 'ring-1', 'ring-primary');
+                        }}
+                        onDragLeave={(e) => {
+                          e.currentTarget.classList.remove('bg-accent/80', 'ring-1', 'ring-primary');
+                        }}
+                        onDrop={async (e) => {
+                          e.preventDefault();
+                          e.currentTarget.classList.remove('bg-accent/80', 'ring-1', 'ring-primary');
+                          try {
+                            const raw = e.dataTransfer.getData("application/json");
+                            if (!raw) return;
+                            const data = JSON.parse(raw);
+                            if (data.type === "snippet" && data.id) {
+                              const res = await fetch(`/api/snippets/${data.id}`, {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ collectionId: col.id })
+                              });
+                              if (res.ok) {
+                                window.location.reload();
+                              }
+                            }
+                          } catch { }
+                        }}
+                        onClick={() => {
+                          if (onTagClick) {
+                            onTagClick(`collection:${col.id}`);
+                          } else {
+                            window.location.href = `/dashboard?collection=${col.id}`;
+                          }
+                          setMobileOpen(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
+                      >
+                        <Image src={KoalaFolder} alt="Folder" width={16} height={16} />
+                        <span className="truncate">{col.name}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {languages.length > 0 && !collapsed && (
-          <div className="px-3 py-2 border-t border-border overflow-y-auto max-h-48">
+          <div className="px-3 py-2 border-t border-border scrollbar-hide overflow-y-auto max-h-48">
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">
               {t.languages}
             </h3>
@@ -472,80 +478,104 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
         )}
 
         {tags.length > 0 && !collapsed && (
-          <div className="px-3 py-2 border-t border-border overflow-y-auto max-h-48">
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">
-              {t.tags}
-            </h3>
-            <div className="flex flex-wrap gap-1.5 px-1">
-              {tags.map((tag) => {
-                const activeTags = searchParamsObj.get("tags")?.split(",") || [];
-                const isActive = activeTags.includes(tag);
-                return (
-                  <button
-                    key={tag}
-                    onClick={() => {
-                      if (onTagClick) {
-                        onTagClick(tag);
-                      } else {
-                        const params = new URLSearchParams(searchParamsObj.toString());
-                        let currentTags = params.get("tags")?.split(",") || [];
-                        if (isActive) {
-                          currentTags = currentTags.filter(t => t !== tag);
-                        } else {
-                          currentTags.push(tag);
-                        }
-                        if (currentTags.length > 0) {
-                          params.set("tags", currentTags.join(","));
-                        } else {
-                          params.delete("tags");
-                        }
-                        const targetPath = ["/", "/dashboard", "/public"].includes(pathname) ? pathname : "/dashboard";
-                        window.location.href = `${targetPath}?${params.toString()}`;
-                      }
-                      setMobileOpen(false);
-                    }}
-                    className="hover:opacity-80 transition-opacity"
-                  >
-                    <Badge variant={isActive ? "default" : "outline"} className="cursor-pointer text-xs" aria-label={`Filter by tag: ${tag}`}>
-                      {tag}
-                    </Badge>
-                  </button>
-                );
-              })}
-            </div>
+          <div className="border-t border-border">
+            <button
+              onClick={() => {
+                const next = !tagsExpanded;
+                setTagsExpanded(next);
+                localStorage.setItem("koalasnippets_tags_expanded", String(next));
+              }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/30 transition-colors"
+            >
+              <span className="flex-1 text-left">{t.tags}</span>
+              {tagsExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            </button>
+            {tagsExpanded && (
+              <div className="px-3 pb-2 max-h-48 scrollbar-hide overflow-y-auto">
+                <div className="flex flex-wrap gap-1.5 px-1">
+                  {tags.map((tag) => {
+                    const activeTags = searchParamsObj.get("tags")?.split(",") || [];
+                    const isActive = activeTags.includes(tag);
+                    return (
+                      <button
+                        key={tag}
+                        onClick={() => {
+                          if (onTagClick) {
+                            onTagClick(tag);
+                          } else {
+                            const params = new URLSearchParams(searchParamsObj.toString());
+                            let currentTags = params.get("tags")?.split(",") || [];
+                            if (isActive) {
+                              currentTags = currentTags.filter(t => t !== tag);
+                            } else {
+                              currentTags.push(tag);
+                            }
+                            if (currentTags.length > 0) {
+                              params.set("tags", currentTags.join(","));
+                            } else {
+                              params.delete("tags");
+                            }
+                            const targetPath = ["/", "/dashboard", "/public"].includes(pathname) ? pathname : "/dashboard";
+                            window.location.href = `${targetPath}?${params.toString()}`;
+                          }
+                          setMobileOpen(false);
+                        }}
+                        className="hover:opacity-80 transition-opacity"
+                      >
+                        <Badge variant={isActive ? "default" : "outline"} className="cursor-pointer text-xs" aria-label={`Filter by tag: ${tag}`}>
+                          {tag}
+                        </Badge>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {recentSnippets.length > 0 && !collapsed && (
-          <div className="px-3 py-2 border-t border-border overflow-y-auto max-h-48">
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1 flex items-center justify-between">
-              <span className="flex items-center gap-1.5">
-                <Clock size={12} />
-                {t.recentlyAccessed}
-              </span>
-              <button
-                onClick={clearRecentSnippets}
-                className="text-muted-foreground hover:text-destructive transition-colors p-0.5 rounded"
-                aria-label={t.clearRecent}
-              >
-                <X size={10} />
-              </button>
-            </h3>
-            <div className="space-y-0.5">
-              {recentSnippets.map((snippet) => (
-                <Link
-                  key={snippet.id}
-                  href={`/snippets/${snippet.id}`}
-                  onClick={() => setMobileOpen(false)}
-                  className="w-full flex flex-col px-2 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors group"
-                >
-                  <span className="truncate group-hover:text-primary transition-colors">{snippet.title}</span>
-                  <span className="text-[10px] opacity-70">
-                    {new Date(snippet.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </Link>
-              ))}
-            </div>
+          <div className="border-t border-border">
+            <button
+              onClick={() => {
+                const next = !recentExpanded;
+                setRecentExpanded(next);
+                localStorage.setItem("koalasnippets_recent_expanded", String(next));
+              }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/30 transition-colors"
+            >
+              <Clock size={12} />
+              <span className="flex-1 text-left">{t.recentlyAccessed}</span>
+              {recentExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            </button>
+            {recentExpanded && (
+              <div className="px-3 pb-2 max-h-48 scrollbar-hide overflow-y-auto">
+                <div className="flex items-center justify-end mb-2 px-1">
+                  <button
+                    onClick={clearRecentSnippets}
+                    className="text-muted-foreground hover:text-destructive transition-colors p-0.5 rounded"
+                    aria-label={t.clearRecent}
+                  >
+                    <X size={10} />
+                  </button>
+                </div>
+                <div className="space-y-0.5">
+                  {recentSnippets.map((snippet) => (
+                    <Link
+                      key={snippet.id}
+                      href={`/snippets/${snippet.id}`}
+                      onClick={() => setMobileOpen(false)}
+                      className="w-full flex flex-col px-2 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors group"
+                    >
+                      <span className="truncate group-hover:text-primary transition-colors">{snippet.title}</span>
+                      <span className="text-[10px] opacity-70">
+                        {new Date(snippet.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
         </div>
