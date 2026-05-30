@@ -436,7 +436,7 @@ export function DashboardContent({ snippets, viewMode, density, allowSelection =
                     key={virtualRow.index}
                     data-index={virtualRow.index}
                     ref={(node) => gridVirtualizer.measureElement(node)}
-                    className="grid gap-3 sm:gap-4"
+                    className="grid gap-3 sm:gap-4 pb-3 sm:pb-4"
                     style={{
                       transform: `translateY(${virtualRow.start}px)`,
                       position: "absolute",
