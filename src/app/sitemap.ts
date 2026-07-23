@@ -40,11 +40,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "yearly",
       priority: 0.1,
     },
-    {
-      url: `${BASE_URL}/impressum`,
-      lastModified: new Date(),
-      changeFrequency: "yearly",
-      priority: 0.1,
-    },
   ];
 }

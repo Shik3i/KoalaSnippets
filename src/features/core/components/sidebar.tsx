@@ -781,9 +781,9 @@ export function Sidebar({ tags = [], languages = [], isAuthenticated = false, is
           <div className="px-3 pb-3">
             <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground px-2">
               <div className="flex items-center gap-3 min-w-0">
-                <Link href="/impressum" className="hover:text-foreground transition-colors shrink-0">
+                <a href="https://koalastuff.net/legal" className="hover:text-foreground transition-colors shrink-0">
                   {t.imprint}
-                </Link>
+                </a>
                 <Link href="/privacy" className="hover:text-foreground transition-colors shrink-0">
                   {t.privacy}
                 </Link>
