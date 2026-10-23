@@ -1,6 +1,6 @@
-{
+﻿{
   "name": "koalasnippets",
-  "version": "1.13.12",
+  "version": "1.13.13",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -58,3 +58,4 @@
     "@emnapi/runtime": "1.10.0"
   }
 }
+
