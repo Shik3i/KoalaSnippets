@@ -1,6 +1,6 @@
 {
   "name": "koalasnippets",
-  "version": "1.13.13",
+  "version": "1.13.14",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -33,7 +33,7 @@
     "sharp": "^0.35.3",
     "shiki": "^1",
     "yaml": "^2.9.0",
-    "zod": "^3"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -58,4 +58,3 @@
     "@emnapi/runtime": "1.10.0"
   }
 }
-

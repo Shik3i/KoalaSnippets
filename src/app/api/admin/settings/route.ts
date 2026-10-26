@@ -47,7 +47,7 @@ export async function PUT(request: Request) {
     const parsed = updateSettingsSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
 
     await db.update(siteSettings).set(parsed.data).where(eq(siteSettings.id, 1));
